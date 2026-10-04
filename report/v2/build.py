@@ -292,16 +292,32 @@ def main():
             return f'{w * per * 1000 / 3.6e6:.2f}'
         return ''
 
+    BEST = {('gpu-l4', 'ffbp/fp32_cuda'), ('gpu-l4', 'ffbp/f16_cuda'), ('tpu-v5e', 'ffbp/fp32_high_pallas2_direct'), ('tpu-v5e', 'ffbp/fp32_fast_pallas2_direct'),
+            ('tpu-v6e', 'ffbp/fp32_high_pallas2_direct'), ('tpu-v6e', 'ffbp/fp32_fast_pallas2_direct'), ('cpu-c4d16', 'ffbp/fp32_conv_direct')}
+
+    def bold_row(cells):
+        """Bold every cell of a table row; math cells (the error column) get \\mathbf."""
+        out = []
+        for c in cells:
+            c = c.strip()
+            if not c:
+                out.append('')
+            elif c.startswith('$') and c.endswith('$') and 'bullet' not in c:
+                out.append('$\\mathbf{' + c[1:-1] + '}$')
+            else:
+                out.append('\\textbf{' + c + '}')
+        return ' & '.join(out) + ' \\\\'
+
     def cost_header(label, caption):
         return [r'\begin{table}[tb]', r'\centering', caption, label, r'\small', r'\setlength{\tabcolsep}{4pt}', r'\begin{tabular}{lllrrrr}', r'\toprule',
                 r'Device & Algorithm & Arithmetic & Time (s) & Images/h & \$ per 1000 & kWh per 1000 \\', r'\midrule']
 
     lines = [r'\begin{table}[tb]', r'\centering',
-             r'\caption{Panama Canal: the selected configurations grouped by the visible change relative to the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, with cost computed from the device time. Energy is that of the processor alone over the pipelined per-image time that the cost column uses. On the L4 it is measured by \texttt{nvidia-smi}. On the TPUs it is a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, applied as if the chip ran at that power throughout. On the CPU it is the 8 cores\textquoteright{} pro-rata share of the 400~W package at the measured utilization. A bullet marks the rows on the Pareto front of Figure~\ref{fig:teaser}. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
+             r'\caption{Panama Canal: the selected configurations grouped by the visible change relative to the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, with cost computed from the device time. Energy is that of the processor alone over the pipelined per-image time that the cost column uses. On the L4 it is measured by \texttt{nvidia-smi}. On the TPUs it is a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, applied as if the chip ran at that power throughout. On the CPU it is the 8 cores\textquoteright{} pro-rata share of the 400~W package at the measured utilization. Bold rows are the best configuration found for each device at each precision, the factorized builds of record; a bullet marks the rows on the Pareto front of Figure~\ref{fig:teaser}. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
              r'\label{tab:cost}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrrc}', r'\toprule',
              r'Device & Algorithm & Arithmetic & Time (s) & \$ per 1000 & kWh per 1000 & Error (dB) & Pareto \\', r'\midrule']
     panama_rows = []
-    lines_other = cost_header(r'\label{tab:costother}', r'\caption{Melbourne and Iowa: device time, throughput and cost for the selected configurations, as in Table~\ref{tab:cost}. }')
+    lines_other = cost_header(r'\label{tab:costother}', r'\caption{Melbourne and Iowa: device time, throughput and cost for the selected configurations, as in Table~\ref{tab:cost}; bold rows as there. }')
     # candidates per selected row; the fastest timed form is used (ties broken toward a pipelined record)
     record_c = [('gpu-l4', ['bp/cuda_f16']), ('gpu-l4', ['bp/cuda_fp32']), ('gpu-l4', ['ffbp/f16_cuda', 'ffbp/f16_conv']),
                 ('gpu-l4', ['ffbp/fp32_cuda', 'ffbp/fp32_conv', 'ffbp/fp32']), ('gpu-l4', ['pfa/fp32_taps_corr']),
@@ -356,7 +372,8 @@ def main():
             else:
                 if first:
                     out_lines.append(f"\\multicolumn{{7}}{{l}}{{\\emph{{{SCENE[s_]}}}}} \\\\")
-                out_lines.append(f"{DEV[lab]} & {a} & {arith} & {fmt(run, 1)} & {3600.0 / per:,.0f}{star} & {usd:.2f} & {kwh(lab, per, mon, util)} \\\\")
+                cells = [DEV[lab], a, arith, fmt(run, 1), f'{3600.0 / per:,.0f}{star}', f'{usd:.2f}', kwh(lab, per, mon, util)]
+                out_lines.append(bold_row(cells) if (lab, tag) in BEST else ' & '.join(cells) + ' \\\\')
             key = f"c.{s_}.{lab}.{tag.replace('/', '.')}"
             for key in [key] + [f"c.{s_}.{lab}.{c_.replace('/', '.')}" for c_ in cands]:
                 num[key + '.s'] = fmt(run, 1)
@@ -422,7 +439,8 @@ def main():
         lines.append(f"\\multicolumn{{8}}{{l}}{{\\emph{{{code}. {name}}}}} \\\\")
         for d_ in grp:
             e = db(d_['err']) if d_['err'] is not None else ''
-            lines.append(f"{DEV[d_['lab']]} & {d_['a']} & {d_['arith']} & {fmt(d_['run'], 1)} & {d_['usd']:.2f}{d_['star']} & {d_['kwh']} & {e} & {'$\\bullet$' if d_['pareto'] else ''} \\\\")
+            cells = [DEV[d_['lab']], d_['a'], d_['arith'], fmt(d_['run'], 1), f"{d_['usd']:.2f}{d_['star']}", d_['kwh'], e, '$\\bullet$' if d_['pareto'] else '']
+            lines.append(bold_row(cells) if (d_['lab'], d_['tag']) in BEST else ' & '.join(cells) + ' \\\\')
         lines.append(r'\midrule')
         num[f'tier.{code}.cheapest'] = f"{DEV[grp[0]['lab']]} {grp[0]['a'].lower()}, {grp[0]['arith']}"
         num[f'tier.{code}.cheapest.usd'] = f"{grp[0]['usd']:.2f}"
