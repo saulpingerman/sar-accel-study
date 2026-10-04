@@ -320,16 +320,24 @@ def main():
                 if v is not None and abs(v - best) <= tol:
                     r[j] = bold(r[j])
 
+    def bold_fastest(rows, col=3):
+        """Bold the whole row with the smallest device time (ties share)."""
+        vals = [num_of(r[col]) for r in rows]
+        best = min(v for v in vals if v is not None)
+        for r, v in zip(rows, vals):
+            if v is not None and abs(v - best) <= 1e-9:
+                r[:] = [bold(c) if c.strip() and 'bullet' not in c else c for c in r]
+
     def cost_header(label, caption):
         return [r'\begin{table}[tb]', r'\centering', caption, label, r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrr}', r'\toprule',
                 r'Device & Algorithm & Arithmetic & Time (s) & Images/h & \$ per 1000 & kWh per 1000 \\', r'\midrule']
 
     lines = [r'\begin{table}[tb]', r'\centering',
-             r'\caption{Panama Canal: the selected configurations grouped by the visible change relative to the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, with cost computed from the device time. Energy is that of the processor alone over the pipelined per-image time that the cost column uses. On the L4 it is measured by \texttt{nvidia-smi}. On the TPUs it is a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, applied as if the chip ran at that power throughout. On the CPU it is the 8 cores\textquoteright{} pro-rata share of the 400~W package at the measured utilization. Bold marks the best value in each column within a group; a bullet marks the rows on the Pareto front of Figure~\ref{fig:teaser}. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
+             r'\caption{Panama Canal: the selected configurations grouped by the visible change relative to the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, with cost computed from the device time. Energy is that of the processor alone over the pipelined per-image time that the cost column uses. On the L4 it is measured by \texttt{nvidia-smi}. On the TPUs it is a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, applied as if the chip ran at that power throughout. On the CPU it is the 8 cores\textquoteright{} pro-rata share of the 400~W package at the measured utilization. Bold marks the fastest configuration in each group; a bullet marks the rows on the Pareto front of Figure~\ref{fig:teaser}. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
              r'\label{tab:cost}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrrc}', r'\toprule',
              r'Device & Algorithm & Arithmetic & Time (s) & \$ per 1000 & kWh per 1000 & Error (dB) & Pareto \\', r'\midrule']
     panama_rows = []
-    lines_other = cost_header(r'\label{tab:costother}', r'\caption{Melbourne and Iowa: device time, throughput and cost for the selected configurations, as in Table~\ref{tab:cost}; bold marks the best value in each column of a collection. }')
+    lines_other = cost_header(r'\label{tab:costother}', r'\caption{Melbourne and Iowa: device time, throughput and cost for the selected configurations, as in Table~\ref{tab:cost}; bold marks the fastest configuration on each collection. }')
     # candidates per selected row; the fastest timed form is used (ties broken toward a pipelined record)
     record_c = [('gpu-l4', ['bp/cuda_f16']), ('gpu-l4', ['bp/cuda_fp32']), ('gpu-l4', ['ffbp/f16_cuda', 'ffbp/f16_conv']),
                 ('gpu-l4', ['ffbp/fp32_cuda', 'ffbp/fp32_conv', 'ffbp/fp32']), ('gpu-l4', ['pfa/fp32_taps_corr']),
@@ -402,7 +410,7 @@ def main():
         # bold the best value in each numeric column of this collection (the Panama rows are handled per group below)
         scene_cells = [c for c in out_lines if isinstance(c, list)]
         if scene_cells:
-            bold_best(scene_cells, {3: 'min', 4: 'max', 5: 'min', 6: 'min'})
+            bold_fastest(scene_cells)
         out_lines[:] = [' & '.join(c) + ' \\\\' if isinstance(c, list) else c for c in out_lines]
         out_lines.append(r'\midrule')
     # metrics for each timed Panama row: the saved image of the same arithmetic (filter and ramp forms do not change it)
@@ -459,7 +467,7 @@ def main():
             e = db(d_['err']) if d_['err'] is not None else ''
             cells = [DEV[d_['lab']], d_['a'], d_['arith'], fmt(d_['run'], 1), f"{d_['usd']:.2f}{d_['star']}", d_['kwh'], e, '$\\bullet$' if d_['pareto'] else '']
             grp_cells.append(cells)
-        bold_best(grp_cells, {3: 'min', 4: 'min', 5: 'min', 6: 'min'})
+        bold_fastest(grp_cells)
         lines += [' & '.join(c) + ' \\\\' for c in grp_cells]
         lines.append(r'\midrule')
         num[f'tier.{code}.cheapest'] = f"{DEV[grp[0]['lab']]} {grp[0]['a'].lower()}, {grp[0]['arith']}"
