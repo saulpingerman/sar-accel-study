@@ -65,7 +65,7 @@ def config_name(tag, lab=''):
         store = 'float16' if 'f16' in parts else 'float32'
         return a, f'{store} profiles' + (', 16x oversampled' if 'ov16' in parts else '')
     pol = parts[0] + ('_' + parts[1] if len(parts) > 1 and parts[1] in ('fast', 'high', 'mm') else '')
-    words = {'conv': 'conv. filters', 'taps': 'tap sums' if alg == 'ffbp' else 'gather', 'direct': 'direct ramps', 'pad256': 'padded', 'corr': 'corrected',
+    words = {'conv': 'conv. filters', 'taps': 'tap sums' if alg == 'ffbp' else 'gather', 'direct': 'direct ramps', 'pad256': 'padded',
              'pallas': 'fused level kernel (v1)', 'pallas2': 'fused kernels', 'xlafinal': 'XLA final stage', 'final1': 'direct-trig final', 'cuda': 'CUDA kernels'}
     extra = [words[x] for x in parts if x in words and not (x == 'direct' and 'pallas2' in parts)]   # the kernels build their own ramps
     tpu = lab.startswith('tpu')
@@ -89,11 +89,11 @@ def gen_power(num):
             ('TPU v6e', 'Factorized BP, three-pass, fused kernels', 'design-power bound', '200 to 350', num.get('c.panama.tpu-v6e.ffbp.fp32_high_direct.s', ''), f"{num.get('pw.v6e.3.lo', '')} to {num.get('pw.v6e.3.hi', '')}"),
             ('CPU', 'Factorized BP, float32', 'pro-rata estimate', f"25 at {num.get('cs.panama.util1', '')}\\%", num.get('c.panama.cpu-c4d16.ffbp.fp32_conv_direct.s', ''), num.get('pw.cpu.kj', ''))]
     out = [r'\begin{table}[tb]', r'\centering',
-           r'\caption{Energy per Panama image for the processor alone. The L4 draw is the mean of \texttt{nvidia-smi} samples during the timed run; the TPU figures are bounds from the design-power figures third parties quote~\\cite{introl2025,gpuadvisor2025}, since Google publishes none, assuming the chip ran at that power throughout; the CPU figure is the pro-rata share of the 8 cores (25~W of the 400~W package) times the measured utilization. Hosts, memory and the other components of each instance are excluded.}',
-           r'\label{tab:power}', r'\small', r'\begin{tabular}{lllrrr}', r'\toprule',
+           r'\caption{Energy per Panama image for the processor alone. The L4 draw is the mean of \texttt{nvidia-smi} samples during the timed run; the TPU figures are bounds from the design-power figures third parties quote~\cite{introl2025,gpuadvisor2025}, since Google publishes none, assuming the chip ran at that power throughout; the CPU figure is the pro-rata share of the 8 cores (25~W of the 400~W package) times the measured utilization. Hosts, memory and the other components of each instance are excluded.}',
+           r'\label{tab:power}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrr}', r'\toprule',
            r'Device & Configuration & Basis & Power (W) & Time (s) & Energy (kJ) \\', r'\midrule']
     out += [' & '.join(r) + r' \\' for r in rows]
-    out += [r'\bottomrule', r'\end{tabular}', r'\end{table}']
+    out += [r'\bottomrule', r'\end{tabular}}', r'\end{table}']
     return out
 
 
@@ -295,29 +295,41 @@ def main():
     BEST = {('gpu-l4', 'ffbp/fp32_cuda'), ('gpu-l4', 'ffbp/f16_cuda'), ('tpu-v5e', 'ffbp/fp32_high_pallas2_direct'), ('tpu-v5e', 'ffbp/fp32_fast_pallas2_direct'),
             ('tpu-v6e', 'ffbp/fp32_high_pallas2_direct'), ('tpu-v6e', 'ffbp/fp32_fast_pallas2_direct'), ('cpu-c4d16', 'ffbp/fp32_conv_direct')}
 
-    def bold_row(cells):
-        """Bold every cell of a table row; math cells (the error column) get \\mathbf."""
-        out = []
-        for c in cells:
-            c = c.strip()
-            if not c:
-                out.append('')
-            elif c.startswith('$') and c.endswith('$') and 'bullet' not in c:
-                out.append('$\\mathbf{' + c[1:-1] + '}$')
-            else:
-                out.append('\\textbf{' + c + '}')
-        return ' & '.join(out) + ' \\\\'
+    def bold(c):
+        c = c.strip()
+        if not c:
+            return ''
+        if c.startswith('$') and c.endswith('$'):
+            return '$\\mathbf{' + c[1:-1] + '}$'
+        return '\\textbf{' + c + '}'
+
+    def num_of(c):
+        """The number a cell compares by: first number in the cell (the lower end of a range), None when blank."""
+        m_ = re.search(r'-?\d+(?:\.\d+)?', c.replace(',', '').replace('$', '').replace('\\mathbf', ''))
+        return float(m_.group(0)) if m_ else None
+
+    def bold_best(rows, cols, tol=1e-9):
+        """rows: list of cell lists; cols: {index: 'min' | 'max'}; bolds the best cell(s) of each column in place (ties within tol share)."""
+        for j, sense in cols.items():
+            vals = [num_of(r[j]) for r in rows]
+            cand = [v for v in vals if v is not None]
+            if not cand:
+                continue
+            best = min(cand) if sense == 'min' else max(cand)
+            for r, v in zip(rows, vals):
+                if v is not None and abs(v - best) <= tol:
+                    r[j] = bold(r[j])
 
     def cost_header(label, caption):
-        return [r'\begin{table}[tb]', r'\centering', caption, label, r'\small', r'\setlength{\tabcolsep}{4pt}', r'\begin{tabular}{lllrrrr}', r'\toprule',
+        return [r'\begin{table}[tb]', r'\centering', caption, label, r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrr}', r'\toprule',
                 r'Device & Algorithm & Arithmetic & Time (s) & Images/h & \$ per 1000 & kWh per 1000 \\', r'\midrule']
 
     lines = [r'\begin{table}[tb]', r'\centering',
-             r'\caption{Panama Canal: the selected configurations grouped by the visible change relative to the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, with cost computed from the device time. Energy is that of the processor alone over the pipelined per-image time that the cost column uses. On the L4 it is measured by \texttt{nvidia-smi}. On the TPUs it is a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, applied as if the chip ran at that power throughout. On the CPU it is the 8 cores\textquoteright{} pro-rata share of the 400~W package at the measured utilization. Bold rows are the best configuration found for each device at each precision, the factorized builds of record; a bullet marks the rows on the Pareto front of Figure~\ref{fig:teaser}. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
+             r'\caption{Panama Canal: the selected configurations grouped by the visible change relative to the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, with cost computed from the device time. Energy is that of the processor alone over the pipelined per-image time that the cost column uses. On the L4 it is measured by \texttt{nvidia-smi}. On the TPUs it is a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, applied as if the chip ran at that power throughout. On the CPU it is the 8 cores\textquoteright{} pro-rata share of the 400~W package at the measured utilization. Bold marks the best value in each column within a group; a bullet marks the rows on the Pareto front of Figure~\ref{fig:teaser}. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
              r'\label{tab:cost}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrrc}', r'\toprule',
              r'Device & Algorithm & Arithmetic & Time (s) & \$ per 1000 & kWh per 1000 & Error (dB) & Pareto \\', r'\midrule']
     panama_rows = []
-    lines_other = cost_header(r'\label{tab:costother}', r'\caption{Melbourne and Iowa: device time, throughput and cost for the selected configurations, as in Table~\ref{tab:cost}; bold rows as there. }')
+    lines_other = cost_header(r'\label{tab:costother}', r'\caption{Melbourne and Iowa: device time, throughput and cost for the selected configurations, as in Table~\ref{tab:cost}; bold marks the best value in each column of a collection. }')
     # candidates per selected row; the fastest timed form is used (ties broken toward a pipelined record)
     record_c = [('gpu-l4', ['bp/cuda_f16']), ('gpu-l4', ['bp/cuda_fp32']), ('gpu-l4', ['ffbp/f16_cuda', 'ffbp/f16_conv']),
                 ('gpu-l4', ['ffbp/fp32_cuda', 'ffbp/fp32_conv', 'ffbp/fp32']), ('gpu-l4', ['pfa/fp32_taps_corr']),
@@ -373,7 +385,7 @@ def main():
                 if first:
                     out_lines.append(f"\\multicolumn{{7}}{{l}}{{\\emph{{{SCENE[s_]}}}}} \\\\")
                 cells = [DEV[lab], a, arith, fmt(run, 1), f'{3600.0 / per:,.0f}{star}', f'{usd:.2f}', kwh(lab, per, mon, util)]
-                out_lines.append(bold_row(cells) if (lab, tag) in BEST else ' & '.join(cells) + ' \\\\')
+                out_lines.append(cells)
             key = f"c.{s_}.{lab}.{tag.replace('/', '.')}"
             for key in [key] + [f"c.{s_}.{lab}.{c_.replace('/', '.')}" for c_ in cands]:
                 num[key + '.s'] = fmt(run, 1)
@@ -387,6 +399,11 @@ def main():
                 if mon and mon.get('cpu_util') is not None:
                     num[key + '.util'] = f"{100 * mon['cpu_util']:.0f}"
             first = False
+        # bold the best value in each numeric column of this collection (the Panama rows are handled per group below)
+        scene_cells = [c for c in out_lines if isinstance(c, list)]
+        if scene_cells:
+            bold_best(scene_cells, {3: 'min', 4: 'max', 5: 'min', 6: 'min'})
+        out_lines[:] = [' & '.join(c) + ' \\\\' if isinstance(c, list) else c for c in out_lines]
         out_lines.append(r'\midrule')
     # metrics for each timed Panama row: the saved image of the same arithmetic (filter and ramp forms do not change it)
     prow = rows_of(m, 'panama')
@@ -437,17 +454,20 @@ def main():
         if not grp:
             continue
         lines.append(f"\\multicolumn{{8}}{{l}}{{\\emph{{{code}. {name}}}}} \\\\")
+        grp_cells = []
         for d_ in grp:
             e = db(d_['err']) if d_['err'] is not None else ''
             cells = [DEV[d_['lab']], d_['a'], d_['arith'], fmt(d_['run'], 1), f"{d_['usd']:.2f}{d_['star']}", d_['kwh'], e, '$\\bullet$' if d_['pareto'] else '']
-            lines.append(bold_row(cells) if (d_['lab'], d_['tag']) in BEST else ' & '.join(cells) + ' \\\\')
+            grp_cells.append(cells)
+        bold_best(grp_cells, {3: 'min', 4: 'min', 5: 'min', 6: 'min'})
+        lines += [' & '.join(c) + ' \\\\' for c in grp_cells]
         lines.append(r'\midrule')
         num[f'tier.{code}.cheapest'] = f"{DEV[grp[0]['lab']]} {grp[0]['a'].lower()}, {grp[0]['arith']}"
         num[f'tier.{code}.cheapest.usd'] = f"{grp[0]['usd']:.2f}"
     lines[-1] = r'\bottomrule'
     lines += [r'\end{tabular}}', r'\end{table}']                   # the Panama table is in a resizebox
     lines_other[-1] = r'\bottomrule'
-    lines_other += [r'\end{tabular}', r'\end{table}']
+    lines_other += [r'\end{tabular}}', r'\end{table}']
     gen['cost'] = '\n'.join(lines)
     gen['costother'] = '\n'.join(lines_other)
     gen['pfaedge'] = '\n'.join(gen_pfaedge())
@@ -507,6 +527,7 @@ def main():
         for (s_, lab), d in timing.items():
             if s_ == s:
                 tags |= {(lab, t) for t in d if t != '_meta' and (lab, t) not in STALE}
+        tags = {(lab, t) for lab, t in tags if not (t.startswith('pfa') and 'corr' not in t)}   # polar format before its final resampling is an intermediate, not a configuration
         if not tags:
             continue
         lines += [r'\begin{landscape}', r'\begin{table}[p]', r'\centering', f'\\caption{{Every configuration timed or measured, {SCENE[s]}: device time in seconds, with the pipelined seconds per image in parentheses where a loop was run; error and largest pixel difference (dB), 5 by 5 coherence statistics, amplitude and phase statistics over the brighter half of the pixels, and the error in four rings by distance from the scene center (quarters of the half-width, dB). A dash marks a configuration that was timed without saving its image.}}',

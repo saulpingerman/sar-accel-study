@@ -263,7 +263,7 @@ def scenes():
 
 
 def rings(m):
-    """Error by distance from the scene center for corrected polar format and the float32 factorized image, three scenes."""
+    """Error by distance from the scene center for polar format and the float32 factorized image, three scenes."""
     fig, ax = plt.subplots(figsize=(5.2, 3.0))
     x = [0.125, 0.375, 0.625, 0.875]
     style = {'panama': '-', 'melbourne': '--', 'iowa': ':'}
@@ -271,7 +271,7 @@ def rings(m):
         rows = rows_of(m, s)
         for (lab, tag), r in rows.items():
             if tag == 'pfa/fp32_corr' and r.get('rings') and lab == 'gpu-l4':
-                ax.plot(x, r['rings'], marker='o', color='#c0392b', linestyle=style[s], label=f'{SCENE[s]}, polar format, corrected')
+                ax.plot(x, r['rings'], marker='o', color='#c0392b', linestyle=style[s], label=f'{SCENE[s]}, polar format')
             if tag == 'ffbp/fp32' and r.get('rings') and lab == 'gpu-l4':
                 ax.plot(x, r['rings'], marker='s', color='#2c3e50', linestyle=style[s], label=f'{SCENE[s]}, factorized, float32')
     ax.set_xlabel('Distance from the scene center (fraction of the half-width)')
@@ -293,8 +293,8 @@ if __name__ == '__main__':
         rings(m)
     scenes()
     profile()
-    zoom('panama', [('gpu-l4/bp_cuda_f16', 'L4 exact BP, fp16'), ('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format, corrected')],
+    zoom('panama', [('gpu-l4/bp_cuda_f16', 'L4 exact BP, fp16'), ('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format')],
          ['locks', 'port', 'ships', 'corner'])
-    pixel_zoom('panama', [('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format, corrected')],
+    pixel_zoom('panama', [('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format')],
                ['locks', 'port', 'ships'])
     print('figures written')
