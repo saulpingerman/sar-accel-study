@@ -21,11 +21,21 @@ from .ffbp import C, _positions
 from .ffbp2 import HOST_LEVELS, make_plan, collection_arrays  # noqa: F401  (re-exported for callers)
 
 _SRC = r'''
+#include <cuda_fp16.h>
+#if STORE == 16
+  typedef __half sample_t;           /* phase history, intermediates and outputs in memory */
+  #define LD(v) __half2float(v)
+  #define ST(v) __float2half(v)
+#else
+  typedef float sample_t;
+  #define LD(v) (v)
+  #define ST(v) (v)
+#endif
 #define PB 32          /* pulses per block in rot_fir_k */
 #define JT 8           /* threads per pulse, each two consecutive outputs: 16 columns per block */
 extern "C" __global__
-void rot_fir_k(const float* __restrict__ sre, const float* __restrict__ sim, const float* __restrict__ c0, const float* __restrict__ sl,
-               const float* __restrict__ taps, float* __restrict__ yre, float* __restrict__ yim,
+void rot_fir_k(const sample_t* __restrict__ sre, const sample_t* __restrict__ sim, const float* __restrict__ c0, const float* __restrict__ sl,
+               const float* __restrict__ taps, sample_t* __restrict__ yre, sample_t* __restrict__ yim,
                int C_, int P, int K, int Ko, int D, int L, int pl, float kc)
 {
     // grid: x = blocks of 2 JT output columns, y = blocks of PB pulses, z = parent; block = PB * JT threads
@@ -42,15 +52,13 @@ void rot_fir_k(const float* __restrict__ sre, const float* __restrict__ sim, con
     for (int r = tid; r < L; r += PB * JT) tp[r] = taps[r];
     const int p = p0 + pp;
     const bool pok = p < P;
-    const float* sr = sre + ((size_t)n * P + (pok ? p : 0)) * K;
-    const float* si = sim + ((size_t)n * P + (pok ? p : 0)) * K;
     const int j = j0 + 2 * jt;
     // the raw window, loaded once with consecutive threads on consecutive columns (coalesced)
     for (int idx = tid; idx < PB * W; idx += PB * JT) {
         const int row = idx / W, i = idx % W, k = kstart + i, pr = p0 + row;
         const bool ok = (pr < P) && (k >= 0) && (k < K);
-        zr[row * WS + i] = ok ? sre[((size_t)n * P + pr) * K + k] : 0.f;
-        zi[row * WS + i] = ok ? sim[((size_t)n * P + pr) * K + k] : 0.f;
+        zr[row * WS + i] = ok ? LD(sre[((size_t)n * P + pr) * K + k]) : 0.f;
+        zi[row * WS + i] = ok ? LD(sim[((size_t)n * P + pr) * K + k]) : 0.f;
     }
     __syncthreads();
     float prev_cc = 0.f, prev_ss = 0.f;
@@ -108,7 +116,7 @@ void rot_fir_k(const float* __restrict__ sre, const float* __restrict__ sim, con
             const int row = idx / (2 * JT), col = idx % (2 * JT), pr = p0 + row, jj = j0 + col;
             if (pr < P && jj < Ko) {
                 const size_t o = (((size_t)n * C_ + c) * P + pr) * (size_t)Ko + jj;
-                yre[o] = otr[idx]; yim[o] = oti[idx];
+                yre[o] = ST(otr[idx]); yim[o] = ST(oti[idx]);
             }
         }
         __syncthreads();
@@ -117,8 +125,8 @@ void rot_fir_k(const float* __restrict__ sre, const float* __restrict__ sim, con
 
 #define FP_COLS 64     /* columns per block in fir_p */
 extern "C" __global__
-void fir_p(const float* __restrict__ yre, const float* __restrict__ yim, const float* __restrict__ taps,
-           float* __restrict__ zre, float* __restrict__ zim, int P, int Ko, int Po, int D, int L, int pl, int nout)
+void fir_p(const sample_t* __restrict__ yre, const sample_t* __restrict__ yim, const float* __restrict__ taps,
+           sample_t* __restrict__ zre, sample_t* __restrict__ zim, int P, int Ko, int Po, int D, int L, int pl, int nout)
 {
     // grid: x = blocks of FP_COLS columns, y = blocks of nout output pulses, z = child; block = FP_COLS * 4 threads,
     // each thread nout / 4 of the outputs of its column. The input rows the block needs sit in shared memory
@@ -127,14 +135,14 @@ void fir_p(const float* __restrict__ yre, const float* __restrict__ yim, const f
     const int rows = (nout - 1) * D + L;
     extern __shared__ float sm[];
     float* tr_ = sm; float* ti_ = sm + rows * FP_COLS; float* tp = sm + 2 * rows * FP_COLS;
-    const float* yr = yre + (size_t)b * P * Ko;
-    const float* yi = yim + (size_t)b * P * Ko;
+    const sample_t* yr = yre + (size_t)b * P * Ko;
+    const sample_t* yi = yim + (size_t)b * P * Ko;
     const int pstart = D * i0 - pl;
     for (int r = q; r < rows; r += 4) {
         const int p = pstart + r;
         const bool ok = (p >= 0) && (p < P) && (j < Ko);
-        tr_[r * FP_COLS + threadIdx.x % FP_COLS] = ok ? yr[(size_t)p * Ko + j] : 0.f;
-        ti_[r * FP_COLS + threadIdx.x % FP_COLS] = ok ? yi[(size_t)p * Ko + j] : 0.f;
+        tr_[r * FP_COLS + threadIdx.x % FP_COLS] = ok ? LD(yr[(size_t)p * Ko + j]) : 0.f;
+        ti_[r * FP_COLS + threadIdx.x % FP_COLS] = ok ? LD(yi[(size_t)p * Ko + j]) : 0.f;
     }
     for (int r = threadIdx.x; r < L; r += FP_COLS * 4) tp[r] = taps[r];
     __syncthreads();
@@ -153,12 +161,12 @@ void fir_p(const float* __restrict__ yre, const float* __restrict__ yim, const f
             ai = fmaf(t, ci[r * FP_COLS], ai);
         }
         const size_t o = ((size_t)b * Po + i) * (size_t)Ko + j;
-        zre[o] = ar; zim[o] = ai;
+        zre[o] = ST(ar); zim[o] = ST(ai);
     }
 }
 
 extern "C" __global__
-void final_tile(const float* __restrict__ dre, const float* __restrict__ dim, const float* __restrict__ ux, const float* __restrict__ uy,
+void final_tile(const sample_t* __restrict__ dre, const sample_t* __restrict__ dim, const float* __restrict__ ux, const float* __restrict__ uy,
                 const float* __restrict__ dlx, const float* __restrict__ dly, float* __restrict__ ore, float* __restrict__ oim,
                 int Pf, int Qf, int T, float a0, float a1, int pps)
 {
@@ -167,8 +175,8 @@ void final_tile(const float* __restrict__ dre, const float* __restrict__ dim, co
     extern __shared__ float2 sm2[];
     const int rowlen = pps * Qf;                          // pps pulses side by side
     float2* A2 = sm2; float2* B2 = sm2 + T * rowlen;      // (re, im) pairs: one 8-byte load per complex table entry
-    const float* dr = dre + (size_t)b * Pf * Qf;
-    const float* di = dim + (size_t)b * Pf * Qf;
+    const sample_t* dr = dre + (size_t)b * Pf * Qf;
+    const sample_t* di = dim + (size_t)b * Pf * Qf;
     float acc_r[4][2], acc_i[4][2];
     #pragma unroll
     for (int u = 0; u < 4; ++u) { acc_r[u][0] = acc_r[u][1] = acc_i[u][0] = acc_i[u][1] = 0.f; }
@@ -197,7 +205,7 @@ void final_tile(const float* __restrict__ dre, const float* __restrict__ dim, co
                 for (; q < qend; ++q) {
                     const int qq2 = q - ph * Qf;
                     if (isA) {
-                        const float d_r = pok ? dr[p * Qf + qq2] : 0.f, d_i = pok ? di[p * Qf + qq2] : 0.f;
+                        const float d_r = pok ? LD(dr[p * Qf + qq2]) : 0.f, d_i = pok ? LD(di[p * Qf + qq2]) : 0.f;
                         R2[q] = make_float2(d_r * wr - d_i * wi, d_r * wi + d_i * wr);
                     } else {
                         R2[q] = make_float2(wr, wi);
@@ -234,16 +242,17 @@ void final_tile(const float* __restrict__ dre, const float* __restrict__ dim, co
 }
 '''
 
-_mod = None
+_mods = {}
 
 
-def _kernels():
-    global _mod
-    if _mod is None:
-        _mod = cp.RawModule(code=_SRC, options=('--std=c++14', '--use_fast_math'))
-    out = {k: _mod.get_function(k) for k in ('rot_fir_k', 'fir_p', 'final_tile')}
+def _kernels(store='fp32'):
+    bits = 16 if store == 'f16' else 32
+    if bits not in _mods:
+        _mods[bits] = cp.RawModule(code=_SRC, options=('--std=c++14', '--use_fast_math', f'-DSTORE={bits}'))
+    out = {k: _mods[bits].get_function(k) for k in ('rot_fir_k', 'fir_p', 'final_tile')}
     for k in out.values():
         k.max_dynamic_shared_size_bytes = 96 * 1024          # opt in to more than 48 KB of shared memory per block
+    out['dtype'] = cp.float16 if bits == 16 else cp.float32
     return out
 
 
@@ -257,8 +266,8 @@ def _children(kern, pre, pim, c0, sl, lv):
         fk = lv['fir_k']
         taps = cp.asarray(fk['kern'], cp.float32)
         L, pl = fk['L'], fk['pl']
-        yre = cp.empty((Np * Cn, P, Ko), cp.float32)
-        yim = cp.empty((Np * Cn, P, Ko), cp.float32)
+        yre = cp.empty((Np * Cn, P, Ko), kern['dtype'])
+        yim = cp.empty((Np * Cn, P, Ko), kern['dtype'])
         W = 16 * Dk + L
         smem = (2 * 32 * (W | 1) + L + 2 * 32 * 16) * 4
         assert smem <= 96 * 1024, (Dk, L)
@@ -271,15 +280,15 @@ def _children(kern, pre, pim, c0, sl, lv):
         cyc = c0[:, :, :, None] + k[None, None, None, :] * sl[:, :, :, None]
         ang = (cyc - cp.rint(cyc)) * (2 * np.pi)
         cs, sn = cp.cos(ang), cp.sin(ang)
-        yre = (pre[:, None] * cs - pim[:, None] * sn).reshape(Np * Cn, P, K)
-        yim = (pre[:, None] * sn + pim[:, None] * cs).reshape(Np * Cn, P, K)
+        yre = (pre[:, None] * cs - pim[:, None] * sn).reshape(Np * Cn, P, K).astype(kern['dtype'])
+        yim = (pre[:, None] * sn + pim[:, None] * cs).reshape(Np * Cn, P, K).astype(kern['dtype'])
     _mark('rot_fir_k', t0)
     t0 = _tick()
     if Dp > 1:
         fp = lv['fir_p']
         taps = cp.asarray(fp['kern'], cp.float32)
-        zre = cp.empty((Np * Cn, Po, Ko), cp.float32)
-        zim = cp.empty((Np * Cn, Po, Ko), cp.float32)
+        zre = cp.empty((Np * Cn, Po, Ko), kern['dtype'])
+        zim = cp.empty((Np * Cn, Po, Ko), kern['dtype'])
         nout = 16                                        # outputs per block: the input rows must fit in 40 KB
         while nout > 4 and (2 * ((nout - 1) * Dp + fp['L']) * 64 + fp['L']) * 4 > 40 * 1024:
             nout -= 4
@@ -324,10 +333,12 @@ def _tick():
     return None
 
 
-def make_ffbp_cuda(plan, coll, final_mode='fp32'):
+def make_ffbp_cuda(plan, coll, final_mode='fp32', store='fp32'):
     """Build form(S) -> complex64 image [nx, ny] (device) for the plan and the collection arrays (host float64).
-    final_mode: 'fp32' (CUDA cores, float32) or 'f16tc' (tensor cores, float16 operands, float32 accumulation)."""
-    kern = _kernels()
+    final_mode: 'fp32' (CUDA cores, float32) or 'f16tc' (tensor cores, float16 operands, float32 accumulation).
+    store: 'fp32' or 'f16' for the phase history, every intermediate and the final-stage input in memory; the filter
+    arithmetic accumulates in float32 in both cases."""
+    kern = _kernels(store)
     levels, T, L = plan['levels'], plan['T'], len(plan['levels'])
     fin = plan['final']
     Pf, Qf = fin['P'], fin['K']
@@ -375,7 +386,7 @@ def make_ffbp_cuda(plan, coll, final_mode='fp32'):
         t0 = _tick()
         if final_mode == 'f16tc':
             ore, oim = final_tile_tc(cp.ascontiguousarray(are), cp.ascontiguousarray(aim), cp.ascontiguousarray(ux.astype(cp.float32)),
-                                     cp.ascontiguousarray(uy.astype(cp.float32)), dlx, dly, a0, a1, T)
+                                     cp.ascontiguousarray(uy.astype(cp.float32)), dlx, dly, a0, a1, T, store=store)
         else:
             kern['final_tile']((B,), (T * T // 8,), (cp.ascontiguousarray(are), cp.ascontiguousarray(aim), cp.ascontiguousarray(ux.astype(cp.float32)),
                                                 cp.ascontiguousarray(uy.astype(cp.float32)), dlx, dly, ore, oim,
@@ -416,8 +427,8 @@ def make_ffbp_cuda(plan, coll, final_mode='fp32'):
         """S [P, K] complex64 (host or device, already windowed) -> complex64 image [nx, ny] on the device."""
         S = cp.asarray(S)
         scale = float(cp.abs(S).max())
-        pre = cp.ascontiguousarray((S.real / scale).astype(cp.float32))[None]
-        pim = cp.ascontiguousarray((S.imag / scale).astype(cp.float32))[None]
+        pre = cp.ascontiguousarray((S.real / scale).astype(kern['dtype']))[None]
+        pim = cp.ascontiguousarray((S.imag / scale).astype(kern['dtype']))[None]
         lv0, la0 = levels[0], dev[0]
         full = cp.empty((plan['Nx'], plan['Ny']), cp.complex64)
         for g0 in range(0, G, ng):
@@ -443,12 +454,19 @@ def make_ffbp_cuda(plan, coll, final_mode='fp32'):
 _SRC_TC = r'''
 #include <mma.h>
 #include <cuda_fp16.h>
+#if STORE == 16
+  typedef __half sample_t;
+  #define LD(v) __half2float(v)
+#else
+  typedef float sample_t;
+  #define LD(v) (v)
+#endif
 using namespace nvcuda;
 #define TT 32
 #define PPS 2
 #define NSEG 2
 extern "C" __global__
-void final_tile_tc(const float* __restrict__ dre, const float* __restrict__ dim, const float* __restrict__ ux, const float* __restrict__ uy,
+void final_tile_tc(const sample_t* __restrict__ dre, const sample_t* __restrict__ dim, const float* __restrict__ ux, const float* __restrict__ uy,
                    const float* __restrict__ dlx, const float* __restrict__ dly, float* __restrict__ ore, float* __restrict__ oim,
                    int Pf, int Qf, float a0, float a1)
 {
@@ -460,8 +478,8 @@ void final_tile_tc(const float* __restrict__ dre, const float* __restrict__ dim,
     half* A_s = reinterpret_cast<half*>(smraw);
     half* B_s = A_s + 2 * TT * LD;
     float* M_s = reinterpret_cast<float*>(smraw);                 // reused at the end: [2T][2T + 4]
-    const float* dr = dre + (size_t)b * Pf * Qf;
-    const float* di = dim + (size_t)b * Pf * Qf;
+    const sample_t* dr = dre + (size_t)b * Pf * Qf;
+    const sample_t* di = dim + (size_t)b * Pf * Qf;
     // zero the padding columns once
     for (int i = tid; i < 2 * TT * (LD - K2); i += 512) {
         const int row = i / (LD - K2), col = K2 + i % (LD - K2);
@@ -493,7 +511,7 @@ void final_tile_tc(const float* __restrict__ dre, const float* __restrict__ dim,
         for (int q = qa; q < qb; ++q) {
             float v;
             if (which == 0) {
-                const float d_r = pok ? dr[p * Qf + q] : 0.f, d_i = pok ? di[p * Qf + q] : 0.f;
+                const float d_r = pok ? LD(dr[p * Qf + q]) : 0.f, d_i = pok ? LD(di[p * Qf + q]) : 0.f;
                 v = imag ? (d_r * wi + d_i * wr) : (d_r * wr - d_i * wi);
             } else {
                 v = imag ? wi : wr;
@@ -524,17 +542,16 @@ void final_tile_tc(const float* __restrict__ dre, const float* __restrict__ dim,
     }
 }
 '''
-_mod_tc = None
+_mods_tc = {}
 
 
-def final_tile_tc(are, aim, ux, uy, dlx, dly, a0, a1, T):
-    """are, aim [B, Pf, Qf] float32; ux, uy [B, Pf]; -> (re, im) [B, T, T] via the tensor-core kernel (T must be 32)."""
-    global _mod_tc
+def final_tile_tc(are, aim, ux, uy, dlx, dly, a0, a1, T, store='fp32'):
+    """are, aim [B, Pf, Qf] float32 or float16; ux, uy [B, Pf]; -> (re, im) [B, T, T] via the tensor-core kernel (T must be 32)."""
     assert T == 32
-    if _mod_tc is None:
-        _mod_tc = cp.RawModule(code=_SRC_TC, backend='nvcc', options=('-std=c++14', '--use_fast_math', '-arch=sm_%d%d' % cp.cuda.Device().compute_capability_tuple()
-                               if hasattr(cp.cuda.Device(), 'compute_capability_tuple') else '-arch=sm_' + cp.cuda.Device().compute_capability))
-    k = _mod_tc.get_function('final_tile_tc')
+    bits = 16 if store == 'f16' else 32
+    if bits not in _mods_tc:
+        _mods_tc[bits] = cp.RawModule(code=_SRC_TC, backend='nvcc', options=('-std=c++14', '--use_fast_math', f'-DSTORE={bits}', '-arch=sm_' + cp.cuda.Device().compute_capability))
+    k = _mods_tc[bits].get_function('final_tile_tc')
     B, Pf, Qf = are.shape
     K2 = 2 * Qf
     KP = (K2 + 15) // 16 * 16

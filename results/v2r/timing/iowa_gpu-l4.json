@@ -344,5 +344,31 @@
     "gpu_util_mean": 86.85950413223141
    }
   }
+ },
+ "ffbp/f16_cuda": {
+  "first_s": 2.032872712000085,
+  "run_s": 1.8136256279999543,
+  "host_s": 0.35215309499994873,
+  "filt": "cuda",
+  "monitor": {
+   "cpu_util": 0.26059835123095365,
+   "ncpu": 4,
+   "gpu_watts_mean": 65.77000000000001,
+   "gpu_watts_max": 72.04,
+   "gpu_util_mean": 79.42857142857143
+  },
+  "stream": {
+   "images": 30,
+   "seconds": 60.53924825399997,
+   "images_per_s": 0.4955462921199691,
+   "s_per_image": 2.017974941799999,
+   "monitor": {
+    "cpu_util": 0.26223234608344487,
+    "ncpu": 4,
+    "gpu_watts_mean": 62.57647058823528,
+    "gpu_watts_max": 73.97,
+    "gpu_util_mean": 81.8655462184874
+   }
+  }
  }
 }

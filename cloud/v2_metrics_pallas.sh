@@ -19,11 +19,13 @@ done
 wait
 for s in panama melbourne iowa; do
   T=$(ls -d /data/$OUT/$s/*/ | sed 's|/$||' | tr '\n' ',' | sed 's/,$//')
-  $PY v2_metrics.py --ref /data/out/$s/ref --test $T --out /data/$OUT/metrics_$s.json --scene $s > /tmp/metrics_${OUT}_$s.log 2>&1 &
+  CR=""; [ "$s" = panama ] && CR="${CROPS:-}"
+  $PY v2_metrics.py --ref /data/out/$s/ref --test $T --out /data/$OUT/metrics_$s.json --scene $s ${CR:+--figs /data/$OUT/figs_$s --crops "$CR"} > /tmp/metrics_${OUT}_$s.log 2>&1 &
 done
 wait
 for s in panama melbourne iowa; do
   gcloud storage cp /data/$OUT/metrics_$s.json $B/v2/results/${s}_${OUT}_metrics.json >/dev/null 2>&1
   gcloud storage cp /tmp/metrics_${OUT}_$s.log $B/v2/logs/ >/dev/null 2>&1
+  [ -f /data/$OUT/figs_$s/${s}_crops.npz ] && gcloud storage cp /data/$OUT/figs_$s/${s}_crops.npz $B/v2/results/${s}_${OUT}_crops.npz >/dev/null 2>&1
 done
 echo DONE > /tmp/metrics_${OUT}_done; gcloud storage cp /tmp/metrics_${OUT}_done $B/v2/logs/done_metrics_${OUT} >/dev/null 2>&1

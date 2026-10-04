@@ -229,6 +229,9 @@ def make_ffbp(policy, plan, filt='dense', budget=1 << 26, trig='split', pallas_p
     L = len(levels)
     two_pi = 2.0 * math.pi
     npass = 1 if p['prec'] is None else 3            # the fused kernel: one bfloat16 pass or the three-pass split
+    if filt in ('pallas', 'pallas2') and p['prec'] == lax.Precision.HIGHEST:
+        raise ValueError('the fused kernels implement one- and three-pass products only; the six-pass (highest) setting was not built, '
+                         'since three passes reproduce it to within 0.3 dB (use filt=dense for six passes)')
     bands = {}
     on_tpu = jax.devices()[0].platform == 'tpu' or bool(os.environ.get('FFBP_FORCE_TPU_KERNELS'))   # the latter for interpret-mode tests
     if filt == 'pallas':

@@ -74,13 +74,13 @@ def config_name(tag, lab=''):
     else:
         base = {'fp64': 'float64', 'fp32': 'six-pass products' if tpu else 'float32', 'fp32_high': 'three-pass products',
                 'fp32_fast': 'single-pass products' if tpu else 'TF32 products',
-                'bf16_mm': 'single-pass, bfloat16 storage', 'f16': 'float16 products', 'f16tc': 'float32 levels, float16 final'}.get(pol, pol)
+                'bf16_mm': 'single-pass, bfloat16 storage', 'f16': ('float16 throughout' if 'cuda' in parts else 'float16 products'), 'f16tc': 'float32, float16 final stage'}.get(pol, pol)
     return a, base + (', ' + ', '.join(extra) if extra else '')
 
 
 def gen_power(num):
     """Energy per Panama image: measured on the L4, bounded from design power on the TPUs, estimated on the CPU."""
-    rows = [('L4', 'Factorized BP, float16 final, CUDA kernels', 'measured', num.get('pw.l4.ffbp.w', ''), num.get('c.panama.gpu-l4.ffbp.f16_conv.s', ''), num.get('pw.l4.ffbp.kj', '')),
+    rows = [('L4', 'Factorized BP, float16 throughout, CUDA kernels', 'measured', num.get('pw.l4.ffbp.w', ''), num.get('c.panama.gpu-l4.ffbp.f16_conv.s', ''), num.get('pw.l4.ffbp.kj', '')),
             ('L4', 'Factorized BP, float32, CUDA kernels', 'measured', num.get('pw.l4.ffbp32.w', ''), num.get('c.panama.gpu-l4.ffbp.fp32_conv.s', ''), num.get('pw.l4.ffbp32.kj', '')),
             ('L4', 'Exact BP, float16 profiles', 'measured', num.get('pw.l4.bp.w', ''), num.get('c.panama.gpu-l4.bp.cuda_f16.s', ''), num.get('pw.l4.bp.kj', '')),
             ('TPU v5e', 'Factorized BP, single-pass, fused kernels', 'design-power bound', '120 to 200', num.get('c.panama.tpu-v5e.ffbp.fp32_fast_direct.s', ''), f"{num.get('pw.v5e.lo', '')} to {num.get('pw.v5e.hi', '')}"),
@@ -117,7 +117,8 @@ KERNEL_ROWS = {
             ('cuda3', 'ffbp/f16tc_cuda', 'ffbp/fp32_cuda', 'Pulse-major filter threads (conflict-free reads, scattered loads and stores), tiled pulse filter, 4 by 2 final'),
             ('cuda4', 'ffbp/f16tc_cuda', 'ffbp/fp32_cuda', 'Coalesced window loads, children as in-place phase steps; float16 tensor-core final'),
             ('cuda5', 'ffbp/f16tc_cuda', 'ffbp/fp32_cuda', 'Rotation as a geometric sequence per thread; interleaved complex tables in the final'),
-            ('cuda6', 'ffbp/f16tc_cuda', 'ffbp/fp32_cuda', 'Output tiles staged in shared memory for coalesced stores (final build)')]}
+            ('cuda6', 'ffbp/f16tc_cuda', 'ffbp/fp32_cuda', 'Output tiles staged in shared memory for coalesced stores (float32 build of record)'),
+            ('cuda7', 'ffbp/f16_cuda', 'ffbp/fp32_cuda', 'Float16 phase history, intermediates and final-stage operands, float32 accumulation in the filters (float16 build of record)')]}
 
 
 def gen_kernels():
@@ -131,7 +132,7 @@ def gen_kernels():
         lab = os.path.basename(f)[7:-5]
         base[lab] = json.load(open(f))
     out = [r'\begin{table}[tb]', r'\centering',
-           r'\caption{Device time per Panama image (s) of each build of the factorized algorithm, two precisions per device: sixteen-bit means single-pass products on the TPUs and float16 products (JAX program) or the float16 final stage (CUDA builds) on the L4; float32 class means three-pass products on the TPUs and float32 on the L4. Each row adds to the one above; the last row of each device is the build of record in Table~\ref{tab:cost}.}',
+           r'\caption{Device time per Panama image (s) of each build of the factorized algorithm, two precisions per device: sixteen-bit means single-pass products on the TPUs and, on the L4, float16 products (JAX program), the float32 build with the float16 tensor-core final stage (CUDA builds four to six) or float16 storage throughout (build seven); float32 class means three-pass products on the TPUs and float32 on the L4. Each row adds to the one above; the builds of record in Table~\ref{tab:cost} are marked; the float32-class entry in the last L4 row is a rerun of the float32 configuration of the sixth build.}',
            r'\label{tab:kernels}', r'\small', r'\resizebox{\textwidth}{!}{\begin{tabular}{llrr}', r'\toprule', r'Device & Build & 16-bit (s) & float32 class (s) \\', r'\midrule']
     for lab in ('tpu-v6e', 'tpu-v5e', 'gpu-l4'):
         rows = KERNEL_ROWS['tpu' if lab.startswith('tpu') else 'gpu']
@@ -236,7 +237,7 @@ def main():
                               r'L4 & Exact BP, float32 profiles & float32 profiles & float64 per tile & float32 & float32 sums \\',
                               r'L4 & Exact BP, float16 profiles & float16 profiles & float64 per tile & float32 & float32 sums \\',
                               r'L4 & Factorized, float32, CUDA kernels & float32 & float64 (2 levels), float32 & float32 & float32 fused multiply-adds (levels and final) \\',
-                              r'L4 & Factorized, float32 levels, float16 final, CUDA kernels & float32 & float64 (2 levels), float32 & float32 & float32 levels; float16 operands on the tensor cores in the final stage \\',
+                              r'L4 & Factorized, float16 throughout, CUDA kernels & float16 & float64 (2 levels), float32 & float32 & float16 data into float32 fused multiply-adds in the levels; float16 operands on the tensor cores in the final stage \\',
                               r'L4 & Factorized, float16 products & float16 & float64 (2 levels), float32 & float32 & float16 operands, tensor cores \\',
                               r'L4 & Factorized, float32 & float32 & float64 (2 levels), float32 & float32 & float32 (highest setting) \\',
                               r'L4 & Factorized, TF32 products & float32 & float64 (2 levels), float32 & float32 & TF32 operands (default setting) \\',
@@ -296,13 +297,13 @@ def main():
                 r'Device & Algorithm & Arithmetic & Time (s) & Images/h & \$ per 1000 & kWh per 1000 \\', r'\midrule']
 
     lines = [r'\begin{table}[tb]', r'\centering',
-             r'\caption{Panama Canal: the selected configurations grouped by the change a viewer sees against the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, costed from the device time. Energy is that of the processor alone over the same time: measured by \texttt{nvidia-smi} on the L4; on the TPUs a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, taken as if the chip ran at that power throughout; on the CPU the 8 cores\textquotesingle{} pro-rata share of the 400~W package at the measured utilization. A bullet marks the Pareto-optimal rows of Figure~\ref{fig:teaser}: no other configuration is both cheaper and closer to the reference. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
+             r'\caption{Panama Canal: the selected configurations grouped by the visible change relative to the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, with cost computed from the device time. Energy is that of the processor alone over the pipelined per-image time that the cost column uses. On the L4 it is measured by \texttt{nvidia-smi}. On the TPUs it is a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, applied as if the chip ran at that power throughout. On the CPU it is the 8 cores\textquoteright{} pro-rata share of the 400~W package at the measured utilization. A bullet marks the rows on the Pareto front of Figure~\ref{fig:teaser}. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
              r'\label{tab:cost}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrrc}', r'\toprule',
              r'Device & Algorithm & Arithmetic & Time (s) & \$ per 1000 & kWh per 1000 & Error (dB) & Pareto \\', r'\midrule']
     panama_rows = []
     lines_other = cost_header(r'\label{tab:costother}', r'\caption{Melbourne and Iowa: device time, throughput and cost for the selected configurations, as in Table~\ref{tab:cost}. }')
     # candidates per selected row; the fastest timed form is used (ties broken toward a pipelined record)
-    record_c = [('gpu-l4', ['bp/cuda_f16']), ('gpu-l4', ['bp/cuda_fp32']), ('gpu-l4', ['ffbp/f16tc_cuda', 'ffbp/f16_conv']),
+    record_c = [('gpu-l4', ['bp/cuda_f16']), ('gpu-l4', ['bp/cuda_fp32']), ('gpu-l4', ['ffbp/f16_cuda', 'ffbp/f16_conv']),
                 ('gpu-l4', ['ffbp/fp32_cuda', 'ffbp/fp32_conv', 'ffbp/fp32']), ('gpu-l4', ['pfa/fp32_taps_corr']),
                 ('tpu-v5e', ['ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_fast_direct']), ('tpu-v5e', ['ffbp/fp32_high_pallas2_direct', 'ffbp/fp32_high_direct', 'ffbp/fp32_high']), ('tpu-v5e', ['pfa/fp32_taps_corr']),
                 ('tpu-v6e', ['ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_fast_direct']), ('tpu-v6e', ['ffbp/fp32_high_pallas2_direct', 'ffbp/fp32_high_direct', 'ffbp/fp32_high']), ('tpu-v6e', ['pfa/fp32_corr']),
@@ -407,7 +408,7 @@ def main():
     num['pareto.n'] = str(sum(d_['pareto'] for d_ in pts))
     for d_ in panama_rows:                                                   # energy per thousand images, by role
         num[f"kwh.{d_['lab']}.{d_['tag'].replace('/', '.')}"] = d_['kwh']
-    for role, lab, tag in (('l4.fp32', 'gpu-l4', 'ffbp/fp32_cuda'), ('l4.f16', 'gpu-l4', 'ffbp/f16tc_cuda'), ('v6e.high', 'tpu-v6e', 'ffbp/fp32_high_pallas2_direct'),
+    for role, lab, tag in (('l4.fp32', 'gpu-l4', 'ffbp/fp32_cuda'), ('l4.f16', 'gpu-l4', 'ffbp/f16_cuda'), ('v6e.high', 'tpu-v6e', 'ffbp/fp32_high_pallas2_direct'),
                            ('v5e.high', 'tpu-v5e', 'ffbp/fp32_high_pallas2_direct'), ('v6e.fast', 'tpu-v6e', 'ffbp/fp32_fast_pallas2_direct'), ('v5e.fast', 'tpu-v5e', 'ffbp/fp32_fast_pallas2_direct'),
                            ('cpu.fp32', 'cpu-c4d16', 'ffbp/fp32_conv_direct'), ('l4.pfa', 'gpu-l4', 'pfa/fp32_taps_corr')):
         for d_ in panama_rows:
@@ -453,7 +454,7 @@ def main():
              r'Device & Configuration & Error & Max & Coh. min & Amp. p99 & max & Phase p99 & max \\', r'\midrule']
     rows = rows_of(m, 'panama')
     prec_order = [('gpu-l4', 'bp/cuda_fp32'), ('gpu-l4', 'bp/cuda_f16'), ('gpu-l4', 'bp/cuda_fp32_ov16'), ('gpu-l4', 'bp/cuda_f16_ov16'),
-                  ('gpu-l4', 'ffbp/fp32_cuda'), ('gpu-l4', 'ffbp/f16tc_cuda'),
+                  ('gpu-l4', 'ffbp/fp32_cuda'), ('gpu-l4', 'ffbp/f16_cuda'), ('gpu-l4', 'ffbp/f16tc_cuda'),
                   ('gpu-l4', 'ffbp/fp32'), ('gpu-l4', 'ffbp/fp32_fast'), ('gpu-l4', 'ffbp/f16_conv'),
                   ('tpu-v6e', 'ffbp/fp32_high_pallas2_direct'), ('tpu-v6e', 'ffbp/fp32_fast_pallas2_direct'), ('tpu-v5e', 'ffbp/fp32_high_pallas2_direct'), ('tpu-v5e', 'ffbp/fp32_fast_pallas2_direct'),
                   ('tpu-v6e', 'ffbp/fp32'), ('tpu-v6e', 'ffbp/fp32_high_direct'), ('tpu-v6e', 'ffbp/fp32_fast'), ('tpu-v6e', 'ffbp/bf16_mm'),
@@ -513,7 +514,7 @@ def main():
     # ---- derived numbers
     KTAG = {('tpu-v6e', 'ffbp/fp32_high_direct'): 'ffbp/fp32_high_pallas2_direct', ('tpu-v6e', 'ffbp/fp32_fast_direct'): 'ffbp/fp32_fast_pallas2_direct',
             ('tpu-v5e', 'ffbp/fp32_high_direct'): 'ffbp/fp32_high_pallas2_direct', ('tpu-v5e', 'ffbp/fp32_fast_direct'): 'ffbp/fp32_fast_pallas2_direct',
-            ('gpu-l4', 'ffbp/fp32_conv'): 'ffbp/fp32_cuda', ('gpu-l4', 'ffbp/f16_conv'): 'ffbp/f16tc_cuda'}
+            ('gpu-l4', 'ffbp/fp32_conv'): 'ffbp/fp32_cuda', ('gpu-l4', 'ffbp/f16_conv'): 'ffbp/f16_cuda'}
 
     def ktag(lab, tag, s_='panama'):
         """The kernel build's tag for a role when it was timed on that scene, else the XLA tag."""
@@ -550,12 +551,16 @@ def main():
 
     for lab, a_, b_, key in (('tpu-v6e', 'ffbp/fp32_high_direct', 'ffbp/fp32_high_pallas2_direct', 'v6e.3'), ('tpu-v6e', 'ffbp/fp32_fast_direct', 'ffbp/fp32_fast_pallas2_direct', 'v6e.1'),
                              ('tpu-v5e', 'ffbp/fp32_high_direct', 'ffbp/fp32_high_pallas2_direct', 'v5e.3'), ('tpu-v5e', 'ffbp/fp32_fast_direct', 'ffbp/fp32_fast_pallas2_direct', 'v5e.1'),
-                             ('gpu-l4', 'ffbp/fp32_conv', 'ffbp/fp32_cuda', 'l4.32'), ('gpu-l4', 'ffbp/f16_conv', 'ffbp/f16tc_cuda', 'l4.16')):
+                             ('gpu-l4', 'ffbp/fp32_conv', 'ffbp/fp32_cuda', 'l4.32'), ('gpu-l4', 'ffbp/f16_conv', 'ffbp/f16_cuda', 'l4.16')):
         v = ratio(t_base(lab, a_), t_raw('panama', lab, b_))
         if v:
             num[f'kgain.{key}'] = v
             num[f'kbase.{key}.s'] = fmt(t_base(lab, a_), 1)
             num[f'knew.{key}.s'] = fmt(t_raw('panama', lab, b_), 1)
+    num['l4.f16tc.s'] = fmt(t_raw('panama', 'gpu-l4', 'ffbp/f16tc_cuda'), 1)
+    t32, t16 = t_raw('panama', 'gpu-l4', 'ffbp/fp32_cuda'), t_raw('panama', 'gpu-l4', 'ffbp/f16_cuda')
+    if t32 and t16:
+        num['l4.f16.gain.s'] = fmt(t32 - t16, 1)
     v = ratio(t_of('panama', 'gpu-l4', 'ffbp/f16_conv'), t_of('panama', 'tpu-v6e', 'ffbp/fp32_fast_direct'))
     if v: num['concl.v6e.vs.l4'] = v
     v = ratio(t_of('panama', 'gpu-l4', 'ffbp/fp32_conv'), t_of('panama', 'tpu-v6e', 'ffbp/fp32_high_direct'))
@@ -641,18 +646,20 @@ def main():
             u = usd_of(s_, lab, ktag(lab, tag, s_))
             if u:
                 num[f'c.{s_}.{key}.usd'] = f'{u:.2f}'
-    # exact backprojection's time against the factorized images, and the float16 final stage's loss
+    # exact backprojection's time against the factorized images, and the float16 builds' loss
     for tag, key, ref_ in (('bp/cuda_f16', 'bp.time.vs.ffbp16', 'ffbp/fp32_cuda'), ('bp/cuda_fp32', 'bp.time.vs.ffbp32', 'ffbp/fp32_cuda')):
         v = ratio(t_raw('panama', 'gpu-l4', tag), t_raw('panama', 'gpu-l4', ref_), 0)
         if v: num[key] = v
     pr_ = rows_of(m, 'panama')
+    if ('gpu-l4', 'ffbp/f16_cuda') in pr_ and ('gpu-l4', 'ffbp/fp32_cuda') in pr_:
+        num['l4.f16.loss'] = f"{pr_[('gpu-l4', 'ffbp/f16_cuda')]['err_db'] - pr_[('gpu-l4', 'ffbp/fp32_cuda')]['err_db']:.1f}"
     if ('gpu-l4', 'ffbp/f16tc_cuda') in pr_ and ('gpu-l4', 'ffbp/fp32_cuda') in pr_:
         num['l4.f16tc.loss'] = f"{pr_[('gpu-l4', 'ffbp/f16tc_cuda')]['err_db'] - pr_[('gpu-l4', 'ffbp/fp32_cuda')]['err_db']:.1f}"
     # single-pass penalties, polar-format time ratio, price fraction, TPU correction slowdown
     pr0 = rows_of(m, 'panama')
     def err_(lab, tag):
         r = pr0.get((lab, tag)); return None if r is None else r['err_db']
-    e_sp, e_3, e_l4f16 = err_('tpu-v6e', 'ffbp/fp32_fast_pallas2_direct'), err_('tpu-v6e', 'ffbp/fp32_high_pallas2_direct'), err_('gpu-l4', 'ffbp/f16tc_cuda')
+    e_sp, e_3, e_l4f16 = err_('tpu-v6e', 'ffbp/fp32_fast_pallas2_direct'), err_('tpu-v6e', 'ffbp/fp32_high_pallas2_direct'), err_('gpu-l4', 'ffbp/f16_cuda')
     if e_sp is not None and e_3 is not None:
         num['sp.vs.3pass.db'] = f'{e_sp - e_3:.0f}'
     if e_sp is not None and e_l4f16 is not None:
@@ -677,14 +684,18 @@ def main():
     if ub and uf:
         num['bp.vs.ffbp32.lo'] = f'{ub / uf:.0f}'
     # exact backprojection against the factorized images of the L4
-    for tag, key, ref_ in (('bp/cuda_f16', 'bp.vs.ffbp16', 'ffbp/f16tc_cuda'), ('bp/cuda_fp32', 'bp.vs.ffbp32', 'ffbp/fp32_cuda')):
+    for tag, key, ref_ in (('bp/cuda_f16', 'bp.vs.ffbp16', 'ffbp/f16_cuda'), ('bp/cuda_fp32', 'bp.vs.ffbp32', 'ffbp/fp32_cuda')):
         ub, uf = usd_of('panama', 'gpu-l4', tag), usd_of('panama', 'gpu-l4', ref_)
         if ub and uf:
             num[key] = f'{ub / uf:.0f}'
-    # the L4's saving from the float16 final stage, and the XLA-program spread of the three accelerators
-    u16, u32 = usd_of('panama', 'gpu-l4', 'ffbp/f16tc_cuda'), usd_of('panama', 'gpu-l4', 'ffbp/fp32_cuda')
+    # the L4's saving from float16, and the XLA-program spread of the three accelerators
+    u16, u32 = usd_of('panama', 'gpu-l4', 'ffbp/f16_cuda'), usd_of('panama', 'gpu-l4', 'ffbp/fp32_cuda')
     if u16 and u32:
         num['l4.f16.saving.pct'] = f'{100 * (1 - u16 / u32):.0f}'
+    for lab, key in (('tpu-v6e', 'v6e'), ('tpu-v5e', 'v5e')):
+        u1, u3 = usd_of('panama', lab, 'ffbp/fp32_fast_pallas2_direct'), usd_of('panama', lab, 'ffbp/fp32_high_pallas2_direct')
+        if u1 and u3:
+            num[f'sp.saving.{key}.pct'] = f'{100 * (1 - u1 / u3):.0f}'
     us0 = [usd_of('panama', lab, tag) for lab, tag in (('gpu-l4', 'ffbp/fp32_conv'), ('tpu-v5e', 'ffbp/fp32_high_direct'), ('tpu-v6e', 'ffbp/fp32_high_direct'))]
     if all(us0):
         num['spread0.panama.fp32.pct'] = f'{100 * (max(us0) / min(us0) - 1):.0f}'

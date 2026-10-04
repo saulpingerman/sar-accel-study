@@ -30,7 +30,7 @@ def teaser(m):
     cpu_best = min(cs, key=lambda r: r['s_per_image'])['s_per_image'] if cs else None
     # (label, timing tag, metrics tag, filled, short name)
     record = [('gpu-l4', 'bp/cuda_f16', 'bp/cuda_f16', True, 'L4 exact, f16'), ('gpu-l4', 'bp/cuda_fp32', 'bp/cuda_fp32', True, 'L4 exact, f32'),
-              ('gpu-l4', 'ffbp/f16tc_cuda', 'ffbp/f16tc_cuda', True, 'L4 float16 final'), ('gpu-l4', 'ffbp/fp32_cuda', 'ffbp/fp32_cuda', True, 'L4 float32'),
+              ('gpu-l4', 'ffbp/f16_cuda', 'ffbp/f16_cuda', True, 'L4 float16'), ('gpu-l4', 'ffbp/fp32_cuda', 'ffbp/fp32_cuda', True, 'L4 float32'),
               ('gpu-l4', 'pfa/fp32_taps_corr', 'pfa/fp32_corr', True, 'L4 polar format'),
               ('tpu-v6e', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_fast_pallas2_direct', True, 'v6e single-pass'), ('tpu-v6e', 'ffbp/fp32_high_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', True, 'v6e three-pass'),
               ('tpu-v6e', 'pfa/fp32_corr', 'pfa/fp32_corr', True, 'v6e polar format'),
@@ -70,7 +70,7 @@ def teaser(m):
         else:
             ax.scatter(p['x'], p['y'], s=36, c=COL[p['lab']] if p['filled'] else 'white', alpha=0.35, **kw)
     # labels for the front only, placed above-left of each point along the front
-    offsets = {'L4 polar format': (7, 6), 'v5e single-pass': (-7, 6), 'L4 float16 final': (-7, 8),
+    offsets = {'L4 polar format': (7, 6), 'v5e single-pass': (-7, 6), 'L4 float16': (-7, 8),
                'L4 float32': (7, -10), 'v5e three-pass': (7, -9), 'CPU float32': (-7, 7), 'CPU float64': (-7, -10)}
     for p in front:
         dx, dy = offsets.get(p['name'], (6, 6))
@@ -293,8 +293,8 @@ if __name__ == '__main__':
         rings(m)
     scenes()
     profile()
-    zoom('panama', [('gpu-l4/bp_cuda_f16', 'L4 exact BP, fp16'), ('gpu-l4/ffbp_f16', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format, corrected')],
+    zoom('panama', [('gpu-l4/bp_cuda_f16', 'L4 exact BP, fp16'), ('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format, corrected')],
          ['locks', 'port', 'ships', 'corner'])
-    pixel_zoom('panama', [('gpu-l4/ffbp_f16', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format, corrected')],
+    pixel_zoom('panama', [('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format, corrected')],
                ['locks', 'port', 'ships'])
     print('figures written')

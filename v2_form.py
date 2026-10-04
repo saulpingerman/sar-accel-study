@@ -121,7 +121,7 @@ def main():
     ap.add_argument('--pallas-nc', type=int, default=8, help='pallas2: children per parent load')
     ap.add_argument('--pallas-ng', type=int, default=8, help='pallas2: first-level tiles per group')
     ap.add_argument('--no-pallas-final', action='store_true', help='pallas2: keep the XLA final stage')
-    ap.add_argument('--cuda-final', default='fp32', help='ffbpcuda: final stage fp32 (CUDA cores) or f16tc (tensor cores), comma list')
+    ap.add_argument('--cuda-final', default='fp32', help='ffbpcuda configurations, comma list: fp32 (float32 throughout), f16tc (float32 with the tensor-core float16 final), f16 (float16 storage of the phase history and every intermediate, float32 accumulation, tensor-core final)')
     ap.add_argument('--pallas-final', type=int, default=2, help='pallas2 final stage: 0 XLA, 1 direct-trig kernel, 2 recurrence kernel, 3 recurrence with four tiles per step')
     ap.add_argument('--pallas-gen', type=int, default=3, help='pallas2 level kernel generation: 2 or 3 (3: coarse tables precomputed, pulse decimation fused)')
     ap.add_argument('--pad', type=int, default=0, help='pad pulses and samples with zeros to multiples of this (TPU matrix-unit alignment)')
@@ -194,14 +194,16 @@ def main():
         print('plan', [(l['sx'], l['sy'], l['Dk'], l['Dp'], l['Ko'], l['Po']) for l in plan['levels']], f'{time.perf_counter() - t:.1f}s', flush=True)
         wpd, wkd = cp.asarray(wp), cp.asarray(wk)
         for fmode in a.cuda_final.split(','):
+          store = 'f16' if fmode == 'f16' else 'fp32'
+          fin = 'f16tc' if fmode in ('f16tc', 'f16') else 'fp32'
           tag = f'ffbp/{fmode}_cuda' + pad_tag
           try:
               def host():
                   return ffbp2.collection_arrays(plan, col.ant)
 
-              def run_one(coll, Sd=None, fmode=fmode):
+              def run_one(coll, Sd=None, fin=fin, store=store):
                   """Sd: the weighted phase history on the device; uploaded here when None (the pipelined loop)."""
-                  form = ffbp_cuda.make_ffbp_cuda(plan, coll, final_mode=fmode)
+                  form = ffbp_cuda.make_ffbp_cuda(plan, coll, final_mode=fin, store=store)
                   if Sd is None:
                       Sd = cp.asarray(S) * wpd[:, None] * wkd[None, :]
                   return form(Sd, ng=a.pallas_ng)
