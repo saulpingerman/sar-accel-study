@@ -186,6 +186,47 @@ The conclusions hold for the fastest form of each flow found in this study (Sect
 
 \paragraph{Code and data.} The code, the cloud run scripts, every measurement record behind the tables and the build of this report are at \url{https://github.com/saulpingerman/sar-accel-study}. The radar data are from the Umbra Open Data Program~\cite{umbra2023} and the optical images from Copernicus Sentinel-2~\cite{sentinel2}; neither is redistributed, and the scripts fetch both from their public sources.
 
+\begin{thebibliography}{99}
+\bibitem{umbra2023} Umbra Lab, Inc., ``Umbra Open Data Program,'' 2023. [Online]. Available: \url{https://umbra.space/open-data}
+\bibitem{raney1971} R. K. Raney, ``Synthetic aperture imaging radar and moving targets,'' \emph{IEEE Trans. Aerosp. Electron. Syst.}, vol. AES-7, no. 3, pp. 499--505, 1971.
+\bibitem{sentinel2} European Space Agency, ``Copernicus Sentinel-2 Level-2A surface reflectance, tiles S2B\_17PPK\_20230723 and S2A\_17PPK\_20240223,'' contains modified Copernicus Sentinel data 2023 and 2024, accessed October 2026 through the Earth Search STAC catalog. [Online]. Available: \url{https://registry.opendata.aws/sentinel-2-l2a-cogs/}
+\bibitem{fasih2010} A. R. Fasih and T. D. R. Hartley, ``GPU-accelerated synthetic aperture radar backprojection in CUDA,'' in \emph{Proc. IEEE Radar Conf.}, Washington, DC, 2010, pp. 1408--1413.
+\bibitem{benson2012} T. M. Benson, D. P. Campbell, and D. A. Cook, ``Gigapixel spotlight synthetic aperture radar backprojection using clusters of GPUs and CUDA,'' in \emph{Proc. IEEE Radar Conf.}, 2012, pp. 853--858.
+\bibitem{park2012} J. Park, P. T. P. Tang, M. Smelyanskiy, D. Kim, and T. Benson, ``Efficient backprojection-based synthetic aperture radar computation with many-core processors,'' in \emph{Proc. Int. Conf. High Performance Computing, Networking, Storage and Analysis (SC '12)}, Salt Lake City, UT, 2012.
+\bibitem{cordes2009} B. Cordes and M. Leeser, ``Parallel backprojection: A case study in high-performance reconfigurable computing,'' \emph{EURASIP J. Embedded Syst.}, vol. 2009, art. 727965, 2009.
+\bibitem{capozzoli2013} A. Capozzoli, C. Curcio, and A. Liseno, ``Fast GPU-based interpolation for SAR backprojection,'' \emph{Progress In Electromagnetics Research}, vol. 133, pp. 259--283, 2013.
+\bibitem{xu2022} Y. Xu, Z. Zhang, L. Chen, and L. Yang, ``The adaptive streaming SAR back-projection algorithm based on half-precision in GPU,'' \emph{Electronics}, vol. 11, no. 18, art. 2807, 2022.
+\bibitem{frey2009} O. Frey, C. Magnard, M. R\"uegg, and E. Meier, ``Focusing of airborne synthetic aperture radar data from highly nonlinear flight tracks,'' \emph{IEEE Trans. Geosci. Remote Sens.}, vol. 47, no. 6, pp. 1844--1858, 2009.
+\bibitem{ponce2011} O. Ponce, P. Prats, M. Rodriguez-Cassola, R. Scheiber, and A. Reigber, ``Processing of circular SAR trajectories with fast factorized back-projection,'' in \emph{Proc. IEEE Int. Geosci. Remote Sens. Symp. (IGARSS)}, 2011, pp. 3692--3695.
+\bibitem{doerry2007} A. W. Doerry, ``Wavefront curvature limitations and compensation to polar format processing for synthetic aperture radar images,'' Sandia National Laboratories, Albuquerque, NM, Rep. SAND2007-0046, 2007.
+\bibitem{gorham2016} L. A. Gorham and B. D. Rigling, ``Scene size limits for polar format algorithm,'' \emph{IEEE Trans. Aerosp. Electron. Syst.}, vol. 52, no. 1, pp. 73--84, 2016.
+\bibitem{jakowatz2006} C. V. Jakowatz, Jr. and N. Doren, ``Comparison of polar formatting and back-projection algorithms for spotlight-mode SAR image formation,'' in \emph{Proc. SPIE 6237, Algorithms for Synthetic Aperture Radar Imagery XIII}, 2006, art. 62370H.
+\bibitem{jouppi2017} N. P. Jouppi \emph{et al.}, ``In-datacenter performance analysis of a tensor processing unit,'' in \emph{Proc. 44th Annu. Int. Symp. Computer Architecture (ISCA)}, Toronto, ON, 2017, pp. 1--12.
+\bibitem{cudaguide} NVIDIA Corporation, ``CUDA C++ Programming Guide,'' Section 5.4.1, Arithmetic instructions, 2025. [Online]. Available: \url{https://docs.nvidia.com/cuda/cuda-c-programming-guide/}
+\bibitem{google2024trillium} Google Cloud, ``Introducing Trillium, sixth-generation TPUs,'' May 2024. [Online]. Available: \url{https://cloud.google.com/blog/products/compute/introducing-trillium-6th-gen-tpus}
+\bibitem{introl2025} Introl, ``Google TPU architecture: 7 generations explained,'' 2025. [Online]. Available: \url{https://introl.com/blog/google-tpu-architecture-complete-guide-7-generations}
+\bibitem{gpuadvisor2025} GPU Advisor, ``TPU v6e (Trillium) specs,'' 2025. [Online]. Available: \url{https://gpuadvisor.com/gpu/tpu-v6e}
+\bibitem{jouppi2023} N. P. Jouppi \emph{et al.}, ``TPU v4: An optically reconfigurable supercomputer for machine learning with hardware support for embeddings,'' in \emph{Proc. 50th Annu. Int. Symp. Computer Architecture (ISCA)}, Orlando, FL, 2023.
+\bibitem{lu2020} T. Lu, Y.-F. Chen, B. Hechtman, T. Wang, and J. Anderson, ``Large-scale discrete Fourier transform on TPUs,'' arXiv:2002.03260, 2020.
+\bibitem{lu2021} T. Lu, T. Marin, Y. Zhuo, Y.-F. Chen, and C. Ma, ``Nonuniform fast Fourier transform on TPUs,'' in \emph{Proc. IEEE 18th Int. Symp. Biomedical Imaging (ISBI)}, 2021.
+\bibitem{lewis2022} A. G. M. Lewis \emph{et al.}, ``Large-scale distributed linear algebra with tensor processing units,'' \emph{Proc. Natl. Acad. Sci. USA}, vol. 119, no. 33, 2022.
+\bibitem{gorham2010} L. A. Gorham and L. J. Moore, ``SAR image formation toolbox for MATLAB,'' in \emph{Proc. SPIE 7699, Algorithms for Synthetic Aperture Radar Imagery XVII}, 2010, p. 769906.
+\bibitem{mccorkle1996} J. W. McCorkle and M. Rofheart, ``An order $N^2 \log(N)$ backprojector algorithm for focusing wide-angle wide-bandwidth arbitrary-motion synthetic aperture radar,'' in \emph{Proc. SPIE 2747, Radar Sensor Technology}, 1996, pp. 25--36.
+\bibitem{xiao2000} S. Xiao, D. C. Munson, Jr., S. Basu, and Y. Bresler, ``An $N^2 \log N$ back-projection algorithm for SAR image formation,'' in \emph{Conf. Rec. 34th Asilomar Conf. Signals, Systems and Computers}, 2000, pp. 3--7.
+\bibitem{ulander2003} L. M. H. Ulander, H. Hellsten, and G. Stenstr\"om, ``Synthetic-aperture radar processing using fast factorized back-projection,'' \emph{IEEE Trans. Aerosp. Electron. Syst.}, vol. 39, no. 3, pp. 760--776, 2003.
+\bibitem{carrara1995} W. G. Carrara, R. S. Goodman, and R. M. Majewski, \emph{Spotlight Synthetic Aperture Radar: Signal Processing Algorithms}. Norwood, MA: Artech House, 1995.
+\bibitem{jakowatz1996} C. V. Jakowatz, Jr., D. E. Wahl, P. H. Eichel, D. C. Ghiglia, and P. A. Thompson, \emph{Spotlight-Mode Synthetic Aperture Radar: A Signal Processing Approach}. Boston, MA: Kluwer, 1996.
+\bibitem{rabiner1969} L. R. Rabiner, R. W. Schafer, and C. M. Rader, ``The chirp z-transform algorithm,'' \emph{IEEE Trans. Audio Electroacoust.}, vol. 17, no. 2, pp. 86--92, 1969.
+\bibitem{taylor1955} T. T. Taylor, ``Design of line-source antennas for narrow beamwidth and low side lobes,'' \emph{IRE Trans. Antennas Propag.}, vol. 3, no. 1, pp. 16--28, 1955.
+\bibitem{kaiser1974} J. F. Kaiser, ``Nonrecursive digital filter design using the $I_0$-sinh window function,'' in \emph{Proc. IEEE Int. Symp. Circuits and Systems}, 1974, pp. 20--23.
+\bibitem{higham2002} N. J. Higham, \emph{Accuracy and Stability of Numerical Algorithms}, 2nd ed. Philadelphia, PA: SIAM, 2002.
+\bibitem{wang2019bfloat16} S. Wang and P. Kanwar, ``BFloat16: The secret to high performance on Cloud TPUs,'' Google Cloud Blog, Aug. 2019.
+\bibitem{jax2018} J. Bradbury \emph{et al.}, ``JAX: Composable transformations of Python+NumPy programs,'' 2018. [Online]. Available: \url{https://github.com/jax-ml/jax}
+\bibitem{lam2015} S. K. Lam, A. Pitrou, and S. Seibert, ``Numba: A LLVM-based Python JIT compiler,'' in \emph{Proc. 2nd Workshop on the LLVM Compiler Infrastructure in HPC}, 2015.
+\bibitem{okuta2017} R. Okuta, Y. Unno, D. Nishino, S. Hido, and C. Loomis, ``CuPy: A NumPy-compatible library for NVIDIA GPU calculations,'' in \emph{Proc. Workshop on Machine Learning Systems (LearningSys) at NIPS}, 2017.
+\bibitem{barnett2019} A. H. Barnett, J. Magland, and L. af Klinteberg, ``A parallel nonuniform fast Fourier transform library based on an `exponential of semicircle' kernel,'' \emph{SIAM J. Sci. Comput.}, vol. 41, no. 5, pp. C479--C504, 2019.
+\end{thebibliography}
+
 \clearpage
 \appendix
 \section{Algorithms}
@@ -371,46 +412,5 @@ Table~\ref{tab:prec} gives the error statistics of the selected Panama configura
 
 % BEGIN GEN fullstats
 % END GEN fullstats
-
-\begin{thebibliography}{99}
-\bibitem{umbra2023} Umbra Lab, Inc., ``Umbra Open Data Program,'' 2023. [Online]. Available: \url{https://umbra.space/open-data}
-\bibitem{raney1971} R. K. Raney, ``Synthetic aperture imaging radar and moving targets,'' \emph{IEEE Trans. Aerosp. Electron. Syst.}, vol. AES-7, no. 3, pp. 499--505, 1971.
-\bibitem{sentinel2} European Space Agency, ``Copernicus Sentinel-2 Level-2A surface reflectance, tiles S2B\_17PPK\_20230723 and S2A\_17PPK\_20240223,'' contains modified Copernicus Sentinel data 2023 and 2024, accessed October 2026 through the Earth Search STAC catalog. [Online]. Available: \url{https://registry.opendata.aws/sentinel-2-l2a-cogs/}
-\bibitem{fasih2010} A. R. Fasih and T. D. R. Hartley, ``GPU-accelerated synthetic aperture radar backprojection in CUDA,'' in \emph{Proc. IEEE Radar Conf.}, Washington, DC, 2010, pp. 1408--1413.
-\bibitem{benson2012} T. M. Benson, D. P. Campbell, and D. A. Cook, ``Gigapixel spotlight synthetic aperture radar backprojection using clusters of GPUs and CUDA,'' in \emph{Proc. IEEE Radar Conf.}, 2012, pp. 853--858.
-\bibitem{park2012} J. Park, P. T. P. Tang, M. Smelyanskiy, D. Kim, and T. Benson, ``Efficient backprojection-based synthetic aperture radar computation with many-core processors,'' in \emph{Proc. Int. Conf. High Performance Computing, Networking, Storage and Analysis (SC '12)}, Salt Lake City, UT, 2012.
-\bibitem{cordes2009} B. Cordes and M. Leeser, ``Parallel backprojection: A case study in high-performance reconfigurable computing,'' \emph{EURASIP J. Embedded Syst.}, vol. 2009, art. 727965, 2009.
-\bibitem{capozzoli2013} A. Capozzoli, C. Curcio, and A. Liseno, ``Fast GPU-based interpolation for SAR backprojection,'' \emph{Progress In Electromagnetics Research}, vol. 133, pp. 259--283, 2013.
-\bibitem{xu2022} Y. Xu, Z. Zhang, L. Chen, and L. Yang, ``The adaptive streaming SAR back-projection algorithm based on half-precision in GPU,'' \emph{Electronics}, vol. 11, no. 18, art. 2807, 2022.
-\bibitem{frey2009} O. Frey, C. Magnard, M. R\"uegg, and E. Meier, ``Focusing of airborne synthetic aperture radar data from highly nonlinear flight tracks,'' \emph{IEEE Trans. Geosci. Remote Sens.}, vol. 47, no. 6, pp. 1844--1858, 2009.
-\bibitem{ponce2011} O. Ponce, P. Prats, M. Rodriguez-Cassola, R. Scheiber, and A. Reigber, ``Processing of circular SAR trajectories with fast factorized back-projection,'' in \emph{Proc. IEEE Int. Geosci. Remote Sens. Symp. (IGARSS)}, 2011, pp. 3692--3695.
-\bibitem{doerry2007} A. W. Doerry, ``Wavefront curvature limitations and compensation to polar format processing for synthetic aperture radar images,'' Sandia National Laboratories, Albuquerque, NM, Rep. SAND2007-0046, 2007.
-\bibitem{gorham2016} L. A. Gorham and B. D. Rigling, ``Scene size limits for polar format algorithm,'' \emph{IEEE Trans. Aerosp. Electron. Syst.}, vol. 52, no. 1, pp. 73--84, 2016.
-\bibitem{jakowatz2006} C. V. Jakowatz, Jr. and N. Doren, ``Comparison of polar formatting and back-projection algorithms for spotlight-mode SAR image formation,'' in \emph{Proc. SPIE 6237, Algorithms for Synthetic Aperture Radar Imagery XIII}, 2006, art. 62370H.
-\bibitem{jouppi2017} N. P. Jouppi \emph{et al.}, ``In-datacenter performance analysis of a tensor processing unit,'' in \emph{Proc. 44th Annu. Int. Symp. Computer Architecture (ISCA)}, Toronto, ON, 2017, pp. 1--12.
-\bibitem{cudaguide} NVIDIA Corporation, ``CUDA C++ Programming Guide,'' Section 5.4.1, Arithmetic instructions, 2025. [Online]. Available: \url{https://docs.nvidia.com/cuda/cuda-c-programming-guide/}
-\bibitem{google2024trillium} Google Cloud, ``Introducing Trillium, sixth-generation TPUs,'' May 2024. [Online]. Available: \url{https://cloud.google.com/blog/products/compute/introducing-trillium-6th-gen-tpus}
-\bibitem{introl2025} Introl, ``Google TPU architecture: 7 generations explained,'' 2025. [Online]. Available: \url{https://introl.com/blog/google-tpu-architecture-complete-guide-7-generations}
-\bibitem{gpuadvisor2025} GPU Advisor, ``TPU v6e (Trillium) specs,'' 2025. [Online]. Available: \url{https://gpuadvisor.com/gpu/tpu-v6e}
-\bibitem{jouppi2023} N. P. Jouppi \emph{et al.}, ``TPU v4: An optically reconfigurable supercomputer for machine learning with hardware support for embeddings,'' in \emph{Proc. 50th Annu. Int. Symp. Computer Architecture (ISCA)}, Orlando, FL, 2023.
-\bibitem{lu2020} T. Lu, Y.-F. Chen, B. Hechtman, T. Wang, and J. Anderson, ``Large-scale discrete Fourier transform on TPUs,'' arXiv:2002.03260, 2020.
-\bibitem{lu2021} T. Lu, T. Marin, Y. Zhuo, Y.-F. Chen, and C. Ma, ``Nonuniform fast Fourier transform on TPUs,'' in \emph{Proc. IEEE 18th Int. Symp. Biomedical Imaging (ISBI)}, 2021.
-\bibitem{lewis2022} A. G. M. Lewis \emph{et al.}, ``Large-scale distributed linear algebra with tensor processing units,'' \emph{Proc. Natl. Acad. Sci. USA}, vol. 119, no. 33, 2022.
-\bibitem{gorham2010} L. A. Gorham and L. J. Moore, ``SAR image formation toolbox for MATLAB,'' in \emph{Proc. SPIE 7699, Algorithms for Synthetic Aperture Radar Imagery XVII}, 2010, p. 769906.
-\bibitem{mccorkle1996} J. W. McCorkle and M. Rofheart, ``An order $N^2 \log(N)$ backprojector algorithm for focusing wide-angle wide-bandwidth arbitrary-motion synthetic aperture radar,'' in \emph{Proc. SPIE 2747, Radar Sensor Technology}, 1996, pp. 25--36.
-\bibitem{xiao2000} S. Xiao, D. C. Munson, Jr., S. Basu, and Y. Bresler, ``An $N^2 \log N$ back-projection algorithm for SAR image formation,'' in \emph{Conf. Rec. 34th Asilomar Conf. Signals, Systems and Computers}, 2000, pp. 3--7.
-\bibitem{ulander2003} L. M. H. Ulander, H. Hellsten, and G. Stenstr\"om, ``Synthetic-aperture radar processing using fast factorized back-projection,'' \emph{IEEE Trans. Aerosp. Electron. Syst.}, vol. 39, no. 3, pp. 760--776, 2003.
-\bibitem{carrara1995} W. G. Carrara, R. S. Goodman, and R. M. Majewski, \emph{Spotlight Synthetic Aperture Radar: Signal Processing Algorithms}. Norwood, MA: Artech House, 1995.
-\bibitem{jakowatz1996} C. V. Jakowatz, Jr., D. E. Wahl, P. H. Eichel, D. C. Ghiglia, and P. A. Thompson, \emph{Spotlight-Mode Synthetic Aperture Radar: A Signal Processing Approach}. Boston, MA: Kluwer, 1996.
-\bibitem{rabiner1969} L. R. Rabiner, R. W. Schafer, and C. M. Rader, ``The chirp z-transform algorithm,'' \emph{IEEE Trans. Audio Electroacoust.}, vol. 17, no. 2, pp. 86--92, 1969.
-\bibitem{taylor1955} T. T. Taylor, ``Design of line-source antennas for narrow beamwidth and low side lobes,'' \emph{IRE Trans. Antennas Propag.}, vol. 3, no. 1, pp. 16--28, 1955.
-\bibitem{kaiser1974} J. F. Kaiser, ``Nonrecursive digital filter design using the $I_0$-sinh window function,'' in \emph{Proc. IEEE Int. Symp. Circuits and Systems}, 1974, pp. 20--23.
-\bibitem{higham2002} N. J. Higham, \emph{Accuracy and Stability of Numerical Algorithms}, 2nd ed. Philadelphia, PA: SIAM, 2002.
-\bibitem{wang2019bfloat16} S. Wang and P. Kanwar, ``BFloat16: The secret to high performance on Cloud TPUs,'' Google Cloud Blog, Aug. 2019.
-\bibitem{jax2018} J. Bradbury \emph{et al.}, ``JAX: Composable transformations of Python+NumPy programs,'' 2018. [Online]. Available: \url{https://github.com/jax-ml/jax}
-\bibitem{lam2015} S. K. Lam, A. Pitrou, and S. Seibert, ``Numba: A LLVM-based Python JIT compiler,'' in \emph{Proc. 2nd Workshop on the LLVM Compiler Infrastructure in HPC}, 2015.
-\bibitem{okuta2017} R. Okuta, Y. Unno, D. Nishino, S. Hido, and C. Loomis, ``CuPy: A NumPy-compatible library for NVIDIA GPU calculations,'' in \emph{Proc. Workshop on Machine Learning Systems (LearningSys) at NIPS}, 2017.
-\bibitem{barnett2019} A. H. Barnett, J. Magland, and L. af Klinteberg, ``A parallel nonuniform fast Fourier transform library based on an `exponential of semicircle' kernel,'' \emph{SIAM J. Sci. Comput.}, vol. 41, no. 5, pp. C479--C504, 2019.
-\end{thebibliography}
 
 \end{document}
