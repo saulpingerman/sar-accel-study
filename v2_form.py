@@ -90,7 +90,7 @@ def drive(submit, n_min, min_seconds, depth):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('mode', choices=['ref', 'ffbp', 'cuda', 'pfa'])
+    ap.add_argument('mode', choices=['ref', 'ffbp', 'cuda', 'pfa', 'ffbpcuda'])
     ap.add_argument('--resample', default='dense', help='pfa: pulse resampling as dense matmul or taps gather')
     ap.add_argument('--orient', default='1,-1', help='pfa: exponent signs along y (range) and x (azimuth)')
     ap.add_argument('--correct', action='store_true', help='pfa: resample the image at the apparent positions of the planar-wavefront model')
@@ -116,6 +116,13 @@ def main():
     ap.add_argument('--x64', action='store_true')
     ap.add_argument('--nosave', action='store_true')
     ap.add_argument('--trig', default='split', choices=['split', 'direct'])
+    ap.add_argument('--pallas-pb', type=int, default=128, help='pallas filter: pulses per kernel block')
+    ap.add_argument('--pallas-chunk', type=int, default=512, help='pallas filter: lanes per rotation chunk')
+    ap.add_argument('--pallas-nc', type=int, default=8, help='pallas2: children per parent load')
+    ap.add_argument('--pallas-ng', type=int, default=8, help='pallas2: first-level tiles per group')
+    ap.add_argument('--no-pallas-final', action='store_true', help='pallas2: keep the XLA final stage')
+    ap.add_argument('--cuda-final', default='fp32', help='ffbpcuda: final stage fp32 (CUDA cores) or f16tc (tensor cores), comma list')
+    ap.add_argument('--pallas-final', type=int, default=2, help='pallas2 final stage: 0 XLA, 1 direct-trig kernel, 2 recurrence kernel')
     ap.add_argument('--pad', type=int, default=0, help='pad pulses and samples with zeros to multiples of this (TPU matrix-unit alignment)')
     ap.add_argument('--tile', type=int, default=32, help='geometry tile of the CUDA kernel, pixels')
     ap.add_argument('--bp-oversample', type=int, default=8, help='cuda: range-profile oversampling')
@@ -175,6 +182,66 @@ def main():
         del X, Y
         img = cpu_ref.bp(rc, u, r0, np.ascontiguousarray(pos[:, 0]), np.ascontiguousarray(pos[:, 1]), np.ascontiguousarray(pos[:, 2]), dr, col.fref).reshape(nx, ny)
         done('bp/numba_fp64', img, run_s=time.perf_counter() - t)
+        return
+
+    if a.mode == 'ffbpcuda':
+        # factorized backprojection with the CUDA kernels (float32), timed like the other device paths
+        import cupy as cp
+        from sarbench import ffbp2, ffbp_cuda
+        t = time.perf_counter()
+        plan = ffbp2.make_plan(col, nx, ny, spx, spy, T=a.T, nlev=a.levels, pmax=a.pmax, e1=e1, e2=e2)
+        print('plan', [(l['sx'], l['sy'], l['Dk'], l['Dp'], l['Ko'], l['Po']) for l in plan['levels']], f'{time.perf_counter() - t:.1f}s', flush=True)
+        wpd, wkd = cp.asarray(wp), cp.asarray(wk)
+        for fmode in a.cuda_final.split(','):
+          tag = f'ffbp/{fmode}_cuda' + pad_tag
+          try:
+              def host():
+                  return ffbp2.collection_arrays(plan, col.ant)
+
+              def run_one(coll, Sd=None, fmode=fmode):
+                  """Sd: the weighted phase history on the device; uploaded here when None (the pipelined loop)."""
+                  form = ffbp_cuda.make_ffbp_cuda(plan, coll, final_mode=fmode)
+                  if Sd is None:
+                      Sd = cp.asarray(S) * wpd[:, None] * wkd[None, :]
+                  return form(Sd, ng=a.pallas_ng)
+              Sdev = cp.asarray(S) * wpd[:, None] * wkd[None, :]        # resident, as hre/him are for the JAX path
+              t = time.perf_counter()
+              coll = host()
+              out = run_one(coll, Sdev)
+              cp.cuda.Stream.null.synchronize()
+              first = time.perf_counter() - t
+              runs, hosts = [], []
+              with Monitor(gpu=True) as mon:
+                  for _ in range(a.reps):
+                      del out
+                      cp.get_default_memory_pool().free_all_blocks()
+                      t = time.perf_counter()
+                      coll = host()
+                      hosts.append(time.perf_counter() - t)
+                      out = run_one(coll, Sdev)
+                      cp.cuda.Stream.null.synchronize()
+                      runs.append(time.perf_counter() - t)
+              img = cp.asnumpy(out).astype(np.complex64)
+              del out, Sdev
+              cp.get_default_memory_pool().free_all_blocks()
+              rec = dict(first_s=first, run_s=min(runs) if runs else first, host_s=min(hosts) if hosts else None, filt='cuda', monitor=mon.result())
+              if a.stream:
+                  def submit(i):
+                      def work():
+                          o = run_one(coll)
+                          res = cp.asnumpy(o)
+                          del o
+                          cp.get_default_memory_pool().free_all_blocks()
+                          return res
+                      return work
+                  with Monitor(gpu=True) as mon:
+                      rec['stream'] = drive(submit, a.stream, a.stream_seconds, 1)
+                  rec['stream']['monitor'] = mon.result()
+              done(tag, img, **rec)
+              del img
+          except Exception as e:
+              cp.get_default_memory_pool().free_all_blocks()
+              print(tag, 'FAILED', type(e).__name__, str(e)[:400], flush=True)
         return
 
     if a.mode == 'cuda':
@@ -317,9 +384,9 @@ def main():
     Sw = S * wp[:, None] * wk[None, :]
     for filt in a.filters.split(','):
         for pol in [p for p in a.policies.split(',') if p and (a.x64 or not ffbp2.needs_x64(p))]:
-            tag = f'ffbp/{pol}' + ('' if filt == 'dense' else f'_{filt}') + ('' if a.trig == 'split' else '_direct') + pad_tag
+            tag = f'ffbp/{pol}' + ('' if filt == 'dense' else f'_{filt}') + ('' if a.trig == 'split' else '_direct') + pad_tag + ({0: '_xlafinal', 1: '_final1', 2: ''}[0 if a.no_pallas_final else a.pallas_final] if filt == 'pallas2' else '')
             try:
-                fn = ffbp2.make_ffbp(pol, plan, filt, a.budget, a.trig)
+                fn = ffbp2.make_ffbp(pol, plan, filt, a.budget, a.trig, pallas_pb=a.pallas_pb, pallas_chunk=a.pallas_chunk, pallas_nc=a.pallas_nc, pallas_ng=a.pallas_ng, pallas_final=0 if a.no_pallas_final else a.pallas_final)
                 static = ffbp2.static_arrays(pol, plan, filt)
                 hre, him, scale = ffbp2.prepare(pol, Sw)
 

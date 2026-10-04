@@ -30,11 +30,11 @@ def teaser(m):
     cpu_best = min(cs, key=lambda r: r['s_per_image'])['s_per_image'] if cs else None
     # (label, timing tag, metrics tag, filled, short name)
     record = [('gpu-l4', 'bp/cuda_f16', 'bp/cuda_f16', True, 'L4 exact, f16'), ('gpu-l4', 'bp/cuda_fp32', 'bp/cuda_fp32', True, 'L4 exact, f32'),
-              ('gpu-l4', 'ffbp/f16_conv', 'ffbp/f16_conv', True, 'L4 float16'), ('gpu-l4', 'ffbp/fp32_conv', 'ffbp/fp32', True, 'L4 float32'),
+              ('gpu-l4', 'ffbp/f16tc_cuda', 'ffbp/f16tc_cuda', True, 'L4 float16 final'), ('gpu-l4', 'ffbp/fp32_cuda', 'ffbp/fp32_cuda', True, 'L4 float32'),
               ('gpu-l4', 'pfa/fp32_taps_corr', 'pfa/fp32_corr', True, 'L4 polar format'),
-              ('tpu-v6e', 'ffbp/fp32_fast_direct', 'ffbp/fp32_fast', True, 'v6e single-pass'), ('tpu-v6e', 'ffbp/fp32_high_direct', 'ffbp/fp32_high_direct', True, 'v6e three-pass'),
+              ('tpu-v6e', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_fast_pallas2_direct', True, 'v6e single-pass'), ('tpu-v6e', 'ffbp/fp32_high_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', True, 'v6e three-pass'),
               ('tpu-v6e', 'pfa/fp32_corr', 'pfa/fp32_corr', True, 'v6e polar format'),
-              ('tpu-v5e', 'ffbp/fp32_fast_direct', 'ffbp/fp32_fast', True, 'v5e single-pass'), ('tpu-v5e', 'ffbp/fp32_high_direct', 'ffbp/fp32_high_direct', True, 'v5e three-pass'),
+              ('tpu-v5e', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_fast_pallas2_direct', True, 'v5e single-pass'), ('tpu-v5e', 'ffbp/fp32_high_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', True, 'v5e three-pass'),
               ('tpu-v5e', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'v5e polar format'),
               ('cpu-c4d16', 'ffbp/fp32_conv_direct', 'ffbp/fp32_conv_direct', True, 'CPU float32'), ('cpu-c4d16', 'ffbp/fp64_conv_direct', 'ffbp/fp64_conv_direct', True, 'CPU float64'),
               ('cpu-c4d16', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'CPU polar format')]
@@ -70,8 +70,8 @@ def teaser(m):
         else:
             ax.scatter(p['x'], p['y'], s=36, c=COL[p['lab']] if p['filled'] else 'white', alpha=0.35, **kw)
     # labels for the front only, placed above-left of each point along the front
-    offsets = {'L4 polar format': (7, 7), 'v5e single-pass': (-7, 6), 'L4 float16': (-7, 7),
-               'L4 float32': (-7, -10), 'v5e three-pass': (7, -9), 'CPU float32': (-7, 7), 'CPU float64': (-7, -10)}
+    offsets = {'L4 polar format': (7, 6), 'v5e single-pass': (-7, 6), 'L4 float16 final': (-7, 8),
+               'L4 float32': (7, -10), 'v5e three-pass': (7, -9), 'CPU float32': (-7, 7), 'CPU float64': (-7, -10)}
     for p in front:
         dx, dy = offsets.get(p['name'], (6, 6))
         ax.annotate(p['name'], (p['x'], p['y']), xytext=(dx, dy), textcoords='offset points', fontsize=7.5, color=COL[p['lab']],
@@ -89,7 +89,7 @@ def teaser(m):
     h = [Line2D([], [], marker='o', color='w', markerfacecolor=COL[k], markeredgecolor=COL[k], markersize=7, label=DEV[k]) for k in COL]
     h += [Line2D([], [], marker=MARK[a], color='w', markerfacecolor='0.6', markeredgecolor='k', markersize=7, label=n) for a, n in (('bp', 'exact backprojection'), ('ffbp', 'factorized backprojection'), ('pfa', 'polar format'))]
     h += [Line2D([], [], color='0.4', lw=1.1, label='Pareto front')]
-    ax.legend(handles=h, fontsize=7, loc='upper left', bbox_to_anchor=(0.01, 0.9), ncol=2, framealpha=0.95)
+    ax.legend(handles=h, fontsize=7, loc='center', bbox_to_anchor=(0.47, 0.62), ncol=2, framealpha=0.95)
     for sp in ('top', 'right'):
         ax.spines[sp].set_visible(False)
     fig.tight_layout()

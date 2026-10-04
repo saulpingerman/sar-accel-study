@@ -204,5 +204,45 @@
    "cpu_util": 0.002131778895444864,
    "ncpu": 44
   }
+ },
+ "ffbp/fp32_fast_pallas2_direct": {
+  "first_s": 6.025094032999732,
+  "run_s": 1.368309237000176,
+  "host_s": 0.2478312480002387,
+  "filt": "pallas2",
+  "monitor": {
+   "cpu_util": 0.005179978081761016,
+   "ncpu": 44
+  },
+  "stream": {
+   "images": 41,
+   "seconds": 60.71807681500013,
+   "images_per_s": 0.6752519537949386,
+   "s_per_image": 1.4809287028048812,
+   "monitor": {
+    "cpu_util": 0.02389994893449956,
+    "ncpu": 44
+   }
+  }
+ },
+ "ffbp/fp32_high_pallas2_direct": {
+  "first_s": 7.817273995999585,
+  "run_s": 1.9005902919998334,
+  "host_s": 0.24646389700001237,
+  "filt": "pallas2",
+  "monitor": {
+   "cpu_util": 0.0040542324442967015,
+   "ncpu": 44
+  },
+  "stream": {
+   "images": 31,
+   "seconds": 62.354219250999904,
+   "images_per_s": 0.49715962083035603,
+   "s_per_image": 2.01142642745161,
+   "monitor": {
+    "cpu_util": 0.01693583267454603,
+    "ncpu": 44
+   }
+  }
  }
 }

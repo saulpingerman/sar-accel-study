@@ -345,5 +345,57 @@
     "gpu_util_mean": 89.27439024390245
    }
   }
+ },
+ "ffbp/fp32_cuda": {
+  "first_s": 3.741018105999501,
+  "run_s": 3.585054094000043,
+  "host_s": 0.6031879949996437,
+  "filt": "cuda",
+  "monitor": {
+   "cpu_util": 0.25616059169009375,
+   "ncpu": 4,
+   "gpu_watts_mean": 64.41714285714286,
+   "gpu_watts_max": 72.19,
+   "gpu_util_mean": 78.5
+  },
+  "stream": {
+   "images": 16,
+   "seconds": 61.54391346400007,
+   "images_per_s": 0.2599769676551224,
+   "s_per_image": 3.8464945915000044,
+   "monitor": {
+    "cpu_util": 0.26269423472797,
+    "ncpu": 4,
+    "gpu_watts_mean": 64.05927419354838,
+    "gpu_watts_max": 73.41,
+    "gpu_util_mean": 87.76612903225806
+   }
+  }
+ },
+ "ffbp/f16tc_cuda": {
+  "first_s": 3.3131174410000312,
+  "run_s": 3.1586752869998236,
+  "host_s": 0.6021522709997953,
+  "filt": "cuda",
+  "monitor": {
+   "cpu_util": 0.2636061543386202,
+   "ncpu": 4,
+   "gpu_watts_mean": 64.94916666666667,
+   "gpu_watts_max": 73.2,
+   "gpu_util_mean": 83.25
+  },
+  "stream": {
+   "images": 18,
+   "seconds": 60.75691661400015,
+   "images_per_s": 0.29626256569860693,
+   "s_per_image": 3.3753842563333416,
+   "monitor": {
+    "cpu_util": 0.2639649186674347,
+    "ncpu": 4,
+    "gpu_watts_mean": 63.11958677685951,
+    "gpu_watts_max": 73.47,
+    "gpu_util_mean": 87.75206611570248
+   }
+  }
  }
 }

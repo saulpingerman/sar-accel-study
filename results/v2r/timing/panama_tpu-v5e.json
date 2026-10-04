@@ -233,5 +233,85 @@
    "cpu_util": 0.0021403706588904964,
    "ncpu": 24
   }
+ },
+ "ffbp/fp32_fast_pallas2_direct": {
+  "first_s": 9.030268865999915,
+  "run_s": 3.1801297939996402,
+  "host_s": 0.46693271799995273,
+  "filt": "pallas2",
+  "monitor": {
+   "cpu_util": 0.050201068696908796,
+   "ncpu": 24
+  },
+  "stream": {
+   "images": 18,
+   "seconds": 62.16667618499969,
+   "images_per_s": 0.28954419159284656,
+   "s_per_image": 3.4537042324999825,
+   "monitor": {
+    "cpu_util": 0.07785570620324318,
+    "ncpu": 24
+   }
+  }
+ },
+ "ffbp/fp32_high_pallas2_direct": {
+  "first_s": 13.888472796000315,
+  "run_s": 5.0906378640002,
+  "host_s": 0.4718464480001785,
+  "filt": "pallas2",
+  "monitor": {
+   "cpu_util": 0.04232319984965915,
+   "ncpu": 24
+  },
+  "stream": {
+   "images": 12,
+   "seconds": 64.51984767400063,
+   "images_per_s": 0.18598927977375873,
+   "s_per_image": 5.3766539728333855,
+   "monitor": {
+    "cpu_util": 0.04507579455958445,
+    "ncpu": 24
+   }
+  }
+ },
+ "ffbp/fp32_fast_pallas2_direct_xlafinal": {
+  "first_s": 10.5854892010002,
+  "run_s": 4.797516694000478,
+  "host_s": 0.46976953800003685,
+  "filt": "pallas2",
+  "monitor": {
+   "cpu_util": 0.00559658704239871,
+   "ncpu": 24
+  }
+ },
+ "ffbp/fp32_high_pallas2_direct_xlafinal": {
+  "first_s": 14.940177845000107,
+  "run_s": 6.438040043000001,
+  "host_s": 0.469814127999598,
+  "filt": "pallas2",
+  "monitor": {
+   "cpu_util": 0.004875623867867141,
+   "ncpu": 24
+  }
+ },
+ "ffbp/fp32_fast_pallas2_direct_final1": {
+  "first_s": 12.96093110900074,
+  "run_s": 4.893581108000035,
+  "host_s": 0.468859538000288,
+  "filt": "pallas2",
+  "monitor": {
+   "cpu_util": 0.00563254617019463,
+   "ncpu": 24
+  }
+ },
+ "ffbp/fp32_high_pallas2_direct_final1": {
+  "first_s": 15.663635365000118,
+  "run_s": 6.7068127330003335,
+  "host_s": 0.47040312700028153,
+  "filt": "pallas2",
+  "monitor": {
+   "cpu_util": 0.003902675554665963,
+   "ncpu": 24
+  }
  }
 }

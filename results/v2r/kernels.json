@@ -1,0 +1,346 @@
+{
+ "tpu-v6e": {
+  "pallas": {
+   "ffbp/fp32_fast_pallas_direct": {
+    "run_s": 4.513896778000003,
+    "s_per_image": 4.201817931133333
+   },
+   "ffbp/fp32_high_pallas_direct": {
+    "run_s": 5.249403314000006,
+    "s_per_image": 4.947806265076924
+   },
+   "ffbp/fp32_fast_direct": {
+    "run_s": 3.8205436150000196,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_direct": {
+    "run_s": 4.603703945000007,
+    "s_per_image": null
+   }
+  },
+  "pallas2": {
+   "ffbp/fp32_fast_pallas2_direct": {
+    "run_s": 4.108823216999781,
+    "s_per_image": 4.28302261073333
+   },
+   "ffbp/fp32_high_pallas2_direct": {
+    "run_s": 4.747400465000055,
+    "s_per_image": 4.924706347846145
+   },
+   "ffbp/fp32_fast_direct": {
+    "run_s": 3.821696290000091,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_direct": {
+    "run_s": 4.602234585999895,
+    "s_per_image": null
+   }
+  },
+  "pallas3": {
+   "ffbp/fp32_fast_pallas2_direct": {
+    "run_s": 2.0071491539997623,
+    "s_per_image": 2.161439496137926
+   },
+   "ffbp/fp32_high_pallas2_direct": {
+    "run_s": 2.750034328000311,
+    "s_per_image": 2.9132226762857107
+   },
+   "ffbp/fp32_fast_pallas2_direct_xlafinal": {
+    "run_s": 3.069146140999692,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_xlafinal": {
+    "run_s": 3.721779636000065,
+    "s_per_image": null
+   },
+   "ffbp/fp32_fast_pallas2_direct_final1": {
+    "run_s": 3.0309211710000454,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_final1": {
+    "run_s": 3.699341380000078,
+    "s_per_image": null
+   }
+  },
+  "pallas4": {
+   "ffbp/fp32_fast_pallas2_direct": {
+    "run_s": 1.9005342999998902,
+    "s_per_image": 2.0504286564333296
+   },
+   "ffbp/fp32_high_pallas2_direct": {
+    "run_s": 2.6156201369999508,
+    "s_per_image": 2.785048088818175
+   },
+   "ffbp/fp32_fast_pallas2_direct_xlafinal": {
+    "run_s": 2.954942564999783,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_xlafinal": {
+    "run_s": 3.622761961999913,
+    "s_per_image": null
+   },
+   "ffbp/fp32_fast_pallas2_direct_final1": {
+    "run_s": 2.9218209460000253,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_final1": {
+    "run_s": 3.5649600619999546,
+    "s_per_image": null
+   }
+  },
+  "pallas5": {
+   "ffbp/fp32_fast_pallas2_direct": {
+    "run_s": 4.059458866,
+    "s_per_image": 4.232382138199998
+   },
+   "ffbp/fp32_high_pallas2_direct": {
+    "run_s": 4.776792225000008,
+    "s_per_image": 4.95251258253846
+   },
+   "ffbp/fp32_fast_pallas2_direct_xlafinal": {
+    "run_s": 5.115026784999998,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_xlafinal": {
+    "run_s": 5.784773746999974,
+    "s_per_image": null
+   },
+   "ffbp/fp32_fast_pallas2_direct_final1": {
+    "run_s": 5.080093721000026,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_final1": {
+    "run_s": 5.720367812000006,
+    "s_per_image": null
+   }
+  }
+ },
+ "tpu-v5e": {
+  "pallas": {
+   "ffbp/fp32_fast_pallas_direct": {
+    "run_s": 7.716191156999969,
+    "s_per_image": 7.425443825999998
+   },
+   "ffbp/fp32_high_pallas_direct": {
+    "run_s": 10.106122411000001,
+    "s_per_image": 9.86497307157143
+   },
+   "ffbp/fp32_fast_direct": {
+    "run_s": 6.490638168000032,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_direct": {
+    "run_s": 9.286888763999968,
+    "s_per_image": null
+   }
+  },
+  "pallas2": {
+   "ffbp/fp32_fast_pallas2_direct": {
+    "run_s": 6.775893775999975,
+    "s_per_image": 7.086717636666663
+   },
+   "ffbp/fp32_high_pallas2_direct": {
+    "run_s": 8.559954800000014,
+    "s_per_image": 8.892651342999995
+   },
+   "ffbp/fp32_fast_direct": {
+    "run_s": 6.488082587000008,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_direct": {
+    "run_s": 9.288087954000275,
+    "s_per_image": null
+   }
+  },
+  "pallas3": {
+   "ffbp/fp32_fast_pallas2_direct": {
+    "run_s": 3.4131873279998217,
+    "s_per_image": 3.6886235090000006
+   },
+   "ffbp/fp32_high_pallas2_direct": {
+    "run_s": 5.583486814000025,
+    "s_per_image": 5.8876862815454425
+   },
+   "ffbp/fp32_fast_pallas2_direct_xlafinal": {
+    "run_s": 5.0268625630001225,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_xlafinal": {
+    "run_s": 6.933484558000146,
+    "s_per_image": null
+   },
+   "ffbp/fp32_fast_pallas2_direct_final1": {
+    "run_s": 5.125157027000114,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_final1": {
+    "run_s": 7.203651688999798,
+    "s_per_image": null
+   }
+  },
+  "pallas4": {
+   "ffbp/fp32_fast_pallas2_direct": {
+    "run_s": 3.1801297939996402,
+    "s_per_image": 3.4537042324999825
+   },
+   "ffbp/fp32_high_pallas2_direct": {
+    "run_s": 5.0906378640002,
+    "s_per_image": 5.3766539728333855
+   },
+   "ffbp/fp32_fast_pallas2_direct_xlafinal": {
+    "run_s": 4.797516694000478,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_xlafinal": {
+    "run_s": 6.438040043000001,
+    "s_per_image": null
+   },
+   "ffbp/fp32_fast_pallas2_direct_final1": {
+    "run_s": 4.893581108000035,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_final1": {
+    "run_s": 6.7068127330003335,
+    "s_per_image": null
+   }
+  },
+  "pallas5": {
+   "ffbp/fp32_fast_pallas2_direct": {
+    "run_s": 6.855931709000288,
+    "s_per_image": 7.164299336444452
+   },
+   "ffbp/fp32_high_pallas2_direct": {
+    "run_s": 8.760300515000381,
+    "s_per_image": 9.096410629285597
+   },
+   "ffbp/fp32_fast_pallas2_direct_xlafinal": {
+    "run_s": 8.463168946000224,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_xlafinal": {
+    "run_s": 10.104223940999873,
+    "s_per_image": null
+   },
+   "ffbp/fp32_fast_pallas2_direct_final1": {
+    "run_s": 8.568998789999569,
+    "s_per_image": null
+   },
+   "ffbp/fp32_high_pallas2_direct_final1": {
+    "run_s": 10.380618092000077,
+    "s_per_image": null
+   }
+  }
+ },
+ "gpu-l4": {
+  "pallas": {
+   "ffbp/f16_pallas": {
+    "run_s": 10.72881664199997,
+    "s_per_image": 11.809092067999984
+   },
+   "ffbp/fp32_fast_pallas": {
+    "run_s": 15.274512569999956,
+    "s_per_image": 16.14497753575
+   },
+   "ffbp/fp32_pallas": {
+    "run_s": 18.72104350999996,
+    "s_per_image": 19.5979554635
+   },
+   "ffbp/f16_conv": {
+    "run_s": 11.128395562999913,
+    "s_per_image": null
+   },
+   "ffbp/fp32_conv": {
+    "run_s": 13.711364646999982,
+    "s_per_image": null
+   }
+  },
+  "cuda": {
+   "ffbp/fp32_cuda": {
+    "run_s": 5.619079659999898,
+    "s_per_image": 5.393134143666657
+   },
+   "ffbp/f16_conv": {
+    "run_s": 11.114849135999975,
+    "s_per_image": null
+   },
+   "ffbp/fp32_conv": {
+    "run_s": 13.73985482299986,
+    "s_per_image": null
+   }
+  },
+  "cuda2": {
+   "ffbp/fp32_cuda": {
+    "run_s": 4.6109572969999135,
+    "s_per_image": 4.394931919285747
+   },
+   "ffbp/f16_conv": {
+    "run_s": 11.161684744000013,
+    "s_per_image": null
+   },
+   "ffbp/fp32_conv": {
+    "run_s": 13.739292587999444,
+    "s_per_image": null
+   }
+  },
+  "cuda3": {
+   "ffbp/fp32_cuda": {
+    "run_s": 5.44654101299966,
+    "s_per_image": 5.718652688090928
+   },
+   "ffbp/f16_conv": {
+    "run_s": 11.111152608999873,
+    "s_per_image": null
+   },
+   "ffbp/fp32_conv": {
+    "run_s": 13.73864359899926,
+    "s_per_image": null
+   }
+  },
+  "cuda4": {
+   "ffbp/fp32_cuda": {
+    "run_s": 4.39465966500029,
+    "s_per_image": 4.6616850283076365
+   },
+   "ffbp/f16tc_cuda": {
+    "run_s": 3.7523529619993496,
+    "s_per_image": 3.976392353437518
+   },
+   "ffbp/f16_conv": {
+    "run_s": 11.17704095299996,
+    "s_per_image": null
+   },
+   "ffbp/fp32_conv": {
+    "run_s": 13.744020639000155,
+    "s_per_image": null
+   }
+  },
+  "cuda5": {
+   "ffbp/fp32_cuda": {
+    "run_s": 3.9792062819997227,
+    "s_per_image": 4.240772346266628
+   },
+   "ffbp/f16tc_cuda": {
+    "run_s": 3.551845594000042,
+    "s_per_image": 3.767794327062518
+   },
+   "ffbp/f16_conv": {
+    "run_s": 11.157339895000405,
+    "s_per_image": null
+   },
+   "ffbp/fp32_conv": {
+    "run_s": 13.687151676999747,
+    "s_per_image": null
+   }
+  },
+  "cuda6": {
+   "ffbp/fp32_cuda": {
+    "run_s": 3.585054094000043,
+    "s_per_image": 3.8464945915000044
+   },
+   "ffbp/f16tc_cuda": {
+    "run_s": 3.1586752869998236,
+    "s_per_image": 3.3753842563333416
+   }
+  }
+ }
+}
