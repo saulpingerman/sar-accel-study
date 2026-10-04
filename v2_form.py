@@ -122,7 +122,8 @@ def main():
     ap.add_argument('--pallas-ng', type=int, default=8, help='pallas2: first-level tiles per group')
     ap.add_argument('--no-pallas-final', action='store_true', help='pallas2: keep the XLA final stage')
     ap.add_argument('--cuda-final', default='fp32', help='ffbpcuda: final stage fp32 (CUDA cores) or f16tc (tensor cores), comma list')
-    ap.add_argument('--pallas-final', type=int, default=2, help='pallas2 final stage: 0 XLA, 1 direct-trig kernel, 2 recurrence kernel')
+    ap.add_argument('--pallas-final', type=int, default=2, help='pallas2 final stage: 0 XLA, 1 direct-trig kernel, 2 recurrence kernel, 3 recurrence with four tiles per step')
+    ap.add_argument('--pallas-gen', type=int, default=3, help='pallas2 level kernel generation: 2 or 3 (3: coarse tables precomputed, pulse decimation fused)')
     ap.add_argument('--pad', type=int, default=0, help='pad pulses and samples with zeros to multiples of this (TPU matrix-unit alignment)')
     ap.add_argument('--tile', type=int, default=32, help='geometry tile of the CUDA kernel, pixels')
     ap.add_argument('--bp-oversample', type=int, default=8, help='cuda: range-profile oversampling')
@@ -384,9 +385,9 @@ def main():
     Sw = S * wp[:, None] * wk[None, :]
     for filt in a.filters.split(','):
         for pol in [p for p in a.policies.split(',') if p and (a.x64 or not ffbp2.needs_x64(p))]:
-            tag = f'ffbp/{pol}' + ('' if filt == 'dense' else f'_{filt}') + ('' if a.trig == 'split' else '_direct') + pad_tag + ({0: '_xlafinal', 1: '_final1', 2: ''}[0 if a.no_pallas_final else a.pallas_final] if filt == 'pallas2' else '')
+            tag = f'ffbp/{pol}' + ('' if filt == 'dense' else f'_{filt}') + ('' if a.trig == 'split' else '_direct') + pad_tag + ({0: '_xlafinal', 1: '_final1', 2: '', 3: '_final3'}[0 if a.no_pallas_final else a.pallas_final] if filt == 'pallas2' else '') + ('_gen2' if filt == 'pallas2' and a.pallas_gen == 2 else '')
             try:
-                fn = ffbp2.make_ffbp(pol, plan, filt, a.budget, a.trig, pallas_pb=a.pallas_pb, pallas_chunk=a.pallas_chunk, pallas_nc=a.pallas_nc, pallas_ng=a.pallas_ng, pallas_final=0 if a.no_pallas_final else a.pallas_final)
+                fn = ffbp2.make_ffbp(pol, plan, filt, a.budget, a.trig, pallas_pb=a.pallas_pb, pallas_chunk=a.pallas_chunk, pallas_nc=a.pallas_nc, pallas_ng=a.pallas_ng, pallas_final=0 if a.no_pallas_final else a.pallas_final, pallas_gen=a.pallas_gen)
                 static = ffbp2.static_arrays(pol, plan, filt)
                 hre, him, scale = ffbp2.prepare(pol, Sw)
 

@@ -13,9 +13,9 @@ import json, os, subprocess
 R = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'results', 'v2r')
 B = 'gs://' + os.environ.get('GCS_BUCKET', 'set-GCS_BUCKET') + '/v2'
 SCENES = ['panama', 'melbourne', 'iowa']
-BUILDS = [('baseline', None), ('pallas', 'pallas'), ('pallas2', 'pallas2'), ('pallas3', 'pallas3'), ('pallas4', 'pallas4'), ('pallas5', 'pallas5'),
+BUILDS = [('baseline', None), ('pallas', 'pallas'), ('pallas2', 'pallas2'), ('pallas3', 'pallas3'), ('pallas4', 'pallas4'), ('pallas5', 'pallas5'), ('pallas6', 'pallas6'), ('pallas7', 'pallas7'), ('pallas8', 'pallas8'),
           ('cuda', 'cuda'), ('cuda2', 'cuda2'), ('cuda3', 'cuda3'), ('cuda4', 'cuda4'), ('cuda5', 'cuda5'), ('cuda6', 'cuda6')]
-FINAL = {'tpu-v6e': 'pallas4', 'tpu-v5e': 'pallas4', 'gpu-l4': 'cuda6'}
+FINAL = {'tpu-v6e': 'pallas8', 'tpu-v5e': 'pallas8', 'gpu-l4': 'cuda6'}
 LABELS = ['tpu-v6e', 'tpu-v5e', 'gpu-l4']
 
 

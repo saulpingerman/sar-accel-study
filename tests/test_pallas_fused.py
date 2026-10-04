@@ -76,3 +76,30 @@ for n in range(N):
         Y = np.asarray(yr)[n, c, :, :Ko] + 1j * np.asarray(yi)[n, c, :, :Ko]
         num += np.sum(np.abs(Y - ref) ** 2); den += np.sum(np.abs(ref) ** 2)
 print(f'kernel2 multi-block: error {10 * np.log10(num / den):.1f} dB')
+
+# third kernel: precomputed coarse tables, with and without the fused pulse decimation
+from sarbench.pallas_ffbp import fused_rotate_dec_k3
+Dp, Po = 2, 40
+tp_ = np.kaiser(16, 8.0) * np.sinc((np.arange(16) - 7.5) / Dp) / Dp
+Fp = np.zeros((P, Po))
+for j in range(Po):
+    for r in range(16):
+        i = Dp * j + r - 6
+        if 0 <= i < P:
+            Fp[i, j] = tp_[r]
+for fused in (False, True):
+    for passes in (1, 3):
+        yr, yi = fused_rotate_dec_k3(Sre2, Sim2, jnp.asarray(c0s), jnp.asarray(sls), band2, kc, pb=32, passes=passes,
+                                     FpT=jnp.asarray(Fp.T, jnp.float32) if fused else None, interpret=True)
+        num = den = 0.0
+        for n in range(N):
+            for c in range(nc):
+                cyc = c0s[n, c][:, None].astype(np.float64) + kk[None, :] * sls[n, c][:, None].astype(np.float64)
+                ref = (Ss[n].astype(np.complex128) * np.exp(1j * (cyc - np.round(cyc)) * 2 * np.pi)) @ Fk
+                if fused:
+                    ref = Fp.T @ ref
+                    Y = np.asarray(yr)[n, c, :Po, :Ko] + 1j * np.asarray(yi)[n, c, :Po, :Ko]
+                else:
+                    Y = np.asarray(yr)[n, c, :, :Ko] + 1j * np.asarray(yi)[n, c, :, :Ko]
+                num += np.sum(np.abs(Y - ref) ** 2); den += np.sum(np.abs(ref) ** 2)
+        print(f'kernel3 fused_p={fused} passes {passes}: error {10 * np.log10(num / den):.1f} dB')

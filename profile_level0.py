@@ -30,6 +30,7 @@ def main():
     ap.add_argument('--filters', default='', help='comma list; default dense,pallas on a TPU')
     ap.add_argument('--nc', type=int, default=8)
     ap.add_argument('--ng', type=int, default=8)
+    ap.add_argument('--gen', type=int, default=3)
     a = ap.parse_args()
     import jax, jax.numpy as jnp
     from jax import lax
@@ -58,7 +59,7 @@ def main():
         la = arrs['levels'][0]
         G = lv['sx'] * lv['sy']
         for trig in (['direct'] if filt == 'pallas' else ['split', 'direct']):
-            fn = ffbp2.make_ffbp(pol, plan, filt, 1 << 26, trig, pallas_pb=a.pb, pallas_chunk=a.chunk, pallas_nc=a.nc, pallas_ng=a.ng)
+            fn = ffbp2.make_ffbp(pol, plan, filt, 1 << 26, trig, pallas_pb=a.pb, pallas_chunk=a.chunk, pallas_nc=a.nc, pallas_ng=a.ng, pallas_gen=a.gen)
             # whole image through the production path
             t_all = timeit(lambda: fn(hre, him, arrs), reps=2)
             res[f'{filt}_{trig}_image_s'] = t_all
@@ -104,14 +105,14 @@ def main():
                   'sum x G =', round(tot * st['G'], 3), flush=True)
             if filt == 'pallas2':
                 # final stage alone on the real tiles of this first-level tile, each available form
-                for mode in (0, 1, 2):
-                    if mode == 2 and platform != 'tpu':
+                for mode in (0, 1, 2, 3):
+                    if mode >= 2 and platform != 'tpu':
                         continue
-                    fnm = ffbp2.make_ffbp(pol, plan, 'pallas2', 1 << 26, trig, pallas_pb=a.pb, pallas_chunk=a.chunk, pallas_nc=a.nc, pallas_ng=a.ng, pallas_final=mode)
+                    fnm = ffbp2.make_ffbp(pol, plan, 'pallas2', 1 << 26, trig, pallas_pb=a.pb, pallas_chunk=a.chunk, pallas_nc=a.nc, pallas_ng=a.ng, pallas_final=mode, pallas_gen=a.gen)
                     ffm = jax.jit(lambda a_, b_, cen_, fnm=fnm: fnm.stages['final'](a_, b_, dict(fa, cen=cen_)))
                     tfm = timeit(ffm, A, Bm, cen, reps=3)
                     res[f'final_mode{mode}_s'] = tfm
-                    print(f'final stage mode {mode} ({"XLA" if mode == 0 else "direct-trig kernel" if mode == 1 else "recurrence kernel"}): {tfm*1e3:.2f} ms per {A.shape[0]} tiles = {tfm/A.shape[0]*1e6:.2f} us per tile', flush=True)
+                    print(f'final stage mode {mode} ({"XLA" if mode == 0 else "direct-trig kernel" if mode == 1 else "recurrence kernel" if mode == 2 else "recurrence, 4 tiles per step"}): {tfm*1e3:.2f} ms per {A.shape[0]} tiles = {tfm/A.shape[0]*1e6:.2f} us per tile', flush=True)
                 ngr = st['ng']
                 gs = jnp.arange(0, ngr, dtype=jnp.int32)
                 t_grp = timeit(lambda: st['one_group'](hre, him, arrs, gs), reps=2)
@@ -141,7 +142,11 @@ def main():
                     npass = 1 if ffbp2.POLICIES[pol]['prec'] is None else 3
                     xr = pad_columns(jnp.zeros((1, Pp, Kl), jnp.float32), band); xi = xr
                     c0z = jnp.zeros((1, ncl, Pp), jnp.float32) + 0.1; slz = jnp.zeros((1, ncl, Pp), jnp.float32) + 1e-3
-                    fk = jax.jit(lambda A, B, c, s_, pbl=pbl, band=band, npass=npass: fused_rotate_dec_k2(A, B, c, s_, band, (Kl - 1) / 2.0, pb=pbl, passes=npass))
+                    if platform == 'tpu' and a.gen >= 3:
+                        from sarbench.pallas_ffbp import fused_rotate_dec_k3
+                        fk = jax.jit(lambda A, B, c, s_, pbl=pbl, band=band, npass=npass: fused_rotate_dec_k3(A, B, c, s_, band, (Kl - 1) / 2.0, pb=pbl, passes=npass))
+                    else:
+                        fk = jax.jit(lambda A, B, c, s_, pbl=pbl, band=band, npass=npass: fused_rotate_dec_k2(A, B, c, s_, band, (Kl - 1) / 2.0, pb=pbl, passes=npass))
                     try:
                         tk = timeit(fk, xr, xi, c0z, slz, reps=3)
                         res[f'pallas2_kernel_L{li}_nc{ncl}_s'] = tk

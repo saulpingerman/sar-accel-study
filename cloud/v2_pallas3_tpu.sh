@@ -12,6 +12,8 @@ for s in panama melbourne iowa; do
   { run ffbp --data /tmp/v2/$s.npz --outdir $O --label $L --policies fp32_fast,fp32_high --filters pallas2 --trig direct --reps 2 --stream 4 --stream-seconds 60 --pallas-pb $pb --pallas-nc $nc --pallas-ng $ng
     [ $s = panama ] && run ffbp --data /tmp/v2/$s.npz --outdir $O --label $L --policies fp32_fast,fp32_high --filters pallas2 --trig direct --reps 2 --nosave --pallas-pb $pb --pallas-nc $nc --pallas-ng $ng --no-pallas-final
     [ $s = panama ] && run ffbp --data /tmp/v2/$s.npz --outdir $O --label $L --policies fp32_fast,fp32_high --filters pallas2 --trig direct --reps 2 --nosave --pallas-pb $pb --pallas-nc $nc --pallas-ng $ng --pallas-final 1
+    [ $s = panama ] && [ "${DEST}" != pallas3 ] && run ffbp --data /tmp/v2/$s.npz --outdir $O --label $L --policies fp32_fast,fp32_high --filters pallas2 --trig direct --reps 2 --nosave --pallas-pb $pb --pallas-nc $nc --pallas-ng $ng --pallas-final 2 --pallas-gen 2
+    [ $s = panama ] && [ "${DEST}" != pallas3 ] && run ffbp --data /tmp/v2/$s.npz --outdir $O --label $L --policies fp32_fast,fp32_high --filters pallas2 --trig direct --reps 2 --nosave --pallas-pb $pb --pallas-nc $nc --pallas-ng $ng --pallas-final 3
   } > /tmp/v2/${LP}_${s}_${L}.log 2>&1
   gcloud storage cp $O/*.npy $O/timing.json $B/v2/$DEST/$s/$L/ >/dev/null 2>&1
   gcloud storage cp /tmp/v2/${LP}_${s}_${L}.log $B/v2/logs/ >/dev/null 2>&1

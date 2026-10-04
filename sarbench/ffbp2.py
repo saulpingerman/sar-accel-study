@@ -214,7 +214,7 @@ def _pulse_block(P, pb_max):
     return min(cands, key=lambda pb: -(-P // pb) * pb)
 
 
-def make_ffbp(policy, plan, filt='dense', budget=1 << 26, trig='split', pallas_pb=128, pallas_chunk=512, pallas_nc=8, pallas_ng=8, pallas_final=2):
+def make_ffbp(policy, plan, filt='dense', budget=1 << 26, trig='split', pallas_pb=128, pallas_chunk=512, pallas_nc=8, pallas_ng=8, pallas_final=2, pallas_gen=3):
     """Build form(hre, him, arrays) -> (re, im), each [nx, ny] float32 (float64 for the fp64 policy).
 
     filt: 'dense' (matrix product with the decimation matrix), 'conv' (strided convolution with its kernel),
@@ -343,8 +343,10 @@ def make_ffbp(policy, plan, filt='dense', budget=1 << 26, trig='split', pallas_p
                 def fused_rotate_dec_k2(a, b, c, d, band, kc, pb, passes):
                     return fused_rotate_dec_k2_gpu(a, b, c, d, band, kc, mm_dtype=mm, precision=gpu_prec, pb=pb)
             band = bands[(P, K, lv['Dk'])]
-            Pp = -(-P // pb) * pb
             nc = min(pallas_nc, Cn)
+            if fuse_p_for(lv, band, nc):
+                pb = 128 * -(-pb // 128)
+            Pp = -(-P // pb) * pb
             Cp = -(-Cn // nc) * nc                                  # children padded to whole groups (zero ramps, discarded)
             pre_p = pad_columns(jnp.pad(pre.astype(jnp.float32), ((0, Pp - P), (0, 0))), band)[None]
             pim_p = pad_columns(jnp.pad(pim.astype(jnp.float32), ((0, Pp - P), (0, 0))), band)[None]
@@ -352,6 +354,9 @@ def make_ffbp(policy, plan, filt='dense', budget=1 << 26, trig='split', pallas_p
             slg = jnp.pad(sl.astype(jnp.float32), ((0, Cp - Cn), (0, Pp - P))).reshape(Cp // nc, 1, nc, Pp)
 
             def one_group(cs):
+                if on_tpu:
+                    a_, b_ = level_kernel(pre_p, pim_p, cs[0], cs[1], band, K, P, Ko, Po, pb, la, lv)
+                    return a_[0], b_[0]
                 yr, yi = fused_rotate_dec_k2(pre_p, pim_p, cs[0], cs[1], band, (K - 1) / 2.0, pb=pb, passes=npass)
                 y = jnp.concatenate([yr[0, :, :P, :Ko], yi[0, :, :P, :Ko]], 0).astype(f)       # [2 nc, P, Ko]
                 z = dec_p(y, la, lv)
@@ -410,6 +415,32 @@ def make_ffbp(policy, plan, filt='dense', budget=1 << 26, trig='split', pallas_p
             ore, oim = lax.map(per_chunk, (c0, sl))
         return ore.reshape(Cn, Po, Ko), oim.reshape(Cn, Po, Ko)
 
+    def fuse_p_for(lv, band, nc):
+        """Whether the level kernel fuses the pulse decimation for nc children (the decimated block must fit in vector
+        memory); the fused form needs 128-pulse blocks because the filter operand's lane dimension is the pulse block."""
+        Po_pad = 8 * -(-lv['Po'] // 8)
+        return on_tpu and pallas_gen >= 3 and lv['Dp'] > 1 and Po_pad * band['kob'] * nc * 16 <= 40 << 20
+
+    def level_kernel(pre_p, pim_p, c0g, slg, band, K, P, Ko, Po, pb, la, lv):
+        """pre_p, pim_p [Np, Pp, Kpad]; c0g, slg [Np, nc, Pp] -> (re, im) [Np, 2 nc .. ] pulse-decimated children
+        [Np, nc, Po, Ko] each, through the level kernel of the selected generation (fusing the pulse decimation when
+        the decimated block fits in vector memory) and otherwise the dense pulse product."""
+        from .pallas_ffbp import fused_rotate_dec_k2, fused_rotate_dec_k3
+        Np, nc, Pp = c0g.shape
+        fuse_p = fuse_p_for(lv, band, nc) and pb % 128 == 0
+        if on_tpu and pallas_gen >= 3:
+            FpT = None
+            if fuse_p:
+                FpT = jnp.pad(jnp.asarray(np.asarray(lv['Fp']).T, jnp.float32), ((0, 0), (0, Pp - P)))
+            yr, yi = fused_rotate_dec_k3(pre_p, pim_p, c0g, slg, band, (K - 1) / 2.0, pb=pb, passes=npass, FpT=FpT)
+        else:
+            yr, yi = fused_rotate_dec_k2(pre_p, pim_p, c0g, slg, band, (K - 1) / 2.0, pb=pb, passes=npass)
+        if fuse_p:
+            return yr[:, :, :Po, :Ko].astype(ew), yi[:, :, :Po, :Ko].astype(ew)
+        y = jnp.concatenate([yr[:, :, :P, :Ko], yi[:, :, :P, :Ko]], 1).reshape(Np * 2 * nc, P, Ko).astype(f)
+        z = dec_p(y, la, lv).reshape(Np, 2 * nc, Po, Ko)
+        return z[:, :nc].astype(ew), z[:, nc:].astype(ew)
+
     def children_batch(pre, pim, c0, sl, la, lv):
         """Several parents at once through the fused level kernel: pre, pim [Np, P, K]; c0, sl [Np, C, P] ->
         [Np C, Po, Ko] (real, imaginary). All C children of a parent come from one load when C <= 64."""
@@ -426,8 +457,10 @@ def make_ffbp(policy, plan, filt='dense', budget=1 << 26, trig='split', pallas_p
             def fused_rotate_dec_k2(a, b, c, d, band, kc, pb, passes):
                 return fused_rotate_dec_k2_gpu(a, b, c, d, band, kc, mm_dtype=mm, precision=gpu_prec, pb=pb)
         band = bands[(P, K, lv['Dk'])]
-        Pp = -(-P // pb) * pb
         nc = Cn if Cn <= 64 else pallas_nc
+        if fuse_p_for(lv, band, nc):
+            pb = 128 * -(-pb // 128)
+        Pp = -(-P // pb) * pb
         Cp = -(-Cn // nc) * nc
         pre_p = pad_columns(jnp.pad(pre.astype(jnp.float32), ((0, 0), (0, Pp - P), (0, 0))), band)
         pim_p = pad_columns(jnp.pad(pim.astype(jnp.float32), ((0, 0), (0, Pp - P), (0, 0))), band)
@@ -435,6 +468,8 @@ def make_ffbp(policy, plan, filt='dense', budget=1 << 26, trig='split', pallas_p
         slg = jnp.pad(sl.astype(jnp.float32), ((0, 0), (0, Cp - Cn), (0, Pp - P))).reshape(Np, Cp // nc, nc, Pp).transpose(1, 0, 2, 3)
 
         def one_group(cs):
+            if on_tpu:
+                return level_kernel(pre_p, pim_p, cs[0], cs[1], band, K, P, Ko, Po, pb, la, lv)
             yr, yi = fused_rotate_dec_k2(pre_p, pim_p, cs[0], cs[1], band, (K - 1) / 2.0, pb=pb, passes=npass)
             y = jnp.concatenate([yr[:, :, :P, :Ko], yi[:, :, :P, :Ko]], 1).reshape(Np * 2 * nc, P, Ko).astype(f)
             z = dec_p(y, la, lv).reshape(Np, 2 * nc, Po, Ko)
@@ -456,7 +491,7 @@ def make_ffbp(policy, plan, filt='dense', budget=1 << 26, trig='split', pallas_p
     e2v = tuple(float(v) for v in plan.get('e2', (0.0, 1.0, 0.0)))
     env = tuple(float(v) for v in np.cross(e1v, e2v))
 
-    fused_fin = (filt == 'pallas2' and int(pallas_final)) or 0            # 0: XLA final; 1: direct-trig kernel; 2: recurrence kernel
+    fused_fin = (filt == 'pallas2' and int(pallas_final)) or 0            # 0: XLA final; 1: direct-trig kernel; 2: recurrence kernel; 3: recurrence, four tiles per step
 
     def final(hre, him, fa):
         B = hre.shape[0]
@@ -481,17 +516,23 @@ def make_ffbp(policy, plan, filt='dense', budget=1 << 26, trig='split', pallas_p
             mx, my, mz = ux.mean(1), uy.mean(1), ((wx * env[0] + wy * env[1] + wz * env[2]) / wn).mean(1)
             mn = jnp.sqrt(mx * mx + my * my + mz * mz)
             ucx, ucy, rc = mx / mn, my / mn, wn.mean(1)
-            if fused_fin == 2 and on_tpu:
-                from .pallas_ffbp import fused_final2
+            if fused_fin in (2, 3) and on_tpu:
+                from .pallas_ffbp import fused_final2, fused_final3
                 Pl = 128 * -(-Pf // 128)
                 Qp8 = 8 * -(-Qf // 8)
-                padt = ((0, 0), (0, Qp8 - Qf), (0, Pl - Pf))
+                tiles = 4 if fused_fin == 3 else 1
+                Bp = tiles * -(-tb // tiles)
+                padt = ((0, Bp - tb), (0, Qp8 - Qf), (0, Pl - Pf))
+                padg = ((0, Bp - tb), (0, 0), (0, Pl - Pf))
                 dTr = jnp.pad(jnp.swapaxes(tre, 1, 2).astype(jnp.float32), padt)
                 dTi = jnp.pad(jnp.swapaxes(tim, 1, 2).astype(jnp.float32), padt)
-                gxT = jnp.pad(ux[:, None, :] * dlx[None, :, None], ((0, 0), (0, 0), (0, Pl - Pf))).astype(jnp.float32)
-                gyT = jnp.pad(uy[:, None, :] * dly[None, :, None], ((0, 0), (0, 0), (0, Pl - Pf))).astype(jnp.float32)
-                cre, cim = fused_final2(dTr, dTi, gxT, gyT, a0, a1, Qf, passes=npass)
-                cre, cim = cre.astype(f), cim.astype(f)
+                gxT = jnp.pad(ux[:, None, :] * dlx[None, :, None], padg).astype(jnp.float32)
+                gyT = jnp.pad(uy[:, None, :] * dly[None, :, None], padg).astype(jnp.float32)
+                if fused_fin == 3:
+                    cre, cim = fused_final3(dTr, dTi, gxT, gyT, a0, a1, Qf, passes=npass, tiles=tiles)
+                else:
+                    cre, cim = fused_final2(dTr, dTi, gxT, gyT, a0, a1, Qf, passes=npass)
+                cre, cim = cre[:tb].astype(f), cim[:tb].astype(f)
             elif fused_fin:
                 if on_tpu:
                     from .pallas_ffbp import fused_final

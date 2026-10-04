@@ -104,8 +104,12 @@ KERNEL_ROWS = {
             ('pallas3', 'ffbp/fp32_fast_pallas2_direct_xlafinal', 'ffbp/fp32_high_pallas2_direct_xlafinal', 'Same, device level batched over parents'),
             ('pallas3', 'ffbp/fp32_fast_pallas2_direct_final1', 'ffbp/fp32_high_pallas2_direct_final1', 'Plus fused final stage, per-sample sines'),
             ('pallas3', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', 'Plus fused final stage, ramps by recurrence'),
-            ('pallas4', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', 'Plus clipped windows, no halo at levels 1 and 2, precomputed fine tables (final build)'),
-            ('pallas5', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', 'Fine tables by doubling instead (rejected)')],
+            ('pallas4', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', 'Plus clipped windows, no halo at levels 1 and 2, precomputed fine tables'),
+            ('pallas5', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', 'Fine tables by doubling instead (rejected)'),
+            ('pallas6', 'ffbp/fp32_fast_pallas2_direct_final2', 'ffbp/fp32_high_pallas2_direct_final2', 'Coarse tables precomputed too, pulse decimation fused into the kernel at levels 1 and 2'),
+            ('pallas6', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', 'Four tiles per step in the final stage instead (3\\% faster on the v6e at three-pass precision only; not kept)'),
+            ('pallas7', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', 'Coarse-table sines over the used lanes only, padded afterwards (rejected)'),
+            ('pallas8', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', 'Generation-3 level kernel with the one-tile recurrence final (final build)')],
     'gpu': [('baseline', 'ffbp/f16_conv', 'ffbp/fp32_conv', 'XLA: ramps materialized, cuDNN convolutions, XLA final stage'),
             ('pallas', 'ffbp/f16_pallas', 'ffbp/fp32_pallas', 'Triton level-0 kernel (Pallas), 16-column windows'),
             ('cuda', None, 'ffbp/fp32_cuda', 'CUDA: shared-memory FIR levels, one pixel per thread final'),
@@ -141,6 +145,37 @@ def gen_kernels():
             if v1 is None and v2 is None:
                 continue
             out.append(f"{DEV[lab] if first else ''} & {name} & {fmt(v1, 2) if v1 is not None else '--'} & {fmt(v2, 2) if v2 is not None else '--'} \\\\")
+            first = False
+        out.append(r'\midrule')
+    out[-1] = r'\bottomrule'
+    out += [r'\end{tabular}}', r'\end{table}']
+    return out
+
+
+def gen_bounds():
+    """Measured stage time against the bound from the measured unit rates (results/v2r/bounds.json)."""
+    p = f'{R}/bounds.json'
+    if not os.path.exists(p):
+        return []
+    b = json.load(open(p))
+    out = [r'\begin{table}[tb]', r'\centering',
+           r'\caption{Each stage of the final kernel builds against the lower bound set by the unit that binds it, Panama image, single-pass or float32 arithmetic. The bounds divide the inherent work of the stage by rates measured on the same device with microbenchmarks in the same framework (vector unit on the rotation mix of the kernel with data resident on chip, high-bandwidth memory copy, matrix units at the product shapes of the kernel, sines in XLA; on the L4 the inner mixes of the kernels on resident shared memory and the memory copy rate). A ratio near one means the stage runs at the rate of that unit; the last column divides the measured time by the sum of all the bounds of the stage, the time it would take if none of its units overlapped.}',
+           r'\label{tab:bounds}', r'\small', r'\resizebox{\textwidth}{!}{\begin{tabular}{llrrrrr}', r'\toprule',
+           r'Device & Stage & Binding unit & Bound (s) & Measured (s) & Ratio & To the sum \\', r'\midrule']
+    for lab in ('tpu-v6e', 'tpu-v5e', 'gpu-l4'):
+        rows = b.get(lab)
+        if not rows:
+            continue
+        first = True
+        for r in rows:
+            if lab.startswith('tpu'):
+                units = {'bound_vpu': 'vector unit', 'bound_hbm': 'memory', 'bound_trig': 'sines (XLA)', 'bound_mxu': 'matrix units'}
+            else:
+                units = {'bound_comp': 'arithmetic', 'bound_mem': 'memory'}
+            k = max(units, key=lambda kk: r.get(kk, 0))
+            ratio = r['measured'] / r['bound'] if r['bound'] else float('nan')
+            tosum = f"{r['measured'] / r['bound_sum']:.2f}" if r.get('bound_sum') else '--'
+            out.append(f"{DEV[lab] if first else ''} & {r['stage']} & {units[k]} & {r['bound']:.2f} & {r['measured']:.2f} & {ratio:.1f} & {tosum} \\\\")
             first = False
         out.append(r'\midrule')
     out[-1] = r'\bottomrule'
@@ -368,6 +403,7 @@ def main():
     gen['costother'] = '\n'.join(lines_other)
     gen['pfaedge'] = '\n'.join(gen_pfaedge())
     gen['kernels'] = '\n'.join(gen_kernels())
+    gen['bounds'] = '\n'.join(gen_bounds())
     # every timed configuration, for the appendix and the numbers
     for (s_, lab), d in timing.items():
         for tag, t in d.items():

@@ -39,3 +39,12 @@ for passes in (1, 3):
     cre, cim = fused_final2(jnp.asarray(dT.real, jnp.float32), jnp.asarray(dT.imag, jnp.float32), jnp.asarray(gxp), jnp.asarray(gyp), float(a0), float(a1), Qf, passes=passes, interpret=True)
     out = np.asarray(cre) + 1j * np.asarray(cim)
     print(f'final kernel 2 (recurrence) passes {passes}: error {10 * np.log10(np.sum(np.abs(out - ref) ** 2) / np.sum(np.abs(ref) ** 2)):.1f} dB')
+
+# the stacked-tile version (B = 3 tiles here -> pad to 4)
+from sarbench.pallas_ffbp import fused_final3
+Bp = 4
+pad = lambda x: np.concatenate([x, np.zeros((Bp - B,) + x.shape[1:], x.dtype)], 0)
+for passes in (1, 3):
+    cre, cim = fused_final3(jnp.asarray(pad(dT.real.astype(np.float32))), jnp.asarray(pad(dT.imag.astype(np.float32))), jnp.asarray(pad(gxp)), jnp.asarray(pad(gyp)), float(a0), float(a1), Qf, passes=passes, interpret=True)
+    out = (np.asarray(cre) + 1j * np.asarray(cim))[:B]
+    print(f'final kernel 3 (stacked tiles) passes {passes}: error {10 * np.log10(np.sum(np.abs(out - ref) ** 2) / np.sum(np.abs(ref) ** 2)):.1f} dB')
