@@ -89,7 +89,7 @@ def gen_power(num):
             ('TPU v6e', 'Factorized BP, three-pass, fused kernels', 'design-power bound', '200 to 350', num.get('c.panama.tpu-v6e.ffbp.fp32_high_direct.s', ''), f"{num.get('pw.v6e.3.lo', '')} to {num.get('pw.v6e.3.hi', '')}"),
             ('CPU', 'Factorized BP, float32', 'pro-rata estimate', f"25 at {num.get('cs.panama.util1', '')}\\%", num.get('c.panama.cpu-c4d16.ffbp.fp32_conv_direct.s', ''), num.get('pw.cpu.kj', ''))]
     out = [r'\begin{table}[tb]', r'\centering',
-           r'\caption{Energy per Panama image for the processor alone. The L4 draw is the mean of \texttt{nvidia-smi} samples during the timed run; the TPU figures are bounds from third-party design-power estimates, which Google has not published, assuming the chip ran at that power throughout; the CPU figure is the pro-rata share of the 8 cores (25~W of the 400~W package) times the measured utilization. Hosts, memory and the other components of each instance are excluded.}',
+           r'\caption{Energy per Panama image for the processor alone. The L4 draw is the mean of \texttt{nvidia-smi} samples during the timed run; the TPU figures are bounds from the design-power figures third parties quote~\\cite{introl2025,gpuadvisor2025}, since Google publishes none, assuming the chip ran at that power throughout; the CPU figure is the pro-rata share of the 8 cores (25~W of the 400~W package) times the measured utilization. Hosts, memory and the other components of each instance are excluded.}',
            r'\label{tab:power}', r'\small', r'\begin{tabular}{lllrrr}', r'\toprule',
            r'Device & Configuration & Basis & Power (W) & Time (s) & Energy (kJ) \\', r'\midrule']
     out += [' & '.join(r) + r' \\' for r in rows]
@@ -272,14 +272,33 @@ def main():
             mon.setdefault(k, v)
         return t.get('run_s'), st.get('s_per_image'), mon
 
+    TPU_W = {'tpu-v5e': (120, 200), 'tpu-v6e': (200, 350)}                 # published third-party design-power figures, a band
+
+    def kwh(lab, per, mon, util=None):
+        """kWh per 1000 images of the processor alone: measured board power on the L4, the design-power band on the TPUs,
+        a pro-rata share of the package at the measured utilization on the CPU (util overrides the monitor's, for the
+        multi-process loop). Returns a string."""
+        if per is None:
+            return ''
+        if lab == 'gpu-l4':
+            w = (mon or {}).get('gpu_watts_mean')
+            return f'{w * per * 1000 / 3.6e6:.2f}' if w else ''
+        if lab in TPU_W:
+            lo, hi = TPU_W[lab]
+            return f'{lo * per * 1000 / 3.6e6:.2f} to {hi * per * 1000 / 3.6e6:.2f}'
+        if lab == 'cpu-c4d16':
+            w = 400 * 8 / 128 * (util if util is not None else ((mon or {}).get('cpu_util') or 1.0))
+            return f'{w * per * 1000 / 3.6e6:.2f}'
+        return ''
+
     def cost_header(label, caption):
-        return [r'\begin{table}[tb]', r'\centering', caption, label, r'\small', r'\setlength{\tabcolsep}{4pt}', r'\begin{tabular}{lllrrr}', r'\toprule',
-                r'Device & Algorithm & Arithmetic & Time (s) & Images/h & \$ per 1000 \\', r'\midrule']
+        return [r'\begin{table}[tb]', r'\centering', caption, label, r'\small', r'\setlength{\tabcolsep}{4pt}', r'\begin{tabular}{lllrrrr}', r'\toprule',
+                r'Device & Algorithm & Arithmetic & Time (s) & Images/h & \$ per 1000 & kWh per 1000 \\', r'\midrule']
 
     lines = [r'\begin{table}[tb]', r'\centering',
-             r'\caption{Panama Canal: the selected configurations grouped by the change a viewer sees against the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, costed from the device time. A bullet marks the Pareto-optimal rows of Figure~\ref{fig:teaser}: no other configuration is both cheaper and closer to the reference. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
-             r'\label{tab:cost}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\begin{tabular}{lllrrrc}', r'\toprule',
-             r'Device & Algorithm & Arithmetic & Time (s) & \$ per 1000 & Error (dB) & Pareto \\', r'\midrule']
+             r'\caption{Panama Canal: the selected configurations grouped by the change a viewer sees against the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, costed from the device time. Energy is that of the processor alone over the same time: measured by \texttt{nvidia-smi} on the L4; on the TPUs a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, taken as if the chip ran at that power throughout; on the CPU the 8 cores\textquotesingle{} pro-rata share of the 400~W package at the measured utilization. A bullet marks the Pareto-optimal rows of Figure~\ref{fig:teaser}: no other configuration is both cheaper and closer to the reference. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
+             r'\label{tab:cost}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrrc}', r'\toprule',
+             r'Device & Algorithm & Arithmetic & Time (s) & \$ per 1000 & kWh per 1000 & Error (dB) & Pareto \\', r'\midrule']
     panama_rows = []
     lines_other = cost_header(r'\label{tab:costother}', r'\caption{Melbourne and Iowa: device time, throughput and cost for the selected configurations, as in Table~\ref{tab:cost}. }')
     # candidates per selected row; the fastest timed form is used (ties broken toward a pipelined record)
@@ -323,18 +342,20 @@ def main():
             if tag is None:
                 continue
             run, sp, mon = tim(s_, lab, tag)
+            util = None
             if lab == 'cpu-c4d16' and tag.startswith('ffbp/fp32') and s_ in cpu_stream:
                 sp = cpu_stream[s_]['s_per_image']
+                util = cpu_stream[s_]['cpu_util']
             per = sp if sp else run
             star = '' if sp else '*'
             usd = PRICE[lab] / 3600.0 * per * 1000
             a, arith = config_name(tag, lab)
             if s_ == 'panama':
-                panama_rows.append(dict(lab=lab, tag=tag, a=a, arith=arith, run=run, per=per, star=star, usd=usd))
+                panama_rows.append(dict(lab=lab, tag=tag, a=a, arith=arith, run=run, per=per, star=star, usd=usd, kwh=kwh(lab, per, mon, util)))
             else:
                 if first:
-                    out_lines.append(f"\\multicolumn{{6}}{{l}}{{\\emph{{{SCENE[s_]}}}}} \\\\")
-                out_lines.append(f"{DEV[lab]} & {a} & {arith} & {fmt(run, 1)} & {3600.0 / per:,.0f}{star} & {usd:.2f} \\\\")
+                    out_lines.append(f"\\multicolumn{{7}}{{l}}{{\\emph{{{SCENE[s_]}}}}} \\\\")
+                out_lines.append(f"{DEV[lab]} & {a} & {arith} & {fmt(run, 1)} & {3600.0 / per:,.0f}{star} & {usd:.2f} & {kwh(lab, per, mon, util)} \\\\")
             key = f"c.{s_}.{lab}.{tag.replace('/', '.')}"
             for key in [key] + [f"c.{s_}.{lab}.{c_.replace('/', '.')}" for c_ in cands]:
                 num[key + '.s'] = fmt(run, 1)
@@ -384,21 +405,30 @@ def main():
     for d_ in pts:
         d_['pareto'] = not any(o is not d_ and o['usd'] <= d_['usd'] and o['err'] <= d_['err'] and (o['usd'] < d_['usd'] or o['err'] < d_['err']) for o in pts)
     num['pareto.n'] = str(sum(d_['pareto'] for d_ in pts))
+    for d_ in panama_rows:                                                   # energy per thousand images, by role
+        num[f"kwh.{d_['lab']}.{d_['tag'].replace('/', '.')}"] = d_['kwh']
+    for role, lab, tag in (('l4.fp32', 'gpu-l4', 'ffbp/fp32_cuda'), ('l4.f16', 'gpu-l4', 'ffbp/f16tc_cuda'), ('v6e.high', 'tpu-v6e', 'ffbp/fp32_high_pallas2_direct'),
+                           ('v5e.high', 'tpu-v5e', 'ffbp/fp32_high_pallas2_direct'), ('v6e.fast', 'tpu-v6e', 'ffbp/fp32_fast_pallas2_direct'), ('v5e.fast', 'tpu-v5e', 'ffbp/fp32_fast_pallas2_direct'),
+                           ('cpu.fp32', 'cpu-c4d16', 'ffbp/fp32_conv_direct'), ('l4.pfa', 'gpu-l4', 'pfa/fp32_taps_corr')):
+        for d_ in panama_rows:
+            if d_['lab'] == lab and d_['tag'] == tag:
+                num[f'kwh.{role}'] = d_['kwh']
     num['pareto.list'] = '; '.join(f"{DEV[d_['lab']]} {d_['a'].lower()}, {d_['arith']}" for d_ in sorted((d_ for d_ in pts if d_['pareto']), key=lambda d_: d_['usd']))
     for code, name in TIERS:
         grp = sorted((d_ for d_ in panama_rows if d_['tier'] == code), key=lambda d_: d_['usd'])
         if not grp:
             continue
-        lines.append(f"\\multicolumn{{7}}{{l}}{{\\emph{{{code}. {name}}}}} \\\\")
+        lines.append(f"\\multicolumn{{8}}{{l}}{{\\emph{{{code}. {name}}}}} \\\\")
         for d_ in grp:
             e = db(d_['err']) if d_['err'] is not None else ''
-            lines.append(f"{DEV[d_['lab']]} & {d_['a']} & {d_['arith']} & {fmt(d_['run'], 1)} & {d_['usd']:.2f}{d_['star']} & {e} & {'$\\bullet$' if d_['pareto'] else ''} \\\\")
+            lines.append(f"{DEV[d_['lab']]} & {d_['a']} & {d_['arith']} & {fmt(d_['run'], 1)} & {d_['usd']:.2f}{d_['star']} & {d_['kwh']} & {e} & {'$\\bullet$' if d_['pareto'] else ''} \\\\")
         lines.append(r'\midrule')
         num[f'tier.{code}.cheapest'] = f"{DEV[grp[0]['lab']]} {grp[0]['a'].lower()}, {grp[0]['arith']}"
         num[f'tier.{code}.cheapest.usd'] = f"{grp[0]['usd']:.2f}"
-    for L_ in (lines, lines_other):
-        L_[-1] = r'\bottomrule'
-        L_ += [r'\end{tabular}', r'\end{table}']
+    lines[-1] = r'\bottomrule'
+    lines += [r'\end{tabular}}', r'\end{table}']                   # the Panama table is in a resizebox
+    lines_other[-1] = r'\bottomrule'
+    lines_other += [r'\end{tabular}', r'\end{table}']
     gen['cost'] = '\n'.join(lines)
     gen['costother'] = '\n'.join(lines_other)
     gen['pfaedge'] = '\n'.join(gen_pfaedge())
@@ -545,7 +575,7 @@ def main():
         _, _, w = tim('panama', 'gpu-l4', ktag('gpu-l4', tag))
         t = t_of('panama', 'gpu-l4', tag)
         if w and w.get('gpu_watts_mean') and t:
-            num[f'pw.l4.{key}.kj'] = f"{w['gpu_watts_mean'] * t / 1000:.1f}"
+            num[f'pw.l4.{key}.kj'] = f"{w['gpu_watts_mean'] * t / 1000:.2f}"
             num[f'pw.l4.{key}.w'] = f"{w['gpu_watts_mean']:.0f}"
     t = t_of('panama', 'tpu-v5e', 'ffbp/fp32_fast_direct')
     if t:

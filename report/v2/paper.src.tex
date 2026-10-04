@@ -164,7 +164,7 @@ The correction is an indexed read at a computed position, 36 per pixel. On Panam
 % BEGIN GEN power
 % END GEN power
 
-The L4 forms a float16 factorized Panama image for @@pw.l4.ffbp.kj@@~kJ of GPU energy and a float32 image for @@pw.l4.ffbp32.kj@@~kJ (Table~\ref{tab:power}). It drew 65 to 72~W in the backprojection loops, close to its 72~W limit, and 55 to 71~W in the polar-format loops. The TPU bounds, @@pw.v5e.lo@@ to @@pw.v5e.hi@@~kJ for a single-pass image on either chip, overlap the L4 figure, so these data do not order the accelerators by energy. The TPU and CPU entries are bounds from unpublished design power and an estimate; none includes the host.
+The L4 forms a float32 factorized Panama image for @@pw.l4.ffbp32.kj@@~kJ of GPU energy and one with the float16 final stage for @@pw.l4.ffbp.kj@@~kJ (Table~\ref{tab:power}), drawing @@pw.l4.ffbp32.w@@~W in the kernel loops against its 72~W limit; per thousand images that is @@kwh.l4.fp32@@ and @@kwh.l4.f16@@~kWh (Table~\ref{tab:cost}). The TPU entries are a range from design-power figures that Google has not published, @@kwh.v5e.high@@~kWh per thousand on the v5e and @@kwh.v6e.high@@ on the v6e at three-pass precision, whose lower ends sit twice the L4 figure; the CPU estimate is @@kwh.cpu.fp32@@~kWh. None of the entries includes the host, and the TPU and CPU figures are estimates, not measurements.
 
 \section{Fairness of the comparison}
 \label{sec:fair}
@@ -388,6 +388,9 @@ Tables~\ref{tab:costother} to \ref{tab:fulliowa} give the cost figures for Melbo
 \bibitem{gorham2016} L. A. Gorham and B. D. Rigling, ``Scene size limits for polar format algorithm,'' \emph{IEEE Trans. Aerosp. Electron. Syst.}, vol. 52, no. 1, pp. 73--84, 2016.
 \bibitem{jakowatz2006} C. V. Jakowatz, Jr. and N. Doren, ``Comparison of polar formatting and back-projection algorithms for spotlight-mode SAR image formation,'' in \emph{Proc. SPIE 6237, Algorithms for Synthetic Aperture Radar Imagery XIII}, 2006, art. 62370H.
 \bibitem{jouppi2017} N. P. Jouppi \emph{et al.}, ``In-datacenter performance analysis of a tensor processing unit,'' in \emph{Proc. 44th Annu. Int. Symp. Computer Architecture (ISCA)}, Toronto, ON, 2017, pp. 1--12.
+\bibitem{google2024trillium} Google Cloud, ``Introducing Trillium, sixth-generation TPUs,'' May 2024. [Online]. Available: \url{https://cloud.google.com/blog/products/compute/introducing-trillium-6th-gen-tpus}
+\bibitem{introl2025} Introl, ``Google TPU architecture: 7 generations explained,'' 2025. [Online]. Available: \url{https://introl.com/blog/google-tpu-architecture-complete-guide-7-generations}
+\bibitem{gpuadvisor2025} GPU Advisor, ``TPU v6e (Trillium) specs,'' 2025. [Online]. Available: \url{https://gpuadvisor.com/gpu/tpu-v6e}
 \bibitem{jouppi2023} N. P. Jouppi \emph{et al.}, ``TPU v4: An optically reconfigurable supercomputer for machine learning with hardware support for embeddings,'' in \emph{Proc. 50th Annu. Int. Symp. Computer Architecture (ISCA)}, Orlando, FL, 2023.
 \bibitem{lu2020} T. Lu, Y.-F. Chen, B. Hechtman, T. Wang, and J. Anderson, ``Large-scale discrete Fourier transform on TPUs,'' arXiv:2002.03260, 2020.
 \bibitem{lu2021} T. Lu, T. Marin, Y. Zhuo, Y.-F. Chen, and C. Ma, ``Nonuniform fast Fourier transform on TPUs,'' in \emph{Proc. IEEE 18th Int. Symp. Biomedical Imaging (ISBI)}, 2021.
