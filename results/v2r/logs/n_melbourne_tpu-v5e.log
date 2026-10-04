@@ -1,0 +1,19 @@
+E1002 23:03:52.185122   10666 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+plan [(8, 8, 5, 5, 2888, 3198), (8, 7, 7, 9, 421, 364), (5, 6, 6, 5, 79, 81)] padded 10240 10752 8.1s
+ffbp/fp32_fast ok {'first_s': 13.1572, 'run_s': 7.8986, 'host_s': 0.4021, 'filt': 'dense'}
+ffbp/fp32_high ok {'first_s': 18.4152, 'run_s': 13.0966, 'host_s': 0.4028, 'filt': 'dense'}
+ffbp/fp32 ok {'first_s': 26.1348, 'run_s': 17.6032, 'host_s': 0.4081, 'filt': 'dense'}
+ffbp/bf16_mm ok {'first_s': 15.7069, 'run_s': 10.6556, 'host_s': 0.4019, 'filt': 'dense'}
+E1002 23:06:17.061005   11328 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+plan [(8, 8, 5, 5, 2888, 3198), (8, 7, 7, 9, 421, 364), (5, 6, 6, 5, 79, 81)] padded 10240 10752 8.0s
+ffbp/fp32_fast_direct ok {'first_s': 12.5928, 'run_s': 6.756, 'host_s': 0.402, 'filt': 'dense'}
+E1002 23:08:12.417158   11886 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+plan [(8, 8, 5, 5, 2888, 3198), (8, 7, 7, 9, 421, 364), (5, 6, 6, 5, 79, 81)] padded 10240 10752 8.0s
+ffbp/fp32_fast_conv ok {'first_s': 48.6625, 'run_s': 32.2378, 'host_s': 0.4025, 'filt': 'conv'}
+E1002 23:09:47.769057   12390 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+pfa grid {'nkr': 8378, 'nka': 8357, 'nfy': 10368, 'nfx': 10125, 'oversample_r': 0.5817975363109587, 'oversample_a': 0.5240155505392525} 0.0s
+pfa/fp32 FAILED JaxRuntimeError RESOURCE_EXHAUSTED: Ran out of memory on HBM, the total memory required for HLO temporaries (17.11G) exceeds available HBM (15.75G). HLO module: jit_pfa.
+pfa/fp32_fast FAILED JaxRuntimeError RESOURCE_EXHAUSTED: Ran out of memory on HBM, the total memory required for HLO temporaries (17.11G) exceeds available HBM (15.75G). HLO module: jit_pfa.
+E1002 23:09:56.605034   12807 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+pfa grid {'nkr': 8378, 'nka': 8357, 'nfy': 10368, 'nfx': 10125, 'oversample_r': 0.5817975363109587, 'oversample_a': 0.5240155505392525} 0.0s
+pfa/fp32_taps FAILED JaxRuntimeError RESOURCE_EXHAUSTED: Ran out of memory on HBM, the total memory required for HLO temporaries (16.16G) exceeds available HBM (15.75G). HLO module: jit_pfa.

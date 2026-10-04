@@ -1,0 +1,12 @@
+plan [(8, 8, 5, 5, 2341, 2609), (7, 7, 7, 8, 343, 335), (5, 5, 5, 5, 77, 75)] padded 8960 8960 13.6s
+ffbp/f16_conv ok {'first_s': 14.4543, 'run_s': 8.9376, 'host_s': 0.4168, 'filt': 'conv'}
+plan [(8, 8, 5, 5, 2341, 2609), (7, 7, 7, 8, 343, 335), (5, 5, 5, 5, 77, 75)] padded 8960 8960 13.5s
+ffbp/fp32_fast_conv ok {'first_s': 15.0685, 'run_s': 9.864, 'host_s': 0.4142, 'filt': 'conv'}
+ffbp/fp32_conv ok {'first_s': 18.4738, 'run_s': 10.2825, 'host_s': 0.4181, 'filt': 'conv'}
+pfa grid {'nkr': 8076, 'nka': 7650, 'nfy': 10368, 'nfx': 9720, 'oversample_r': 0.6923997244685167, 'oversample_a': 0.5883257709759286} 0.0s
+pfa/fp32_taps ok {'first_s': 6.0098, 'run_s': 1.5358, 'resample': 'taps'}
+pfa grid {'nkr': 8076, 'nka': 7650, 'nfy': 10368, 'nfx': 9720, 'oversample_r': 0.6923997244685167, 'oversample_a': 0.5883257709759286} 0.0s
+pfa distortion model: max shift (az, rg) px [9.39, 11.33] fit rms px [0.0, 0.0] 0.3s
+pfa/fp32_taps_corr ok {'first_s': 10.4715, 'run_s': 1.5745, 'resample': 'taps'}
+bp/cuda_f16 ok {'first_s': 63.7599, 'run_s': 63.7599}
+bp/cuda_fp32 ok {'first_s': 142.2901, 'run_s': 142.2901}

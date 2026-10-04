@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: If you use this code or these measurements, please cite the paper.
+title: Cost and Precision of Spotlight SAR Image Formation on Google TPUs, an Nvidia GPU and a CPU
+authors:
+  - family-names: Singerman
+    given-names: Paul
+    affiliation: Penn State University
+    email: pgs16@psu.edu
+  - family-names: Braun
+    given-names: Tom
+    affiliation: Penn State University
+    email: trb5864@psu.edu
+date-released: 2026-10-04
+version: "2.0"
+repository-code: https://github.com/saulpingerman/sar-accel-study
+license: MIT

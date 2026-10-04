@@ -1,0 +1,19 @@
+E1002 23:02:17.940814   17943 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+plan [(8, 8, 5, 5, 2341, 2609), (7, 7, 7, 8, 343, 335), (5, 5, 5, 5, 77, 75)] padded 8960 8960 4.4s
+ffbp/fp32_fast ok {'first_s': 7.9903, 'run_s': 2.9264, 'host_s': 0.2462, 'filt': 'dense'}
+ffbp/fp32_high ok {'first_s': 8.7025, 'run_s': 3.491, 'host_s': 0.2467, 'filt': 'dense'}
+ffbp/fp32 ok {'first_s': 14.5655, 'run_s': 4.2111, 'host_s': 0.2483, 'filt': 'dense'}
+ffbp/bf16_mm ok {'first_s': 8.4124, 'run_s': 3.2437, 'host_s': 0.2477, 'filt': 'dense'}
+E1002 23:03:25.675480   18777 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+plan [(8, 8, 5, 5, 2341, 2609), (7, 7, 7, 8, 343, 335), (5, 5, 5, 5, 77, 75)] padded 8960 8960 4.4s
+ffbp/fp32_fast_direct ok {'first_s': 7.0271, 'run_s': 3.0654, 'host_s': 0.2474, 'filt': 'dense'}
+E1002 23:04:58.692781   19512 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+plan [(8, 8, 5, 5, 2341, 2609), (7, 7, 7, 8, 343, 335), (5, 5, 5, 5, 77, 75)] padded 8960 8960 4.4s
+ffbp/fp32_fast_conv ok {'first_s': 29.8907, 'run_s': 9.5451, 'host_s': 0.2516, 'filt': 'conv'}
+E1002 23:05:49.271672   20176 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+pfa grid {'nkr': 6730, 'nka': 6808, 'nfy': 8640, 'nfx': 8640, 'oversample_r': 0.5770010554090259, 'oversample_a': 0.5235714835038068} 0.0s
+pfa/fp32 ok {'first_s': 37.1816, 'run_s': 0.708, 'resample': 'dense'}
+pfa/fp32_fast ok {'first_s': 38.1679, 'run_s': 0.6631, 'resample': 'dense'}
+E1002 23:09:03.440511   20967 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+pfa grid {'nkr': 6730, 'nka': 6808, 'nfy': 8640, 'nfx': 8640, 'oversample_r': 0.5770010554090259, 'oversample_a': 0.5235714835038068} 0.0s
+pfa/fp32_taps ok {'first_s': 38.3831, 'run_s': 0.6626, 'resample': 'taps'}

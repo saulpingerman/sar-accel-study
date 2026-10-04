@@ -1,0 +1,15 @@
+E1002 22:56:49.928052    7414 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+{"label": "tpu-v5e", "device": "TPU_0(process=0,(0,0,0,0))", "P": 15186, "K": 14399, "Ko": 2408, "Po": 3805, "Dk": 6, "Dp": 4, "children": 64, "fir_k_taps": 44, "fir_p_taps": 30}
+fp32_fast ramp_direct FAILED RESOURCE_EXHAUSTED: Ran out of memory on HBM, the total memory required for HLO temporaries (104.59G) exceeds available HBM (15.75G). HLO module: jit__lambda.
+fp32_fast ramp_split FAILED RESOURCE_EXHAUSTED: Ran out of memory on HBM, the total memory required for HLO temporaries (158.19G) exceeds available HBM (15.75G). HLO module: jit__lambda.
+fp32_fast rotate_direct FAILED RESOURCE_EXHAUSTED: Ran out of memory on HBM, the total memory required for HLO temporaries (210.81G) exceeds available HBM (15.75G). HLO module: jit_rot.
+fp32_fast rotate_split FAILED RESOURCE_EXHAUSTED: Ran out of memory on HBM, the total memory required for HLO temporaries (263.10G) exceeds available HBM (15.75G). HLO module: jit_rot.
+Traceback (most recent call last):
+  File "~/sar/v2_profile.py", line 184, in <module>
+    main()
+  File "~/sar/v2_profile.py", line 98, in main
+    x = jax.jit(rotate_with(ramp_split))(hre, him, c0, sl)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+jax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Ran out of memory on HBM, the total memory required for HLO temporaries (263.10G) exceeds available HBM (15.75G). HLO module: jit_rot.
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.

@@ -1,0 +1,11 @@
+pfa grid {'nkr': 8076, 'nka': 7650, 'nfy': 10368, 'nfx': 9720, 'oversample_r': 0.6923997244685167, 'oversample_a': 0.5883257709759286} 0.0s
+pfa/fp32 ok {'first_s': 54.4281, 'run_s': 1.5686, 'resample': 'dense'}
+pfa/f16 ok {'first_s': 42.7471, 'run_s': 1.1646, 'resample': 'dense'}
+pfa grid {'nkr': 8076, 'nka': 7650, 'nfy': 10368, 'nfx': 9720, 'oversample_r': 0.6923997244685167, 'oversample_a': 0.5883257709759286} 0.0s
+pfa/fp32_taps ok {'first_s': 18.8502, 'run_s': 1.5258, 'resample': 'taps'}
+pfa grid {'nkr': 8076, 'nka': 7650, 'nfy': 10368, 'nfx': 9720, 'oversample_r': 0.6923997244685167, 'oversample_a': 0.5883257709759286} 0.0s
+pfa distortion model: max shift (az, rg) px [9.39, 11.33] fit rms px [0.0, 0.0] 0.3s
+pfa/fp32_corr ok {'first_s': 58.0614, 'run_s': 2.1088, 'resample': 'dense'}
+pfa grid {'nkr': 8076, 'nka': 7650, 'nfy': 10368, 'nfx': 9720, 'oversample_r': 0.6923997244685167, 'oversample_a': 0.5883257709759286} 0.0s
+pfa distortion model: max shift (az, rg) px [9.39, 11.33] fit rms px [0.0, 0.0] 0.3s
+pfa/fp32_taps_corr ok {'first_s': 24.1318, 'run_s': 1.5747, 'resample': 'taps'}

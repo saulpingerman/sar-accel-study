@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.npz
+*.npy
+*.cphd
+*.nitf
+report/v2/paper.tex
+report/v2/paper.aux
+report/v2/paper.log
+report/v2/paper.out
+report/v2/gen/

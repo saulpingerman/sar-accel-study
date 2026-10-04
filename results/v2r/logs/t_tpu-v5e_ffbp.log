@@ -1,0 +1,16 @@
+E1002 21:59:39.393998    4579 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+plan [(8, 8, 54, 44, 275, 354), (2, 2, 2, 2, 148, 187), (2, 2, 2, 2, 84, 104)] padded 1024 1024 0.8s
+ffbp/fp32_fast ok {'first_s': 7.5374, 'run_s': 0.7501, 'host_s': 0.0406, 'filt': 'dense'}
+ffbp/fp32_high ok {'first_s': 7.6371, 'run_s': 1.0395, 'host_s': 0.0408, 'filt': 'dense'}
+ffbp/fp32 ok {'first_s': 9.2829, 'run_s': 1.3093, 'host_s': 0.0403, 'filt': 'dense'}
+ffbp/bf16_mm ok {'first_s': 7.5029, 'run_s': 0.7462, 'host_s': 0.0405, 'filt': 'dense'}
+ffbp/fp32_fast_conv ok {'first_s': 11.9287, 'run_s': 3.0359, 'host_s': 0.0405, 'filt': 'conv'}
+ffbp/fp32_high_conv ok {'first_s': 12.4297, 'run_s': 4.9797, 'host_s': 0.0403, 'filt': 'conv'}
+ffbp/fp32_conv ok {'first_s': 16.0505, 'run_s': 8.6484, 'host_s': 0.0404, 'filt': 'conv'}
+ffbp/bf16_mm_conv ok {'first_s': 11.6532, 'run_s': 3.0507, 'host_s': 0.0402, 'filt': 'conv'}
+E1002 22:02:03.889905    5419 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+plan [(8, 8, 54, 44, 275, 354), (2, 2, 2, 2, 148, 187), (2, 2, 2, 2, 84, 104)] padded 1024 1024 0.8s
+ffbp/fp32_fast_direct ok {'first_s': 7.39, 'run_s': 0.5956, 'host_s': 0.0401, 'filt': 'dense'}
+E1002 22:02:19.577166    5847 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+plan [(8, 8, 54, 44, 279, 358), (2, 2, 2, 2, 150, 189), (2, 2, 2, 2, 85, 105)] padded 1024 1024 0.8s
+ffbp/fp32_fast_pad256 ok {'first_s': 7.3195, 'run_s': 1.5025, 'host_s': 0.0406, 'filt': 'dense'}

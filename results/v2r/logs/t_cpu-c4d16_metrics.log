@@ -1,0 +1,5 @@
+cpu-c4d16 ffbp/fp32_conv_direct  err  -53.9 fit  -53.9 gain +0.000 dB | coh mean 1.00000 p01 1.0000 min 0.998 <0.99 0.000% | amp p99 0.041 max 0.58 dB | phase p99 0.27 max 4.6 deg | maxdiff -56.5 dB
+cpu-c4d16 ffbp/fp32_taps_direct  err  -53.9 fit  -53.9 gain +0.000 dB | coh mean 1.00000 p01 1.0000 min 0.998 <0.99 0.000% | amp p99 0.041 max 0.58 dB | phase p99 0.27 max 4.6 deg | maxdiff -56.5 dB
+cpu-c4d16 ffbp/fp64_conv_direct  err  -54.0 fit  -54.0 gain -0.000 dB | coh mean 1.00000 p01 1.0000 min 0.998 <0.99 0.000% | amp p99 0.041 max 0.58 dB | phase p99 0.26 max 4.7 deg | maxdiff -56.5 dB
+cpu-c4d16 pfa/fp32               err   -0.0 fit   -0.0 gain +0.000 dB | coh mean 0.99789 p01 0.9881 min 0.967 <0.99 1.888% | amp p99 23.674 max 34.30 dB | phase p99 178.16 max 180.0 deg | maxdiff -0.6 dB
+cpu-c4d16 pfa/fp32_taps          err   -0.0 fit   -0.0 gain +0.000 dB | coh mean 0.99789 p01 0.9881 min 0.967 <0.99 1.888% | amp p99 23.674 max 34.30 dB | phase p99 178.16 max 180.0 deg | maxdiff -0.6 dB

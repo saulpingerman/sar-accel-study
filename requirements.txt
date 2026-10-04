@@ -1,0 +1,9 @@
+numpy
+scipy
+numba
+matplotlib
+sarpy
+rasterio
+pymupdf
+jax
+ml_dtypes

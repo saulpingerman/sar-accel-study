@@ -1,0 +1,348 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage[hidelinks]{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[section,above,below]{placeins}
+\usepackage{lscape}
+
+\title{Cost and Precision of Spotlight SAR Image Formation on Google TPUs, an Nvidia GPU and a CPU}
+\author{Paul Singerman\\ Penn State University\\ \texttt{pgs16@psu.edu} \and Tom Braun\\ Penn State University\\ \texttt{trb5864@psu.edu}}
+\date{October 2026}
+
+\setlength{\belowcaptionskip}{5pt}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Three Umbra spotlight collections were imaged at the vendor's native size (8.5 to 12.2 thousand pixels on a side) on a Google Cloud TPU v5e, a TPU v6e, an Nvidia L4 and a 16-vCPU AMD instance, by exact backprojection, factorized backprojection expressed as matrix products, and polar format. Each image was compared with a float64 exact backprojection. At float32 accuracy a thousand Panama images cost \$@@c.panama.l4.fp32.usd@@ on the L4, \$@@c.panama.v5e.high.usd@@ on the v5e and \$@@c.panama.v6e.high.usd@@ on the v6e, and the order changes between scenes; the CPU costs @@concl.cpu.vs.l4@@ times the L4. The v6e is the fastest device, at @@c.panama.tpu-v6e.ffbp.fp32_high.s@@~s per image. The L4's float16 products give the cheapest image within 1.1~dB of float32 accuracy (\$@@c.panama.l4.f16.usd@@); the TPUs' single-pass bfloat16 products are about 12~dB worse. Exact backprojection at 8 times profile oversampling was no more accurate than the factorized image on two of three scenes. Polar format is 2 to 46 times faster but displaces scatterers by up to 7.6~m at the scene corners; its correction costs under a second on the L4 and 42 to 104~s on a TPU and leaves a $-32$~dB residual of unidentified origin.
+\end{abstract}
+
+\section{Introduction}
+
+Spotlight SAR image formation turns a phase history of about $2 \times 10^8$ complex samples into an image of about $10^8$ pixels (Table~\ref{tab:scenes}). The arithmetic is regular enough for the accelerators built for machine learning, but a GPU and a TPU are fast on different operations. The GPU is fast on independent per-pixel loops with scattered memory access; the TPU only on dense matrix products with bfloat16 operands (Appendix~\ref{app:tpu}). This report measures, for three Umbra collections at native size, what an image costs on each device and how far it departs from a float64 reference. The finding is that at float32 accuracy the three accelerators cost within @@spread.panama.fp32.pct@@\% of one another (\$@@c.panama.l4.fp32.usd@@ to \$@@c.panama.v6e.high.usd@@ per thousand Panama images, Table~\ref{tab:cost}), that the choice between them is set by the accuracy tier rather than the device (Figure~\ref{fig:teaser}, Table~\ref{tab:prec}), and that polar format costs 6 to 9 times less than factorized backprojection on the L4 but is usable in position only after a correction that a TPU executes poorly (Section~\ref{sec:pfa}). The report supersedes an earlier internal round on smaller, simulated data, referred to below as the first round.
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=0.9\textwidth]{fig/teaser.pdf}
+\caption{Cost per thousand Panama Canal images against the error of the image relative to the float64 reference, for the selected configuration of each device, algorithm and precision (Table~\ref{tab:cost}). Cost is the on-demand us-central1 instance price divided by the sustained throughput; error is the energy of the difference relative to the energy of the reference. The line is the Pareto front, the eight configurations that no other configuration beats on both cost and error; only these are labeled, and the dominated configurations are drawn faded. Open triangles are polar format before its geometric correction. The dotted lines mark the four groups of Table~\ref{tab:cost} by the change a viewer sees against the reference.}
+\label{fig:teaser}
+\end{figure}
+
+Figures~\ref{fig:scenes} to \ref{fig:pixels} show the images: the three scenes, four Panama regions across devices and algorithms with their coherence against the reference, and three regions at pixel scale (0.41 by 0.36~m). In amplitude only the uncorrected polar-format image differs visibly, by the displacement of the ship and the terminal; every other difference is in the complex values, where the coherence maps show it.
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.92\textwidth]{fig/scenes.pdf}
+\caption{The three collections as formed by the float64 reference, downsampled for display (amplitude in decibels over a 45 dB range, azimuth horizontal, range vertical, 1 km bar). The yellow boxes on the Panama Canal image are the four 512 by 512 pixel regions of Figure~\ref{fig:zoom}.}
+\label{fig:scenes}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.80\textwidth]{fig/zoom_panama.pdf}
+\caption{Panama Canal, four regions of 512 by 512 pixels at full resolution (100 m bar). Top of each pair: amplitude over a 45 dB range for the float64 reference, the L4 exact backprojection (float16 profiles), the L4 factorized image with float16 products, the TPU v6e factorized image with single-pass and three-pass products, and polar format before and after its geometric correction. Bottom: the 5 by 5 coherence of each image with the reference from 0.99 (red) to 1 (white), with its mean below each panel. The regions are the Cocol\'i Locks, the Port of Balboa, a ship in the channel and vegetated terrain 2.7~km from the scene center; Appendix~\ref{app:truth} locates them.}
+\label{fig:zoom}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.94\textwidth]{fig/pixels_panama.pdf}
+\caption{Panama Canal at pixel scale: 128 by 128 pixel windows (53~m in azimuth by 46~m in slant range, 10~m bar) around the brightest feature of the lock, port and ship regions of Figure~\ref{fig:zoom}, drawn without interpolation so that each pixel (0.41 by 0.36~m) is visible on the page. Columns, scales and coherence maps as in Figure~\ref{fig:zoom}, without the L4 exact backprojection, which does not differ visibly from the reference at this scale either.}
+\label{fig:pixels}
+\end{figure}
+
+\section{Data}
+\label{sec:data}
+
+Three collections from Umbra's open data catalog~\cite{umbra2023} were used (Table~\ref{tab:scenes}). They are the Pacific entrance of the Panama Canal (2023-07-18, 02:30 UTC), with the Cocol\'i Locks, the navigation channel and the Port of Balboa; central Melbourne (2023-02-08); and farmland near Johnston, Iowa (2023-10-20). Each was processed from the compensated phase history (CPHD) as delivered, apart from 43 leading pulses of the Melbourne collection that carry no positions or samples. The image grid is the vendor's own: the pixel counts, spacings and slant image plane of the vendor's complex image (SICD).
+
+The four Panama regions of Figure~\ref{fig:zoom} were identified against Sentinel-2 imagery and six other Umbra passes, which also show that the bright target of the ship region is a ship moving at 3.0~m/s, imaged 194~m from its position (Appendix~\ref{app:truth}).
+
+% BEGIN GEN scenes
+% END GEN scenes
+
+\section{Devices, algorithms and arithmetic}
+\label{sec:devices}
+
+Table~\ref{tab:platforms} lists the instances and their on-demand us-central1 list prices (Google Cloud Billing Catalog, 1 October 2026). The CPU instance is the smallest that holds the float64 factorized image; the L4 instance is the smallest offered with that GPU. Software was JAX 0.11.2 throughout, with CUDA 12 and CuPy 14.2.0 on the L4 and Numba 0.68.0 for the reference.
+
+% BEGIN GEN platforms
+% END GEN platforms
+
+Three algorithms were run (Appendix~\ref{app:algorithms}). \emph{Exact backprojection} sums, for every pixel, the range-compressed pulse interpolated at the pixel's range~\cite{gorham2010}: one indexed read per pixel and pulse, @@sc.panama.lookups@@~trillion for the Panama image. A CUDA kernel runs it on the L4 with 8 times oversampled profiles in float32 or float16; a float64 CPU version with 16 times oversampling is the reference. On the TPU the same gather runs at $4 \times 10^7$ to $10^8$ reads per second depending on the access pattern, against about $10^{10}$ on the L4 (Appendix~\ref{app:tpu}), so exact backprojection was not run there.
+
+\emph{Factorized backprojection} divides the image into tiles, re-centers the phase history on each tile with a phase ramp, filters and decimates it, and recurses~\cite{mccorkle1996,ulander2003}. Every stage is an element-wise or a dense matrix product, the operation the TPU's matrix units are built for. The same JAX code runs on all four devices. Where it is faster, strided convolutions replace the decimation matrices (\emph{conv. filters} in the tables), and the phase ramps are evaluated directly or from a coarse and a fine table (\emph{direct} and \emph{split-table} ramps). The tiles' band limits leave a residual against exact backprojection that is independent of the arithmetic (Table~\ref{tab:prec}, float64 row).
+
+\emph{Polar format} resamples the pulses and samples onto a rectangular wavenumber grid by chirp-z transforms~\cite{rabiner1969} and forms the image by one FFT~\cite{carrara1995,jakowatz1996}; it is the cheapest of the three (Table~\ref{tab:cost}). It assumes a planar wavefront, so scatterers are displaced by an amount that grows with the square of their distance from the scene center; a geometric correction resamples the image through the fitted displacement map (Appendix~\ref{app:pfa}). Its pulse resampling runs as a dense product or as a sum over gathered rows (\emph{gather}).
+
+The TPU's matrix units multiply bfloat16 operands only. A float32 product is formed from one bfloat16 pass by default, which gives bfloat16 accuracy, or from three or six passes (JAX precision \emph{default}, \emph{high}, \emph{highest}), called single-, three- and six-pass products below. The L4's tensor cores take float16 operands (11 significant bits against bfloat16's 8), so \emph{sixteen-bit} means a more accurate type on the L4 than on the TPU. The L4's default float32 product uses TF32 operands (also 11 bits); the configurations called \emph{float32} on the L4 use full float32. Every configuration keeps the geometry in float32 or float64 and lowers only the storage type of the data and the operand type of the products; the CPU runs native float32 and float64 (Appendix~\ref{app:formats}).
+
+\section{Measurement protocol}
+\label{sec:protocol}
+
+Device time per image is the wall time of one image on a warm device with the data resident, compilation excluded and the per-collection host work included (about 0.5~s). Throughput is the number of images per hour of a pipelined loop in which the transfers of the next collection and the previous image overlap the formation of the current one. Cost per image is the instance price divided by the throughput; where no pipelined loop was run, the inverse device time is used and the entry carries an asterisk. Repeated timings agree within 4\%, and the L4's pipelined loops run 6 to 11\% slower per image than its device time (Appendix~\ref{app:protocol}).
+
+Every image is compared with the float64 exact backprojection of the same collection after one gain has been fitted per algorithm family (complex for the backprojections, real for polar format). The error quoted is the energy of the difference relative to the energy of the reference (dB). The largest pixel difference, the 5 by 5 coherence and the amplitude and phase deviations over the brighter half of the pixels are tabulated with it. The selected configuration of each device, algorithm and precision is the fastest implementation form whose image is within 0.1~dB of the other forms on that device. Power was measured on the L4 only, from \texttt{nvidia-smi}.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Time and cost per image}
+
+% BEGIN GEN cost
+% END GEN cost
+
+Table~\ref{tab:cost} groups the configurations by what a viewer sees against the float64 image, using the statistics of Table~\ref{tab:prec}: group A, no visible change (99th-percentile amplitude deviation within 3~dB and the 0.1 percentile of the 5 by 5 coherence above 0.999); group B, amplitude unchanged but coherence below 0.999 at the darkest tenth of a percent of pixels, which Figures~\ref{fig:zoom} and \ref{fig:pixels} show as loss beside bright returns; group C, coherence below 0.99 in stripes; group D, features displaced by more than a pixel.
+
+Within group A the configurations cost from \$@@tier.A.cheapest.usd@@ (@@tier.A.cheapest@@) to \$165; group B costs \$@@tier.B.cheapest.usd@@ on the v5e; group C starts at \$@@tier.C.cheapest.usd@@ on the L4; group D at \$@@tier.D.cheapest.usd@@. The Pareto front of Figure~\ref{fig:teaser}, the @@pareto.n@@ configurations that no other configuration beats on both cost and error, is marked in the last column: within group A it runs from the L4's float16 image through the L4's float32 image and the v5e's three-pass image to the CPU's float32 and float64 images, each buying a fraction of a decibel for more money; the v6e is never on it, because the v5e reaches the same error for less.
+
+The v6e forms the factorized image fastest, in @@c.panama.tpu-v6e.ffbp.fp32_fast_direct.s@@~s with single-pass products and @@c.panama.tpu-v6e.ffbp.fp32_high.s@@~s with three-pass products (Table~\ref{tab:cost}; other collections in Table~\ref{tab:costother}, every timed configuration in Appendix~\ref{app:stats}). The v5e takes @@c.panama.tpu-v5e.ffbp.fp32_fast_direct.s@@ and @@c.panama.tpu-v5e.ffbp.fp32_high.s@@~s for the same two, and the L4 @@c.panama.gpu-l4.ffbp.f16_conv.s@@~s with float16 products and @@c.panama.gpu-l4.ffbp.fp32.s@@~s in float32. Because the hourly price rises with device speed, the spread in cost is smaller than the spread in time.
+
+At float32 accuracy a thousand Panama images cost \$@@c.panama.l4.fp32.usd@@ on the L4, \$@@c.panama.v5e.high.usd@@ on the v5e and \$@@c.panama.v6e.high.usd@@ on the v6e, within @@spread.panama.fp32.pct@@\% of one another. The order changes with the collection (Table~\ref{tab:costother}): on Melbourne the three figures (L4, v5e, v6e) are \$@@c.melbourne.l4.fp32.usd@@, \$@@c.melbourne.v5e.high.usd@@ and \$@@c.melbourne.v6e.high.usd@@, on Iowa \$@@c.iowa.l4.fp32.usd@@, \$@@c.iowa.v5e.high.usd@@ and \$@@c.iowa.v6e.high.usd@@. Margins below the 4\% repeat spread are not resolved. The CPU, at \$@@c.panama.cpu-c4d16.ffbp.fp32_conv_direct.usd@@ with four pinned processes (Section~\ref{sec:fair}), costs @@concl.cpu.vs.l4@@ times the L4.
+
+With the sixteen-bit products each device offers, the L4 costs \$@@c.panama.l4.f16.usd@@, the v5e \$@@c.panama.v5e.fast.usd@@ and the v6e \$@@c.panama.v6e.fast.usd@@, for images that differ by 10~dB in error (Section~\ref{sec:prec}). The L4's TF32 products give an image 0.5~dB from full float32 in the same time as full float32 (\$@@c.panama.l4.tf32.usd@@, Table~\ref{tab:fullpanama}). With strided convolutions the L4 therefore appears to be bound by memory traffic, which would explain why the float16 configuration, with half the data in memory, is the faster one. Exact backprojection on the L4 costs \$@@c.panama.gpu-l4.bp.cuda_f16.usd@@ per thousand with float16 profiles and \$@@c.panama.gpu-l4.bp.cuda_fp32.usd@@ with float32, 8 and 18 times the cost of the float16 factorized image.
+
+\subsection{Precision}
+\label{sec:prec}
+
+% BEGIN GEN prec
+% END GEN prec
+
+The factorized errors on Melbourne and Iowa are within 1.6~dB of the Panama values of Table~\ref{tab:prec} (Appendix~\ref{app:stats}). The reference's own convergence, measured on a crop at 8, 16 and 32 times oversampling, is @@ref.conv16@@~dB at 16 times, so no exact-backprojection error can be measured below about $-69$~dB. Exact backprojection on the L4 with 8 times oversampled profiles has an error of @@p.gpu-l4.bp.cuda_fp32.err@@~dB with float32 profiles and @@p.gpu-l4.bp.cuda_f16.err@@~dB with float16; the two coincide because the interpolation error exceeds the arithmetic error at this oversampling. With 16 times profiles the images reach @@p.gpu-l4.bp.cuda_fp32_ov16.err@@ and @@p.gpu-l4.bp.cuda_f16_ov16.err@@~dB against the 16 times reference whose interpolation they share, and about $-69$~dB in truth, at @@t.panama.gpu-l4.bp.cuda_f16_ov16.s@@~s per image with float16 profiles (Appendix~\ref{app:protocol}).
+
+Factorized backprojection at float32 accuracy has an error of @@p.tpu-v6e.ffbp.fp32_high_direct.err@@~dB on the v6e with three-pass products, @@p.gpu-l4.ffbp.fp32.err@@~dB on the L4 and @@p.cpu-c4d16.ffbp.fp32_conv_direct.err@@~dB on the CPU. These are 1.6 to 2.3~dB above the float64 image (@@p.cpu-c4d16.ffbp.fp64_conv_direct.err@@~dB), whose own residual is the band limitation of the tiles. On Panama and Melbourne, exact backprojection at 8 times oversampling is therefore no closer to the reference than the L4's float32 factorized image, and it takes 7 to 16 times as long (float16 and float32 profiles respectively). On the smaller Iowa collection it is 1.5~dB closer. The L4's float16-product image is 1.1~dB above its float32 image (@@p.gpu-l4.ffbp.f16_conv.err@@~dB) and its TF32 image 0.5~dB (@@p.gpu-l4.ffbp.fp32_fast.err@@~dB).
+
+The TPU's single-pass products round both operands to bfloat16 and give an error of @@p.tpu-v6e.ffbp.fp32_fast.err@@~dB, which matches the rounding noise of two operands accumulated through three levels (Appendix~\ref{app:formats}). The 99th-percentile amplitude and phase deviations are @@p.tpu-v6e.ffbp.fp32_fast.amp99@@~dB and @@p.tpu-v6e.ffbp.fp32_fast.ph99@@$^\circ$; the extremes are @@p.tpu-v6e.ffbp.fp32_fast.ampmax@@~dB and @@p.tpu-v6e.ffbp.fp32_fast.phmax@@$^\circ$ (@@sp.phmax.worst@@$^\circ$ on Melbourne), at isolated pixels beside bright returns, where Figures~\ref{fig:zoom} and \ref{fig:pixels} show local losses of coherence. These differences are confined to the complex values and would be expected to matter for interferograms and change-detection maps, which were not tested here.
+
+Three-pass products reproduce the six-pass image to within 0.3~dB in every decibel statistic and 0.003 in coherence. They take @@f16.ratio.v6e@@ (v6e) and @@f16.ratio.v5e@@ (v5e) times the single-pass time, well below three, because the matrix units are active for about a third of the first level and less of the rest (Appendix~\ref{app:tpu}). Bfloat16 storage of the data changes none of these figures and was slower on the two larger collections. The L4's float16-product image has no TPU equivalent: the TPU converts float16 operands to bfloat16 before the matrix units (Appendix~\ref{app:formats}).
+
+\subsection{Polar format}
+\label{sec:pfa}
+
+Polar format forms the Panama image in @@c.panama.tpu-v6e.pfa.fp32.s@@ to @@c.panama.cpu-c4d16.pfa.fp32_taps.s@@~s depending on the device (Table~\ref{tab:cost}), 2 to 46 times faster than the fastest factorized configuration on the same device. Its planar-wavefront model displaces a scatterer at distance $\rho$ from the center by about $\rho^2/2R$ in range, 4~m at 2.5~km for $R = 744$~km (mid-aperture), and by more in azimuth (@@pfa.shift.panama.azm@@~m against @@pfa.shift.panama.rgm@@~m at the Panama corners, depending on the squint). The displacement model of Appendix~\ref{app:pfa} gives up to @@pfa.shift.panama.az@@ pixels in azimuth and @@pfa.shift.panama.rg@@ in range at the corners, and measured positions of bright targets agree with it to within 0.2~pixel. The uncorrected image is therefore sharp but displaced; its 5 by 5 coherence with the reference is @@p.tpu-v6e.pfa.fp32.coh@@.
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=0.72\textwidth]{fig/rings.pdf}
+\caption{Error relative to the float64 reference in four concentric rings by distance from the scene center, for the corrected polar-format image and the float32 factorized image on the L4, on the three collections.}
+\label{fig:rings}
+\end{figure}
+
+The correction forms the image at twice the pixel density without carriers, resamples it at the apparent positions with a six-tap Lanczos kernel and restores the carriers (Appendix~\ref{app:pfa}). It brings the error to @@p.gpu-l4.pfa.fp32_corr.err@@~dB on Panama (@@p.melbourne.pfacorr.err@@ and @@p.iowa.pfacorr.err@@~dB on the other collections), the coherence to @@p.gpu-l4.pfa.fp32_corr.coh@@ and the registration to 0.001~pixel. The residual grows from $-40$~dB at the center to $-30$~dB in the outer quarter (Figure~\ref{fig:rings}). Its cause was not identified. Varying the resampling kernel and the raster oversampling changed it by less than 0.6~dB, and longer pulse interpolators made it up to 0.9~dB worse. The registration error and the reference's convergence are too small to account for it (Appendix~\ref{app:pfa}, which also notes one untested candidate).
+
+The correction is an indexed read at a computed position, 36 per pixel. On Panama it adds @@pfa.corr.l4.add@@~s on the L4 and @@pfa.corr.cpu.add@@~s on the CPU, but @@pfa.corr.v6e.factor@@ times the uncorrected time on the v6e (@@c.panama.tpu-v6e.pfa.fp32_corr.s@@~s), because scattered gathers run on the TPU's vector unit at about $4 \times 10^7$ reads per second. For production use on a TPU the correction would have to move to the host or be replaced by an approximation without scattered gathers (Appendix~\ref{app:protocol}).
+
+\subsection{Power}
+\label{sec:power}
+
+% BEGIN GEN power
+% END GEN power
+
+The L4 forms a float16 factorized Panama image for @@pw.l4.ffbp.kj@@~kJ of GPU energy and a float32 image for @@pw.l4.ffbp32.kj@@~kJ (Table~\ref{tab:power}). It drew 65 to 72~W in the backprojection loops, close to its 72~W limit, and 55 to 71~W in the polar-format loops. The TPU bounds, @@pw.v5e.lo@@ to @@pw.v5e.hi@@~kJ for a single-pass image on either chip, overlap the L4 figure, so these data do not order the accelerators by energy. The TPU and CPU entries are bounds from unpublished design power and an estimate; none includes the host.
+
+\section{Fairness of the comparison}
+\label{sec:fair}
+
+The device comparison depends on each device having been run with an algorithm and arithmetic appropriate to it; Appendices~\ref{app:tpu} and \ref{app:protocol} give the measurements behind the following. On the TPU, a profile of the first factorized level shows the two decimation products taking @@prof.v6e.mm@@~ms per tile and the phase rotation before them @@prof.v6e.rot@@~ms, with the rotation moving 534~GB/s. The device time is set by vector-unit work and memory traffic rather than by the matrix units. Padding to multiples of 256 (8.3 to 8.9~s), split-table ramps (4.5 against 3.8~s), bfloat16 storage (5.2 against 4.5~s), block-banded products and strided convolutions (four times slower) were each tested and none was faster.
+
+On the L4 the exact kernel is dedicated CUDA code with float64 tile geometry, and the factorized image uses strided convolutions, which make it @@fair.l4.convgain@@ times faster with float16 products and @@fair.l4.convgain32@@ times in float32. On the CPU a single XLA process reached @@cs.panama.util1@@\% utilization; four pinned processes raised it to @@cs.panama.utilbest@@\% and the throughput by @@cs.panama.gain@@ times, and float32 (@@cpu.f32vsf64.db@@~dB worse than float64 at @@fair.cpu.speedup@@ times the speed) is the selected configuration. The CPU code was not compared with a hand-tuned implementation. The remaining inequalities are these: the TPU7x and H100 were unavailable under the project's quota; the polar-format correction was written once, as a gather; the asterisked rows of Table~\ref{tab:cost} are inverse device times; the TPU hosts (24 and 44 vCPUs) are larger than the work needs while the L4's (4 vCPUs) is the smallest offered; and spot and committed prices were not considered.
+
+\section{Conclusions}
+\label{sec:concl}
+
+\begin{enumerate}
+\item Per factorized image at float32 accuracy, the L4, v5e and v6e are within @@spread.panama.fp32.pct@@\% of one another on Panama (\$@@c.panama.l4.fp32.usd@@, \$@@c.panama.v5e.high.usd@@ and \$@@c.panama.v6e.high.usd@@ per thousand) and the order differs between collections; no device is cheapest on all three, and the L4 to v5e margins on Panama and Melbourne (3\% and 2\%) are below the 4\% repeat spread. The cheapest image within 1.1~dB of float32 accuracy is the L4's float16-product image at \$@@c.panama.l4.f16.usd@@; the TPUs' single-pass image costs \$@@c.panama.v5e.fast.usd@@ (v5e) and \$@@c.panama.v6e.fast.usd@@ (v6e) but is 10~dB worse than that image and 12~dB worse than the float32 tier. The CPU instance costs @@concl.cpu.vs.l4@@ times the L4 per factorized image at float32 accuracy.
+\item The v6e is the fastest device: @@c.panama.tpu-v6e.ffbp.fp32_fast_direct.s@@~s per Panama image with single-pass and @@c.panama.tpu-v6e.ffbp.fp32_high_direct.s@@~s with three-pass products. Its three-pass time is @@concl.v6e.vs.l4.matched@@ times shorter than the L4's float16-product time and @@concl.v6e.vs.l4.fp32@@ times shorter than its float32 time, at @@concl.v6e.price.vs.l4@@ times the hourly price.
+\item On a TPU, three-pass products give an image within 0.5~dB of the L4's float32 image on every collection. Single-pass products are appropriate only where an error of @@p.tpu-v6e.ffbp.fp32_fast.err@@~dB, with phase deviations of up to @@sp.phmax.worst@@$^\circ$ at isolated pixels, can be tolerated. Bfloat16 storage gave no advantage in time or accuracy.
+\item Exact backprojection on the L4 at 8 times profile oversampling was no more accurate than the float32 factorized image on two of three collections and took 6 to 16 times as long. At 16 times oversampling it is the most accurate image in the study (about $-69$~dB), at @@t.panama.gpu-l4.bp.cuda_f16_ov16.s@@~s and \$@@c16.f16.usd@@ per thousand images with float16 profiles (Table~\ref{tab:fullpanama}).
+\item Polar format is 2 to 46 times faster than factorized backprojection. After the geometric correction it agrees with backprojection in position and to @@p.gpu-l4.pfa.fp32_corr.err@@~dB in value; the correction costs under a second on the L4, 4 to 7~s on the CPU and 42 to 104~s on a TPU. Corrected polar format on the L4, at \$@@c.panama.gpu-l4.pfa.fp32_taps_corr.usd@@ per thousand images, is the cheapest configuration whose image agrees with backprojection in position. Whether a $-32$~dB residual is acceptable depends on the downstream product; interferometry and change detection were not tested.
+\end{enumerate}
+
+\paragraph{Code and data.} The code, the cloud run scripts, every measurement record behind the tables and the build of this report are at \url{https://github.com/saulpingerman/sar-accel-study}. The radar data are from the Umbra Open Data Program~\cite{umbra2023} and the optical images from Copernicus Sentinel-2~\cite{sentinel2}; neither is redistributed, and the scripts fetch both from their public sources.
+
+\appendix
+\section{Algorithms}
+\label{app:algorithms}
+
+The phase history is motion compensated to the scene reference point. For pulse $p$ with antenna position $\mathbf{a}_p$ and frequency sample $f_k$,
+\begin{equation}
+S_{p,k} = \sum_n \sigma_n \exp\!\left(-j \frac{4\pi f_k}{c}\, \Delta R_p(\mathbf{x}_n)\right),
+\qquad
+\Delta R_p(\mathbf{x}) = \lVert \mathbf{x} - \mathbf{a}_p \rVert - \lVert \mathbf{a}_p \rVert ,
+\label{eq:signal}
+\end{equation}
+where $\sigma_n$ and $\mathbf{x}_n$ are the complex amplitude and position of scatterer $n$ and $c$ is the speed of light. The CPHD files give the transmit and receive positions per pulse, whose midpoint was used as $\mathbf{a}_p$, and the start frequency and sample spacing per pulse; the mean start frequency and spacing were used, which differ from the per-pulse values by at most @@data.griddrift@@ of a sample spacing. A Taylor weighting ($\bar{n}=4$, $-35$~dB sidelobes)~\cite{taylor1955} was applied along both axes in every algorithm. The image grid is the vendor's: pixel $(i, j)$ lies at $(i - n_x/2)\,s_x\,\mathbf{e}_1 + (j - n_y/2)\,s_y\,\mathbf{e}_2$ from the reference point, with $\mathbf{e}_1$ and $\mathbf{e}_2$ the SICD column and row unit vectors and $s_x$, $s_y$ its sample spacings.
+
+\paragraph{Exact backprojection.} Each pulse is range compressed by a zero-padded inverse FFT, with 8 times oversampling in the selected configurations and 16 times in the reference and in the two rows so marked, and each pixel is the sum over pulses of the linearly interpolated profile at $\Delta R_p$ times the carrier phase $\exp(j 4\pi f_c \Delta R_p / c)$~\cite{gorham2010}. The range difference is evaluated in the cancellation-free form
+\begin{equation}
+\Delta R_p(\mathbf{x}) = \frac{q}{1 + \sqrt{1 + q / r_p}}, \qquad q = \frac{\lVert\mathbf{x}\rVert^2}{r_p} - 2\, \hat{\mathbf{u}}_p \cdot \mathbf{x},
+\end{equation}
+with $r_p = \lVert\mathbf{a}_p\rVert$ and $\hat{\mathbf{u}}_p = \mathbf{a}_p / r_p$. The reference implementation evaluates everything in float64 with Numba~\cite{lam2015} on the CPU. The CUDA kernel, compiled through CuPy~\cite{okuta2017}, evaluates the base range, the unit vector and the reciprocal range of each 32 by 32 pixel tile in float64 once per pulse, and the per-pixel remainder relative to the tile center in float32; the pulses are processed in chunks of 256 so that the range profiles of one chunk fit in memory at any image size. In the first round the per-pixel geometry was computed in float32 from the scene center and its error grew with the size of the scene; computed from the tile center the error does not grow.
+
+\paragraph{Factorized backprojection.} The image is divided recursively into tiles, as in the quadtree~\cite{mccorkle1996,xiao2000} and fast factorized~\cite{ulander2003} backprojection algorithms. At each level the phase history of a parent tile is multiplied by $\exp\{j 4\pi f_k (\lVert \mathbf{c} - \mathbf{a}_p \rVert - \lVert \mathbf{c}' - \mathbf{a}_p \rVert)/c\}$ to move its reference point from the parent center $\mathbf{c}'$ to a child center $\mathbf{c}$; the child's signal is then band limited in frequency and in pulse index in proportion to the child's size, and both axes are low-pass filtered and decimated by a Kaiser-windowed sinc~\cite{kaiser1974} with 70~dB design attenuation. At the last level the range to each pixel is linearized about the tile center, the kernel separates in the two image coordinates, and the tile image is a product of two matrices followed by a per-pixel quadratic phase correction, so that no stage requires an indexed read. The implementation handles rectangular images of any size: the side of each level divides the padded image by factors chosen from 8, 7, 6, 5, 4, 3 and 2, with 32 by 32 pixel final tiles, and the decimation factors follow from the range and Doppler extents of a child tile. For the Panama image the three levels divide the azimuth side by 8, 8 and 6 and the range side by 8, 7 and 5, and the first level decimates the 14,399 samples by 6 and the 15,186 pulses by 4. The first two levels compute their phase ramps from float64 geometry on the host and the remaining level from float32 geometry on the device; in the first round a float32 second level was found to add an error that grew with the size of the scene. The ramps themselves are evaluated on the device in float32, either directly (\emph{direct ramps} in the tables) or as the product of a coarse and a fine table (the \emph{split-table} form, about $2\sqrt{n}$ sines and cosines per ramp of $n$ samples, used by every row not labeled \emph{direct ramps}); the device times of both forms are in Appendix~\ref{app:stats}. The decimation filters are applied as dense matrix products (the TPU form), as strided convolutions (the L4 and CPU form) or as explicit sums over taps; on the TPU the three give the same image to better than $-140$~dB, and on the L4 the convolution differs from the dense product by $-64$ to $-76$~dB with TF32 products and not at all with full float32 products. One first-level tile is processed per call to the device, which bounds the working memory to about 6~GB at these sizes on every device. Polar format is described in Appendix~\ref{app:pfa}.
+
+\section{Floating-point formats and the arithmetic of each configuration}
+\label{app:formats}
+
+Table~\ref{tab:arith} states, for every configuration that was timed, in which floating-point type each step runs. A first-round configuration in which the phase ramps were also computed in bfloat16 produced an unusable image and is excluded. The L4's float16-product configuration also holds the data in float16; on the TPU the equivalent change, bfloat16 storage, is timed separately. The gather form of polar format is the selected form on the L4, the CPU and the v5e, and on the v5e the only form that fits, because the dense 15,186 by 15,186 resampling matrix and its intermediates exceed that device's 16~GB; it has no resampling product, and its arithmetic is that of the L4 and CPU row.
+
+% BEGIN GEN arith
+% END GEN arith
+
+Table~\ref{tab:formats} lists the formats that appear in this report. Float16 (IEEE binary16) keeps 11 significant bits and a 5-bit exponent, so it resolves 1 part in 2048 but overflows above 65,504; the phase history is therefore scaled to unit peak before conversion. Bfloat16~\cite{wang2019bfloat16} keeps the 8-bit exponent of float32 and only 8 significant bits, 1 part in 256. On the TPU every matrix product is formed from bfloat16 operands. A float32 operand is either rounded once (one pass), or split into a bfloat16 head and tail with the cross terms accumulated (three passes), or split into three parts (six passes), which recovers float32 accuracy~\cite{jax2018}. The L4's tensor cores accept float16 and bfloat16 operands, and TF32 (11 significant bits) for float32 operands at JAX's default precision (Section~\ref{sec:devices}). The CPU has no reduced-precision arithmetic that is faster than float32.
+
+\begin{table}[tb]
+\centering
+\caption{Floating-point formats. Significant bits include the implicit bit; the spacing is the distance between adjacent representable values near 1.}
+\label{tab:formats}
+\begin{tabular}{lrrrl}
+\toprule
+Format & Bits & Significant bits & Exponent bits & Spacing near 1 \\
+\midrule
+float64 & 64 & 53 & 11 & $2.2 \times 10^{-16}$ \\
+float32 & 32 & 24 & 8 & $1.2 \times 10^{-7}$ \\
+TF32 (GPU product operand) & 19 & 11 & 8 & $9.8 \times 10^{-4}$ \\
+float16 (IEEE binary16) & 16 & 11 & 5 & $9.8 \times 10^{-4}$ \\
+bfloat16 & 16 & 8 & 8 & $7.8 \times 10^{-3}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The measured image errors agree with the operand resolutions of Table~\ref{tab:formats}. Rounding each operand of the factorized products to bfloat16 adds noise about 48~dB below the operand~\cite{higham2002}, and the measured error of the single-pass TPU image, once the algorithm's own error (the float64 row of Table~\ref{tab:prec}) is removed, matches the rounding noise of the two operands accumulated through three levels. The float16 operands of the L4 are 18~dB finer and their rounding adds 1.1~dB to the float32 error. The three-pass product keeps the first 16 significant bits of each operand.
+
+\section{Using the TPU}
+\label{app:tpu}
+
+\paragraph{Survey.} In the first round the gather that backprojection needs per pixel and pulse was measured on the TPU at about $10^8$ reads per second; the L4's CUDA kernel performs the 1.6 trillion reads of the Panama image in 104~s, about $1.5 \times 10^{10}$ per second. The public documentation of the TPU generations, the JAX and Pallas documentation and the published work on irregular computation on TPUs were searched in October 2026 for a way to run exact backprojection, or any lookup-based formulation, at a rate comparable with the L4. A TPU core has a matrix unit, which multiplies dense tiles of bfloat16 operands at the chip's rated rate, and a vector unit, which executes element-wise operations and gathers at a rate set by memory bandwidth and lane count, two orders of magnitude lower per element. No texture or cache hierarchy for scattered reads is documented. The v6e and TPU7x add sparse cores for embedding lookups, which Google's Cloud TPU documentation (accessed October 2026) places near $10^9$ rows per second per chip and which are programmed through Pallas, JAX's kernel language; at that rate the @@sc.panama.lookups@@~trillion reads of the Panama image would take about 30 minutes, against 100 to 200 seconds on the L4. Writing the lookup as a one-hot matrix product, so that the matrix unit does it, multiplies by a matrix whose density is one in several thousand, and the arithmetic cost exceeds the dense algorithm's by the same factor. No published work was found that forms SAR, beamforming or tomographic images on a TPU; the nearest are formulations of FFTs and non-uniform FFTs as matrix products~\cite{barnett2019}, the approach taken here. The documentation's recommendations for dense workloads were applied and tested: shapes padded to multiples of 128 (v5e) or 256 (v6e), bfloat16 operands for default products, explicit precision per product and profiling of the compiled program; the recommendation for the TPU7x (two devices per chip) could not be tested.
+
+\paragraph{Profile.} Figure~\ref{fig:profile} shows the time of each stage of the first level on one first-level tile of the Panama collection, 15,186 pulses by 14,399 samples decimated to 3,805 by 2,408, measured one stage at a time on the v6e with single-pass products and on the L4 with TF32 products (profiling one stage at a time materializes the inputs and outputs of each stage, which the fused program does not; for a whole tile these exceed the v5e's 16~GB, so the v5e was not profiled). The phase ramp fused with the complex multiplication (rotate) costs @@prof.v6e.rot@@~ms on the v6e; the frequency-axis decimation as a dense product @@prof.v6e.dk@@~ms, as a strided convolution @@prof.v6e.dkconv@@~ms and as a block-banded product @@prof.v6e.dkband@@~ms; the pulse-axis decimation @@prof.v6e.dp@@, @@prof.v6e.dpconv@@ and @@prof.v6e.dpband@@~ms. The dense products run at @@prof.v6e.tflops@@~TFLOP/s including the multiplications by the zeros of the filter matrices, and the rotation moves @@prof.v6e.rotgbs@@~GB/s through memory. On the L4 the same stages take @@prof.l4.rot@@~ms for the rotation and @@prof.l4.dk@@, @@prof.l4.dkconv@@ and @@prof.l4.dkband@@~ms for the three forms of the frequency-axis decimation, so the strided convolution was used on the L4 and the dense product on the TPU. The deeper levels of the factorization multiply the number of children faster than the decimation shrinks the data, so the element-wise rotation accounts for most of the TPU device time over the whole image; the matrix units are active for roughly a third of the first level and for less of the rest.
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=0.9\textwidth]{fig/profile.pdf}
+\caption{Time per first-level tile of each stage of the factorized algorithm, by form, on the TPU v6e (single-pass products) and the L4 (TF32 products), with float32 data. Logarithmic scale.}
+\label{fig:profile}
+\end{figure}
+
+\paragraph{Measures that did not reduce TPU time.} Padding the pulse and sample counts to multiples of 256 increased the v5e device time from @@pad.v5e.base@@ to @@pad.v5e.pad@@~s (both timed in one session, earlier than the 8.0~s of Table~\ref{tab:fullpanama}); the padded samples are carried through every level. Bfloat16 storage slowed both TPUs on the Panama and Melbourne images (@@t.panama.tpu-v6e.ffbp.bf16_mm.s@@ compared with @@t.panama.tpu-v6e.ffbp.fp32_fast.s@@~s on the v6e), because the ramps remain float32 and the resulting conversions take longer than the reduction in memory traffic recovers; on the smaller Iowa image the difference was about 10\% in either direction. The split-table ramps, which cut the number of transcendental evaluations by a factor of about 60, were slower than direct evaluation on both TPUs (@@t.panama.tpu-v6e.ffbp.fp32_fast.s@@ compared with @@t.panama.tpu-v6e.ffbp.fp32_fast_direct.s@@~s on the v6e). The compiler fuses the direct form into the multiplication, whereas the table products require a pass over memory of their own. At the stage level the strided convolution was five times slower than the dense product on the frequency axis and twelve times on the pulse axis (Figure~\ref{fig:profile}); at the image level the factor was about four for Panama and Melbourne and two to three for Iowa on both TPUs (Appendix~\ref{app:stats}).
+
+\paragraph{Host transfers.} A 1.75~GB collection moves from host memory to the v6e at 14~GB/s as two float32 planes, and an order of magnitude more slowly as a complex64 array, which passes through a conversion; the same holds for the image on the return path. The pipelined measurements move planes in both directions; before this change, the polar-format throughput on the v6e corresponded to 3.0~s per image against a device time of 1.3~s.
+
+\section{Polar format on an orbital aperture}
+\label{app:pfa}
+
+The implementation consists of three resampling steps and a two-dimensional FFT, each expressed with FFTs, element-wise products or a single matrix product so that the same code runs on all devices. The pulses are first resampled so that the tangent of the look angle in the image plane is uniform in pulse index, which an orbit does not give exactly; this is a 16-tap Kaiser-windowed sinc interpolation along the pulse axis applied as a dense @@pfa.P@@ by @@pfa.P@@ matrix (the form selected on the v6e) or as a sum over 16 gathered rows (the form selected on the L4, the CPU and the v5e; both forms were timed on the L4, the v6e and the CPU). Each pulse is then resampled onto a uniform radial wavenumber grid, and each wavenumber row onto a uniform cross-range grid, by chirp-z transforms~\cite{rabiner1969}, which evaluate the band-limited interpolation on a scaled grid with FFTs and chirps; outputs that would wrap around the band are zeroed. The frequency samples are weighted by $f_c / f_k$ before resampling, because backprojection's uniform weighting of the samples corresponds to a density of $1/k$ in the wavenumber plane (the polar Jacobian) that the uniform spectral weighting of polar format omits. Without this weighting the corrected image's error worsens by about 1.5~dB. It is applied in every reported polar-format image.
+
+Because the grazing angle changes along the aperture, the radial band of each pulse projected onto the image plane drifts from pulse to pulse. The raster covers the union of the bands and so keeps the full spectral support of backprojection, a trapezoid, rather than the inscribed rectangle; in the ground plane the rectangle would hold half the bandwidth, in the vendor's slant plane nearly all of it. The wavenumber grid spacings are set by the native pixel spacings and FFT sizes of @@pfa.nfx@@ by @@pfa.nfy@@, which include a 300~m guard band on every side of the scene; the range and azimuth profiles are tapered to zero within the guard, because the periodic transforms otherwise wrap echoes from beyond the image into its edges (without the guard the edge error was $-5$~dB). The image is cut from the FFT output on the native grid with the carrier phases restored.
+
+\paragraph{Distortion and its correction.} The planar model writes the range history of a scatterer at $\mathbf{p}$ as $-\hat{\mathbf{u}}_p \cdot \mathbf{q} + c$; a least-squares fit of $\mathbf{q}$ and $c$ over the aperture to the exact history $\lVert \mathbf{p} - \mathbf{a}_p \rVert - \lVert \mathbf{a}_p \rVert$ gives the position at which polar format focuses the scatterer, $(q_x, q_y + c)$, since a constant range offset is a range shift. The fit residual is below 1~mrad of phase everywhere in the three scenes, so the uncorrected image is displaced without defocus, by up to @@pfa.shift.panama.az@@ pixels in azimuth and @@pfa.shift.panama.rg@@ in range at the corners of the Panama scene; measured target positions agree with the model to 0.2~pixel. The mapping is fitted by cubic polynomials over the image (residual below $10^{-4}$~pixel).
+
+The image is resampled through the mapping: the spectrum is placed in a raster of twice the pixel density, transformed without the carrier terms, interpolated at the apparent positions with a six-tap Lanczos kernel along each axis, and multiplied by the carriers evaluated at the apparent positions. No separate phase correction is needed; the quadratic phase of about @@pfa.center.quad@@~radians at 211~m seen in the uncorrected center crop is the carrier of the range displacement. The oversampled raster is processed in blocks rather than held in memory. The range transform is done once, and the azimuth transform and the resampling proceed in blocks of 512 output range columns.
+
+The corrected image's error against the reference is $-39$~dB in the central 1024 by 1024 pixels and $-32$~dB over the whole Panama image, growing toward the edges (the rings of Table~\ref{tab:pfaedge} and Figure~\ref{fig:rings} are quarters of the half-width, not this crop). On the full Panama image the resampling kernel (4, 6 and 8 taps) and the oversampling of the intermediate raster (2 and 3 times) change the whole-image error by less than 0.6~dB and the outermost ring, where the displacement is 10 to 18 pixels, by less than 0.4~dB (Table~\ref{tab:pfaedge}); lengthening the pulse interpolator from 16 to 32 or 48 taps, with a narrower Kaiser window, made the error slightly worse. The registration, measured from the cross-spectrum phase, is 0.001~pixel, and the reference's own convergence is more than 30~dB below the residual.
+ \begin{table}[tb]
+\centering
+\caption{Panama Canal, corrected polar format on the CPU: whole-image error and error by ring (dB) for variations of the correction. Rings are the four concentric regions of Appendix~\ref{app:stats}, inner to outer; the selected configuration is the first row.}
+\label{tab:pfaedge}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Variation & Error & Ring 1 & Ring 2 & Ring 3 & Ring 4 \\
+\midrule
+% BEGIN GEN pfaedge
+% END GEN pfaedge
+\bottomrule
+\end{tabular}
+\end{table}
+
+A remaining candidate, not tested, is the Taylor weighting, which backprojection applies per pulse and per sample but which polar format carries through the resampling onto the rectangular raster; the resulting difference would increase with distance from the center, as the residual does.
+
+\section{Measurement protocol in detail}
+\label{app:protocol}
+
+\paragraph{Time and cost.} Device time is measured from the start of the per-collection host work (for the factorized algorithm the float64 geometry of the first two levels, about 0.5~s) to the completion of the image on the device. Each configuration was compiled and run once and then timed once more; the second run is reported, and a few configurations were timed twice more, with a spread below 4\%, so differences of that order between rows are not resolved. 
+
+The pipelined loop ran until at least four images had been formed and at least 40~s (polar format) or 60~s (factorized) had elapsed, whichever came later, except that the exact backprojection loops on the L4 ran two or three images (190 to 495~s), the corrected polar format on the v6e two images (up to 215~s) and the CPU factorized loop one image per process (612~s with four processes), and the reported figure is images divided by elapsed time. On the TPUs the pipelined loop overlaps the host work with the device and its throughput slightly exceeds the inverse of the device time; on the L4, whose host has four vCPUs, the factorized loops ran 6 to 11\% slower per image than the device time. 
+
+The CPU instance's utilization was recorded from \texttt{/proc/stat} during every run, and its throughput was also measured with two and four worker processes pinned to disjoint cores, because a single XLA process does not occupy all sixteen hardware threads.
+
+\paragraph{Power.} The L4's draw was sampled from \texttt{nvidia-smi} twice a second during the timed loops. The TPU virtual machines and the CPU instance expose no power counters; the bounds derived for them from published design figures are in Section~\ref{sec:power} and are marked as estimates.
+
+\paragraph{Precision.} The gain fitted per algorithm family is a complex gain for the backprojections and a real one for polar format, whose phase differs from the reference by a smooth screen before correction. Six statistics are computed for each image. The error is the energy of the difference relative to the energy of the reference (dB); this is the figure quoted when a single number is given. The others are the largest single-pixel difference relative to the brightest pixel (dB); the complex coherence between the two images over a 5 by 5 window, as the mean, the 0.1 percentile and the minimum; the amplitude ratio and the phase difference over the brighter half of the pixels, as the 99th percentile and the maximum; and the error in four rings by distance from the scene center. Appendix~\ref{app:stats} tabulates all of them for every configuration whose image was saved. The selected configurations are defined in Section~\ref{sec:protocol}; the implementation forms among which the choice is made are the filter, ramp and resampling forms, and Appendices~\ref{app:tpu} and \ref{app:pfa} give the measurements behind each choice.
+
+\paragraph{CPU details.} The CPU code is generated by XLA from the same source as the accelerator code and has not been compared with a hand-tuned CPU implementation; the polar-format and float64 rows of Table~\ref{tab:cost} are single-process timings. Exact backprojection was run on the CPU only as the float64 reference with 16 times oversampling, which took @@ref.panama.s@@~s on the n2-highmem-48 of Section~\ref{sec:devices}; at about \$1,210 per thousand images it serves only as the reference and is not a candidate configuration.
+
+\paragraph{Reference convergence and exact backprojection.} The reference is a float64 exact backprojection with range profiles oversampled 16 times. Its convergence was measured on a 1024 by 1024 crop by forming the same crop at 8, 16 and 32 times: the 8 times image differs from the 32 times image by @@ref.conv8@@~dB and the 16 times image from the 32 times image by @@ref.conv16@@~dB. At 8 times the convergence error would have been comparable to the differences under study, so the 16 times reference was used; even so, no exact-backprojection error can be measured below the convergence of the reference.
+
+With 16 times oversampled profiles, against the 16 times reference whose interpolation they share, the L4 float32 and float16 images measure @@p.gpu-l4.bp.cuda_fp32_ov16.err@@ and @@p.gpu-l4.bp.cuda_f16_ov16.err@@~dB. At these settings the error of exact backprojection is set by the profile oversampling, approximately $-56$~dB at 8 times and, within the limit set by the convergence of the reference itself, approximately $-69$~dB at 16 times; float16 storage of the profiles adds no measurable error at 8 times, and at 16 times it separates the two shared-interpolation figures by 4~dB, which against the $-69$~dB floor amounts to less than 1~dB. With 16 times oversampling, exact backprojection takes @@t.panama.gpu-l4.bp.cuda_f16_ov16.s@@~s with float16 profiles and @@t.panama.gpu-l4.bp.cuda_fp32_ov16.s@@~s with float32 profiles, which at the instance price is \$@@c16.f16.usd@@ and \$@@c16.fp32.usd@@ per thousand images.
+
+\paragraph{Polar format on each device.} On the v5e the corrected image takes @@c.panama.tpu-v5e.pfa.fp32_taps_corr.s@@~s compared with @@c.panama.tpu-v5e.pfa.fp32_taps.s@@~s uncorrected. The contiguous row gathers of the pulse resampling run nearly a hundred times faster on the TPU than the scattered two-dimensional gathers of the correction. A separable approximation of the correction, expressible as row and column phase ramps, would avoid the gathers, but the squinted geometry of these collections is not exactly separable in this way. A form of the correction that avoids scattered gathers would reduce the TPU's disadvantage in Section~\ref{sec:pfa}; the size of the reduction was not measured. The dense pulse-resampling product (images saved on the L4, the v6e and the CPU) and the gather form (the v5e and the CPU) give images that agree to the precision of Table~\ref{tab:prec}.
+
+\section{Ground truth of the Panama regions}
+\label{app:truth}
+
+The identity of the Panama regions used in Figure~\ref{fig:zoom} was checked against Copernicus Sentinel-2 imagery~\cite{sentinel2} (Figure~\ref{fig:eo}). Each pixel of the images formed here was located on the ground from the vendor's SICD header: the pixel's position in the slant plane follows from the scene center point and the row and column unit vectors, and the ground point is the intersection of the line through it along the slant plane's normal with the WGS84 ellipsoid at the scene height. The image corners so computed agree with the corner coordinates in the SICD header to within 15~m. The nearest usable Sentinel-2 acquisition is from 2023-07-23, five days later, at 10~m resolution; a dry-season acquisition of 2024-02-23 is shown as well because clouds cover part of the earlier one. The lock chambers, the quays and container yard of the terminal, and the road beside the vegetation region coincide in the two sensors. The bright target of the ship region, about 180~m long and close to the eastern bank, is not a fixed structure: the Panama Canal is a repeat-collection site in the Umbra catalog, and in the vendor's geocoded products of six other passes, four of them three, four, five and seven days after this collection and two in February 2024, the same water is empty (Figure~\ref{fig:channel}). The pass of 2023-07-25 02:30 UTC repeats the geometry of this collection to within $0.3^\circ$ (azimuth $122.4^\circ$ against $122.1^\circ$, grazing angle $42.6^\circ$ in both, left-looking), which rules out an aspect-dependent return from a fixed object; the other passes span azimuths from $-72^\circ$ to $223^\circ$ and grazing angles from $40^\circ$ to $63^\circ$. The pass of 2023-07-23 14:47 UTC precedes the Sentinel-2 image of that day by 64 minutes, and neither shows anything at the position. The target is therefore a ship in the navigation channel; the Sentinel-2 image of 2024-02-23 shows a different ship nearby. The vendor's geocoded product of this collection places the target inside the outlined crop, which confirms the pixel-to-ground mapping independently of the corner check.
+
+The ship appears on the eastern bank, inland of the channel, as a consequence of its motion during the aperture. A stationary-scene processor places a target with line-of-sight velocity $v_r$ at the position whose Doppler history matches, displaced along azimuth by about $R v_r / V$ (here about 100~m per m/s), and the along-track velocity defocuses it~\cite{raney1971}. Since exact backprojection takes the antenna position of every pulse as data, a target moving at constant velocity $\mathbf{v}$ is formed exactly by backprojecting with the track shifted by $-\mathbf{v} t$, which both focuses it and places it at its position at the aperture center. The ship was assumed to follow the channel axis (bearing $158^\circ$, from the Sentinel-2 water mask) and its speed was swept from $-8$ to $8$~m/s in a tile around it (Figure~\ref{fig:ship}). The sharpness of the tile, the sum of the squared intensities, is single-peaked at $3.0$~m/s (5.8~knots toward the Pacific), where the peak intensity is 10.6~dB above the stationary-scene image and the ship has moved 469 pixels (194~m) along azimuth into the navigation channel; the position of the water was not used in the estimate. A heading $10^\circ$ to the west ($148^\circ$) gives the same speed with an 18\% lower sharpness peak and a compensated position 22~m away. The images compared in Figures~\ref{fig:zoom} and \ref{fig:pixels} are the stationary-scene images, in which the ship appears at the same displaced position under every algorithm; the motion analysis serves only to establish that the target is a ship.
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.96\textwidth]{fig/ship_panama.pdf}
+\caption{The ship compensated for its motion. Top: the tile around the ship as formed and after backprojection with the antenna track shifted for a ship moving at 3.0~m/s along the channel, both resampled north up over a 760~m window (200~m bar), and the two positions on the Sentinel-2 image of 2024-02-23, with the 194~m displacement (dashed) and the estimated velocity, 3.0~m/s toward $158^\circ$, drawn at the compensated position. Bottom: 160 by 160 pixel windows around the ship in image coordinates (20~m bar), and the sharpness of the tile against the assumed speed for the channel heading of $158^\circ$ (coarse and fine sweeps) and for $148^\circ$.}
+\label{fig:ship}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.84\textwidth]{fig/eo_panama.pdf}
+\caption{The four Panama regions of Figure~\ref{fig:zoom} located on the ground. Left: the float64 reference image resampled to a north-up 1~m grid over a 1.2~km window (amplitude in decibels over a 45~dB range, 200~m bar). Center and right: Copernicus Sentinel-2 true-color images of the same windows from 2023-07-23, five days after the radar collection, and from 2024-02-23. The outline is the 512 by 512 pixel crop of Figure~\ref{fig:zoom}; it is a parallelogram on the ground because the image axes are azimuth and slant range.}
+\label{fig:eo}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.92\textwidth]{fig/channel_panama.pdf}
+\caption{The ship region on six dates, north up, 1.2~km windows (200~m bar): the vendor's geocoded products of five Umbra passes between 2023-07-18 and 2023-07-25, and the Sentinel-2 image of 2023-07-23. The outline is the crop of Figure~\ref{fig:zoom}. The bright target of 2023-07-18 is absent from every other pass, including that of 2023-07-25, which repeats the viewing geometry of 2023-07-18 to within $0.3^\circ$; the smaller bright points along the eastern bank recur in every pass and are consistent with moored small craft and shore structures.}
+\label{fig:channel}
+\end{figure}
+
+\section{Full tables}
+\label{app:stats}
+
+Tables~\ref{tab:costother} to \ref{tab:fulliowa} give the cost figures for Melbourne and Iowa and, for every configuration timed or measured on each scene, the device time and the statistics. The column \emph{Rings} gives the error in four concentric regions, the quarters of the half-width from the scene center outward. Configurations are labeled as in the body: on the TPUs \emph{single-pass}, \emph{three-pass} and \emph{six-pass products} are the one, three and six bfloat16 passes of a float32 product and \emph{bfloat16 storage} keeps the data in bfloat16; on the L4 \emph{TF32 products} is the product at JAX's default precision and \emph{float32} the product at the highest setting, used for every float32 figure in the body; \emph{gather} marks the gather form of the pulse resampling and of the correction (for polar format in gather form, \emph{single-pass product} denotes the run whose dense product would have been single-pass; the gather form has no such product and the two images are identical); \emph{direct ramps}, \emph{conv. filters} and \emph{tap sums} are the forms described in Appendix~\ref{app:algorithms}. On the L4, \emph{float16 product} denotes the pulse-resampling product with float16 tensor-core operands. The pipelined figures in parentheses for the polar-format \emph{single-pass product} rows of both TPUs were recorded before the transfer change described in Appendix~\ref{app:tpu} and exceed the device time for that reason. The L4 polar-format times for Iowa (1.5~s uncorrected, 1.6~s corrected) differ by less than the correction's cost on the other scenes, and the CPU's dense uncorrected Melbourne time (20.3~s) exceeds its corrected time (17.8~s); both anomalies are single runs of short kernels and were not repeated.
+
+% BEGIN GEN costother
+% END GEN costother
+
+% BEGIN GEN fullstats
+% END GEN fullstats
+
+\begin{thebibliography}{99}
+\bibitem{umbra2023} Umbra Lab, Inc., ``Umbra Open Data Program,'' 2023. [Online]. Available: \url{https://umbra.space/open-data}
+\bibitem{raney1971} R. K. Raney, ``Synthetic aperture imaging radar and moving targets,'' \emph{IEEE Trans. Aerosp. Electron. Syst.}, vol. AES-7, no. 3, pp. 499--505, 1971.
+\bibitem{sentinel2} European Space Agency, ``Copernicus Sentinel-2 Level-2A surface reflectance, tiles S2B\_17PPK\_20230723 and S2A\_17PPK\_20240223,'' contains modified Copernicus Sentinel data 2023 and 2024, accessed October 2026 through the Earth Search STAC catalog. [Online]. Available: \url{https://registry.opendata.aws/sentinel-2-l2a-cogs/}
+\bibitem{gorham2010} L. A. Gorham and L. J. Moore, ``SAR image formation toolbox for MATLAB,'' in \emph{Proc. SPIE 7699, Algorithms for Synthetic Aperture Radar Imagery XVII}, 2010, p. 769906.
+\bibitem{mccorkle1996} J. W. McCorkle and M. Rofheart, ``An order $N^2 \log(N)$ backprojector algorithm for focusing wide-angle wide-bandwidth arbitrary-motion synthetic aperture radar,'' in \emph{Proc. SPIE 2747, Radar Sensor Technology}, 1996, pp. 25--36.
+\bibitem{xiao2000} S. Xiao, D. C. Munson, Jr., S. Basu, and Y. Bresler, ``An $N^2 \log N$ back-projection algorithm for SAR image formation,'' in \emph{Conf. Rec. 34th Asilomar Conf. Signals, Systems and Computers}, 2000, pp. 3--7.
+\bibitem{ulander2003} L. M. H. Ulander, H. Hellsten, and G. Stenstr\"om, ``Synthetic-aperture radar processing using fast factorized back-projection,'' \emph{IEEE Trans. Aerosp. Electron. Syst.}, vol. 39, no. 3, pp. 760--776, 2003.
+\bibitem{carrara1995} W. G. Carrara, R. S. Goodman, and R. M. Majewski, \emph{Spotlight Synthetic Aperture Radar: Signal Processing Algorithms}. Norwood, MA: Artech House, 1995.
+\bibitem{jakowatz1996} C. V. Jakowatz, Jr., D. E. Wahl, P. H. Eichel, D. C. Ghiglia, and P. A. Thompson, \emph{Spotlight-Mode Synthetic Aperture Radar: A Signal Processing Approach}. Boston, MA: Kluwer, 1996.
+\bibitem{rabiner1969} L. R. Rabiner, R. W. Schafer, and C. M. Rader, ``The chirp z-transform algorithm,'' \emph{IEEE Trans. Audio Electroacoust.}, vol. 17, no. 2, pp. 86--92, 1969.
+\bibitem{taylor1955} T. T. Taylor, ``Design of line-source antennas for narrow beamwidth and low side lobes,'' \emph{IRE Trans. Antennas Propag.}, vol. 3, no. 1, pp. 16--28, 1955.
+\bibitem{kaiser1974} J. F. Kaiser, ``Nonrecursive digital filter design using the $I_0$-sinh window function,'' in \emph{Proc. IEEE Int. Symp. Circuits and Systems}, 1974, pp. 20--23.
+\bibitem{higham2002} N. J. Higham, \emph{Accuracy and Stability of Numerical Algorithms}, 2nd ed. Philadelphia, PA: SIAM, 2002.
+\bibitem{wang2019bfloat16} S. Wang and P. Kanwar, ``BFloat16: The secret to high performance on Cloud TPUs,'' Google Cloud Blog, Aug. 2019.
+\bibitem{jax2018} J. Bradbury \emph{et al.}, ``JAX: Composable transformations of Python+NumPy programs,'' 2018. [Online]. Available: \url{https://github.com/jax-ml/jax}
+\bibitem{lam2015} S. K. Lam, A. Pitrou, and S. Seibert, ``Numba: A LLVM-based Python JIT compiler,'' in \emph{Proc. 2nd Workshop on the LLVM Compiler Infrastructure in HPC}, 2015.
+\bibitem{okuta2017} R. Okuta, Y. Unno, D. Nishino, S. Hido, and C. Loomis, ``CuPy: A NumPy-compatible library for NVIDIA GPU calculations,'' in \emph{Proc. Workshop on Machine Learning Systems (LearningSys) at NIPS}, 2017.
+\bibitem{barnett2019} A. H. Barnett, J. Magland, and L. af Klinteberg, ``A parallel nonuniform fast Fourier transform library based on an `exponential of semicircle' kernel,'' \emph{SIAM J. Sci. Comput.}, vol. 41, no. 5, pp. C479--C504, 2019.
+\end{thebibliography}
+
+\end{document}

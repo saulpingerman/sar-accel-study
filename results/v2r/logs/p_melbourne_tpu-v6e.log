@@ -1,0 +1,15 @@
+E1003 03:38:16.716170   14522 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+pfa grid {'nkr': 9929, 'nka': 9499, 'nfy': 12288, 'nfx': 11520, 'oversample_r': 0.6895360294911456, 'oversample_a': 0.595623275645849} 0.0s
+pfa/fp32 ok {'first_s': 44.4196, 'run_s': 1.2799, 'resample': 'dense'}
+pfa/fp32_fast ok {'first_s': 46.087, 'run_s': 1.1934, 'resample': 'dense'}
+E1003 03:41:52.294166   15376 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+pfa grid {'nkr': 9929, 'nka': 9499, 'nfy': 12288, 'nfx': 11520, 'oversample_r': 0.6895360294911456, 'oversample_a': 0.595623275645849} 0.0s
+pfa/fp32_taps ok {'first_s': 49.7502, 'run_s': 1.3259, 'resample': 'taps'}
+E1003 03:42:54.198254   16036 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+pfa grid {'nkr': 9929, 'nka': 9499, 'nfy': 12288, 'nfx': 11520, 'oversample_r': 0.6895360294911456, 'oversample_a': 0.595623275645849} 0.0s
+pfa distortion model: max shift (az, rg) px [10.24, 10.01] fit rms px [0.0, 0.0] 0.2s
+pfa/fp32_corr ok {'first_s': 160.1737, 'run_s': 101.7348, 'resample': 'dense'}
+E1003 03:53:05.021232   17370 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+pfa grid {'nkr': 9929, 'nka': 9499, 'nfy': 12288, 'nfx': 11520, 'oversample_r': 0.6895360294911456, 'oversample_a': 0.595623275645849} 0.0s
+pfa distortion model: max shift (az, rg) px [10.24, 10.01] fit rms px [0.0, 0.0] 0.2s
+pfa/fp32_taps_corr ok {'first_s': 165.5042, 'run_s': 101.7817, 'resample': 'taps'}

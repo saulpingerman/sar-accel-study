@@ -1,0 +1,80 @@
+plan [(8, 8, 55, 56, 270, 280), (2, 2, 2, 2, 145, 150), (2, 2, 2, 2, 83, 85)] padded 1024 1024 2.0s
+ffbp/f16 ok {'first_s': 23.9207, 'run_s': 1.6311, 'host_s': 0.072, 'filt': 'dense'}
+ffbp/fp32_fast ok {'first_s': 24.3036, 'run_s': 1.9972, 'host_s': 0.0716, 'filt': 'dense'}
+ffbp/fp32 ok {'first_s': 73.3998, 'run_s': 3.2402, 'host_s': 0.0722, 'filt': 'dense'}
+ffbp/f16_conv ok {'first_s': 6.4377, 'run_s': 2.3879, 'host_s': 0.0709, 'filt': 'conv'}
+ffbp/fp32_fast_conv ok {'first_s': 7.5925, 'run_s': 4.4432, 'host_s': 0.0709, 'filt': 'conv'}
+ffbp/fp32_conv ok {'first_s': 7.5209, 'run_s': 4.4489, 'host_s': 0.0716, 'filt': 'conv'}
+plan [(8, 8, 55, 56, 270, 280), (2, 2, 2, 2, 145, 150), (2, 2, 2, 2, 83, 85)] padded 1024 1024 1.7s
+ffbp/f16_direct ok {'first_s': 23.1502, 'run_s': 1.4954, 'host_s': 0.0724, 'filt': 'dense'}
+pfa grid {'nkr': 7229, 'nka': 10123, 'nfy': 9000, 'nfx': 12288, 'oversample_r': 0.5020439195546257, 'oversample_a': 0.6666008165415515} 0.0s
+W1002 22:40:02.752943   16246 bfc_allocator.cc:598] Allocator (GPU_0_bfc) ran out of memory trying to allocate 11.12GiB (rounded to 11942756864) from the lower end requested by op 
+If this is caused by memory fragmentation, the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' may improve the situation.
+Current allocation summary follows.
+W1002 22:40:02.753152   16246 bfc_allocator.cc:609] ***********_**********************************_____________________________________________________*
+pfa/fp32 FAILED JaxRuntimeError RESOURCE_EXHAUSTED: Out of memory while trying to allocate 11.12GiB with allocator GPU_0_bfc on device 0. [tf-allocator-allocation-error=''] [executable_name='jit_pfa']
+W1002 22:41:11.824012   16246 bfc_allocator.cc:598] Allocator (GPU_0_bfc) ran out of memory trying to allocate 11.12GiB (rounded to 11942756864) from the lower end requested by op 
+If this is caused by memory fragmentation, the environment variable 'TF_GPU_ALLOCATOR=cuda_malloc_async' may improve the situation.
+Current allocation summary follows.
+W1002 22:41:11.824308   16246 bfc_allocator.cc:609] ***********************_*******____________________________________________________________________*
+pfa/f16 FAILED JaxRuntimeError RESOURCE_EXHAUSTED: Out of memory while trying to allocate 11.12GiB with allocator GPU_0_bfc on device 0. [executable_name='jit_pfa'] [tf-allocator-allocation-error='']
+pfa grid {'nkr': 7229, 'nka': 10123, 'nfy': 9000, 'nfx': 12288, 'oversample_r': 0.5020439195546257, 'oversample_a': 0.6666008165415515} 0.0s
+W1002 22:41:17.968184   16410 bfc_allocator.cc:371] Allocator (GPU_0_bfc) ran out of memory trying to allocate 1.63GiB from the lower end with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+E1002 22:41:17.968236   16410 cuda_fft.cc:273] Failed to allocate work area.
+E1002 22:41:17.968240   16410 cuda_fft.cc:324] Initialize Params: rank: 1 elem_count: 14399 input_embed: 14399 input_stride: 1 input_distance: 14399 output_embed: 14399 output_stride: 1 output_distance: 14399 batch_count: 15186
+E1002 22:41:17.968246   16410 cuda_fft.cc:333] Failed to initialize batched cufft plan with customized allocator: Out of memory while trying to allocate 1.63GiB with allocator GPU_0_bfc on device 0.
+E1002 22:41:17.988092   16410 status_macros.cc:58] INTERNAL: RET_CHECK failure (external/xla+/xla/backends/gpu/runtime/fft_thunk.cc:201) fft_plan != nullptr Failed to create cuFFT batched plan with scratch allocator
+=== Source Location Trace: === 
+external/xla+/xla/status_macros.cc:81
+
+*** Begin stack trace ***
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	PyObject_Vectorcall
+	_PyEval_EvalFrameDefault
+	_PyObject_Call_Prepend
+	
+	PyObject_Call
+	_PyEval_EvalFrameDefault
+	PyObject_Vectorcall
+	
+	
+	PyObject_Vectorcall
+	_PyEval_EvalFrameDefault
+	PyEval_EvalCode
+	
+	
+	_PyRun_SimpleFileObject
+	_PyRun_AnyFileObject
+	Py_RunMain
+	Py_BytesMain
+	
+	__libc_start_main
+	_start
+*** End stack trace ***
+
+pfa/fp32_taps FAILED JaxRuntimeError INTERNAL: RET_CHECK failure (external/xla+/xla/backends/gpu/runtime/fft_thunk.cc:201) fft_plan != nullptr Failed to create cuFFT batched plan with scratch allocator [executable_name='jit_pfa']
+bp/cuda_fp32 ok {'first_s': 3.4215, 'run_s': 1.5684}
+bp/cuda_f16 ok {'first_s': 1.5807, 'run_s': 1.5685}

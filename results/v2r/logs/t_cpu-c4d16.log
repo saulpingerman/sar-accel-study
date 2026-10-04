@@ -1,0 +1,9 @@
+plan [(8, 8, 55, 56, 270, 280), (2, 2, 2, 2, 145, 150), (2, 2, 2, 2, 83, 85)] padded 1024 1024 0.5s
+ffbp/fp32_conv_direct ok {'first_s': 26.2178, 'run_s': 25.8979, 'host_s': 0.0275, 'filt': 'conv'}
+ffbp/fp32_taps_direct ok {'first_s': 79.8575, 'run_s': 76.9685, 'host_s': 0.0286, 'filt': 'taps'}
+plan [(8, 8, 55, 56, 270, 280), (2, 2, 2, 2, 145, 150), (2, 2, 2, 2, 83, 85)] padded 1024 1024 0.5s
+ffbp/fp64_conv_direct ok {'first_s': 60.8717, 'run_s': 58.738, 'host_s': 0.0305, 'filt': 'conv'}
+pfa grid {'nkr': 7229, 'nka': 10123, 'nfy': 9000, 'nfx': 12288, 'oversample_r': 0.5020439195546257, 'oversample_a': 0.6666008165415515} 0.0s
+pfa/fp32 ok {'first_s': 12.4737, 'run_s': 12.105, 'resample': 'dense'}
+pfa grid {'nkr': 7229, 'nka': 10123, 'nfy': 9000, 'nfx': 12288, 'oversample_r': 0.5020439195546257, 'oversample_a': 0.6666008165415515} 0.0s
+pfa/fp32_taps ok {'first_s': 4.94, 'run_s': 4.7114, 'resample': 'taps'}

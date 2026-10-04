@@ -1,0 +1,32 @@
+E1002 23:17:19.487474   25238 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+{"label": "tpu-v6e", "device": "TPU_0(process=0,(0,0,0,0))", "P": 15186, "K": 14399, "Ko": 2408, "Po": 3805, "Dk": 6, "Dp": 4, "children": 64, "fir_k_taps": 44, "fir_p_taps": 30}
+fp32_fast ramp_direct 29.4 ms 
+fp32_fast ramp_split 8.7 ms 
+fp32_fast rotate_direct 9.8 ms 
+fp32_fast rotate_split 11.0 ms 
+fp32_fast dec_k_dense 3.5 ms 0.0 dB
+fp32_fast dec_k_conv 16.4 ms -144.0 dB
+fp32_fast dec_k_banded 10.9 ms -143.7 dB
+fp32_fast dec_p_dense 1.0 ms 0.0 dB
+fp32_fast dec_p_conv 12.2 ms -146.2 dB
+fp32_fast dec_p_banded 3.0 ms -146.2 dB
+bf16_mm ramp_direct 29.4 ms 
+bf16_mm ramp_split 8.7 ms 
+bf16_mm rotate_direct 9.8 ms 
+bf16_mm rotate_split 11.1 ms 
+bf16_mm dec_k_dense 5.7 ms 0.0 dB
+bf16_mm dec_k_conv 18.3 ms -144.0 dB
+bf16_mm dec_k_banded 11.0 ms -143.7 dB
+bf16_mm dec_p_dense 1.0 ms 0.0 dB
+bf16_mm dec_p_conv 12.4 ms -146.2 dB
+bf16_mm dec_p_banded 3.8 ms -146.0 dB
+fp32 ramp_direct 29.4 ms 
+fp32 ramp_split 8.7 ms 
+fp32 rotate_direct 9.8 ms 
+fp32 rotate_split 11.1 ms 
+fp32 dec_k_dense 17.9 ms 0.0 dB
+fp32 dec_k_conv 52.7 ms -144.1 dB
+fp32 dec_k_banded 17.4 ms -143.3 dB
+fp32 dec_p_dense 4.4 ms 0.0 dB
+fp32 dec_p_conv 44.7 ms -145.7 dB
+fp32 dec_p_banded 3.7 ms -145.8 dB
