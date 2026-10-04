@@ -126,7 +126,7 @@ def main():
             info[s] = json.loads(t[t.index('{'):])
     lines = [r'\begin{table}[tb]', r'\centering', r'\caption{The three collections and their native image grids. Spacings are azimuth by range in the slant plane; squint is the Doppler cone angle less $90^\circ$ at the aperture center; range is the slant range to the scene center at the start of the aperture.}',
              r'\label{tab:scenes}', r'\small', r'\resizebox{\textwidth}{!}{\begin{tabular}{lrrrrrrr}', r'\toprule',
-             r'Scene & Image (az $\times$ rg) & Spacing (m) & Pulses $\times$ samples & Band (MHz) & Graze & Squint & Range (km) \\', r'\midrule']
+             r'Scene & Image (az $\times$ rg) & Spacing (m) & Pulses $\times$ samples & Bandwidth (MHz) & Graze & Squint & Range (km) \\', r'\midrule']
     for s, d in info.items():
         lines.append(f"{SCENE[s]} & {d['nx']:,} $\\times$ {d['ny']:,} & {d['spx']:.3f} $\\times$ {d['spy']:.3f} & {d['vectors']:,} $\\times$ {d['samples']:,} & {d['bandwidth_hz'] / 1e6:.0f} & {d['graze_deg']:.1f}$^\\circ$ & {'$' + f"{d['squint_deg']:.1f}" + '$' if d['squint_deg'] < 0 else f"{d['squint_deg']:.1f}"}$^\\circ$ & {d['range_km'][0]:.0f} \\\\")
         num[f'sc.{s}.nx'] = f"{d['nx']:,}"
@@ -135,11 +135,13 @@ def main():
     lines += [r'\bottomrule', r'\end{tabular}}', r'\end{table}']
     gen['scenes'] = '\n'.join(lines)
     # ---- platforms
-    gen['platforms'] = '\n'.join([r'\begin{table}[tb]', r'\centering', r'\caption{Instances and on-demand prices (US dollars per hour, us-central1).}', r'\label{tab:platforms}',
-                                  r'\begin{tabular}{llr}', r'\toprule', r'Label & Instance & Price \\', r'\midrule',
-                                  r'TPU v5e & 1 chip (v5litepod-1), 24 vCPU host & 1.200 \\', r'TPU v6e & 1 chip (v6e-1), 44 vCPU host & 2.700 \\',
-                                  r'L4 & g2-standard-4, 1 Nvidia L4 (24 GB) & 0.707 \\', r'CPU & c4d-highmem-16, AMD EPYC 9B45, 8 cores, 126 GB & 0.964 \\',
-                                  r'\bottomrule', r'\end{tabular}', r'\end{table}'])
+    gen['platforms'] = '\n'.join([r'\begin{table}[tb]', r'\centering', r'\caption{Instances, the arithmetic timed on each (Section~\ref{sec:devices} and Appendix~\ref{app:formats}) and on-demand prices (US dollars per hour, us-central1).}', r'\label{tab:platforms}',
+                                  r'\small', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllr}', r'\toprule', r'Label & Instance & Arithmetic timed & Price \\', r'\midrule',
+                                  r'TPU v5e & 1 chip (v5litepod-1), 24 vCPU host & bfloat16 single-, three- and six-pass products; float32 or bfloat16 data & 1.200 \\',
+                                  r'TPU v6e & 1 chip (v6e-1), 44 vCPU host & bfloat16 single-, three- and six-pass products; float32 or bfloat16 data & 2.700 \\',
+                                  r'L4 & g2-standard-4, 1 Nvidia L4 (24 GB) & float16, TF32 and float32 products; float16 or float32 data & 0.707 \\',
+                                  r'CPU & c4d-highmem-16, AMD EPYC 9B45, 8 cores, 126 GB & float32 and float64 & 0.964 \\',
+                                  r'\bottomrule', r'\end{tabular}}', r'\end{table}'])
     # ---- arithmetic table (static text)
     gen['arith'] = '\n'.join([r'\begin{table}[tb]', r'\centering', r'\caption{Floating-point type of each step in the timed configurations. Geometry means tile centers, ranges and phase-ramp coefficients; ramps means the sines and cosines themselves; products means the operands of the matrix products or convolutions, always accumulated in float32 or better.}',
                               r'\label{tab:arith}', r'\footnotesize', r'\setlength{\tabcolsep}{3pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{llllll}', r'\toprule',
@@ -184,17 +186,17 @@ def main():
                 r'Device & Algorithm & Arithmetic & Time (s) & Images/h & \$ per 1000 \\', r'\midrule']
 
     lines = [r'\begin{table}[tb]', r'\centering',
-             r'\caption{Panama Canal: the selected configurations grouped by the change a viewer sees against the float64 image, cheapest first within each group. Cost is the on-demand instance price divided by the pipelined throughput (an asterisk marks rows timed without a pipelined loop, costed from the device time). Error is the energy of the difference relative to the reference. A bullet marks the Pareto-optimal rows of Figure~\ref{fig:teaser}: no other configuration is both cheaper and closer to the reference. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
+             r'\caption{Panama Canal: the selected configurations grouped by the change a viewer sees against the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, costed from the device time. A bullet marks the Pareto-optimal rows of Figure~\ref{fig:teaser}: no other configuration is both cheaper and closer to the reference. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
              r'\label{tab:cost}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\begin{tabular}{lllrrrc}', r'\toprule',
              r'Device & Algorithm & Arithmetic & Time (s) & \$ per 1000 & Error (dB) & Pareto \\', r'\midrule']
     panama_rows = []
     lines_other = cost_header(r'\label{tab:costother}', r'\caption{Melbourne and Iowa: device time, throughput and cost for the selected configurations, as in Table~\ref{tab:cost}. }')
     # candidates per selected row; the fastest timed form is used (ties broken toward a pipelined record)
     record_c = [('gpu-l4', ['bp/cuda_f16']), ('gpu-l4', ['bp/cuda_fp32']), ('gpu-l4', ['ffbp/f16_conv']),
-                ('gpu-l4', ['ffbp/fp32_conv', 'ffbp/fp32']), ('gpu-l4', ['pfa/fp32_taps']), ('gpu-l4', ['pfa/fp32_taps_corr']),
-                ('tpu-v5e', ['ffbp/fp32_fast_direct']), ('tpu-v5e', ['ffbp/fp32_high_direct', 'ffbp/fp32_high']), ('tpu-v5e', ['pfa/fp32_taps']), ('tpu-v5e', ['pfa/fp32_taps_corr']),
-                ('tpu-v6e', ['ffbp/fp32_fast_direct']), ('tpu-v6e', ['ffbp/fp32_high_direct', 'ffbp/fp32_high']), ('tpu-v6e', ['pfa/fp32']), ('tpu-v6e', ['pfa/fp32_corr']),
-                ('cpu-c4d16', ['ffbp/fp32_conv_direct']), ('cpu-c4d16', ['ffbp/fp64_conv_direct']), ('cpu-c4d16', ['pfa/fp32_taps']), ('cpu-c4d16', ['pfa/fp32_taps_corr'])]
+                ('gpu-l4', ['ffbp/fp32_conv', 'ffbp/fp32']), ('gpu-l4', ['pfa/fp32_taps_corr']),
+                ('tpu-v5e', ['ffbp/fp32_fast_direct']), ('tpu-v5e', ['ffbp/fp32_high_direct', 'ffbp/fp32_high']), ('tpu-v5e', ['pfa/fp32_taps_corr']),
+                ('tpu-v6e', ['ffbp/fp32_fast_direct']), ('tpu-v6e', ['ffbp/fp32_high_direct', 'ffbp/fp32_high']), ('tpu-v6e', ['pfa/fp32_corr']),
+                ('cpu-c4d16', ['ffbp/fp32_conv_direct']), ('cpu-c4d16', ['ffbp/fp64_conv_direct']), ('cpu-c4d16', ['pfa/fp32_taps_corr'])]
 
     def pick(s_, lab, cands):
         best = None
@@ -271,7 +273,7 @@ def main():
     TIERS = [('A', 'No visible change: amplitude and coherence maps match the reference'),
              ('B', 'Amplitude unchanged; coherence loss beside bright returns'),
              ('C', 'Amplitude unchanged; striped coherence loss'),
-             ('D', 'Visibly displaced (up to 18 pixels at the corners)')]
+             ('D', 'Visibly displaced')]
 
     def tier(r):
         if r['amp_db']['p99'] > 3.0:
@@ -330,7 +332,7 @@ def main():
     prec_order = [('gpu-l4', 'bp/cuda_fp32'), ('gpu-l4', 'bp/cuda_f16'), ('gpu-l4', 'bp/cuda_fp32_ov16'), ('gpu-l4', 'bp/cuda_f16_ov16'),
                   ('gpu-l4', 'ffbp/fp32'), ('gpu-l4', 'ffbp/fp32_fast'), ('gpu-l4', 'ffbp/f16_conv'), ('tpu-v6e', 'ffbp/fp32'), ('tpu-v6e', 'ffbp/fp32_high_direct'), ('tpu-v6e', 'ffbp/fp32_fast'), ('tpu-v6e', 'ffbp/bf16_mm'),
                   ('tpu-v5e', 'ffbp/fp32_high_direct'), ('tpu-v5e', 'ffbp/fp32_fast'), ('cpu-c4d16', 'ffbp/fp64_conv_direct'), ('cpu-c4d16', 'ffbp/fp32_conv_direct'),
-                  ('tpu-v6e', 'pfa/fp32'), ('tpu-v6e', 'pfa/fp32_corr'), ('gpu-l4', 'pfa/fp32_corr'), ('cpu-c4d16', 'pfa/fp32_taps_corr')]
+                  ('tpu-v6e', 'pfa/fp32_corr'), ('gpu-l4', 'pfa/fp32_corr'), ('cpu-c4d16', 'pfa/fp32_taps_corr')]
     for lab, tag in prec_order:
         r = rows.get((lab, tag))
         if r is None:
@@ -465,11 +467,10 @@ def main():
         if s_ == 'panama' and pf:
             num['pfa.nfx'], num['pfa.nfy'] = f"{pf['nfx']:,}", f"{pf['nfy']:,}"
     # cost of the polar-format correction per device
-    for lab, base_tag, corr_tag, key in (('gpu-l4', 'pfa/fp32_taps', 'pfa/fp32_taps_corr', 'l4'), ('cpu-c4d16', 'pfa/fp32_taps', 'pfa/fp32_taps_corr', 'cpu'), ('tpu-v6e', 'pfa/fp32', 'pfa/fp32_corr', 'v6e')):
+    for lab, base_tag, corr_tag, key in (('gpu-l4', 'pfa/fp32_taps', 'pfa/fp32_taps_corr', 'l4'), ('cpu-c4d16', 'pfa/fp32_taps', 'pfa/fp32_taps_corr', 'cpu'), ('tpu-v6e', 'pfa/fp32', 'pfa/fp32_corr', 'v6e'), ('tpu-v5e', 'pfa/fp32_taps', 'pfa/fp32_taps_corr', 'v5e')):
         a_, b_ = t_of('panama', lab, base_tag), t_of('panama', lab, corr_tag)
         if a_ and b_:
-            a_r, b_r = round(a_, 1), round(b_, 1)                       # from the rounded table values, so the text agrees with the table
-            num[f'pfa.corr.{key}.add'] = f'{b_r - a_r:.1f}'
+            num[f'pfa.corr.{key}.add'] = f'{b_ - a_:.1f}'
             num[f'pfa.corr.{key}.factor'] = f'{b_ / a_:.0f}'
     num['pfa.corner.shift'] = '10'
     def usd_of(s_, lab, tag):

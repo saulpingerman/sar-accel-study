@@ -31,13 +31,13 @@ def teaser(m):
     # (label, timing tag, metrics tag, filled, short name)
     record = [('gpu-l4', 'bp/cuda_f16', 'bp/cuda_f16', True, 'L4 exact, f16'), ('gpu-l4', 'bp/cuda_fp32', 'bp/cuda_fp32', True, 'L4 exact, f32'),
               ('gpu-l4', 'ffbp/f16_conv', 'ffbp/f16_conv', True, 'L4 float16'), ('gpu-l4', 'ffbp/fp32_conv', 'ffbp/fp32', True, 'L4 float32'),
-              ('gpu-l4', 'pfa/fp32_taps', 'pfa/fp32', False, 'L4 polar, uncorrected'), ('gpu-l4', 'pfa/fp32_taps_corr', 'pfa/fp32_corr', True, 'L4 polar, corrected'),
+              ('gpu-l4', 'pfa/fp32_taps_corr', 'pfa/fp32_corr', True, 'L4 polar format'),
               ('tpu-v6e', 'ffbp/fp32_fast_direct', 'ffbp/fp32_fast', True, 'v6e single-pass'), ('tpu-v6e', 'ffbp/fp32_high_direct', 'ffbp/fp32_high_direct', True, 'v6e three-pass'),
-              ('tpu-v6e', 'pfa/fp32', 'pfa/fp32', False, 'v6e polar, uncorrected'), ('tpu-v6e', 'pfa/fp32_corr', 'pfa/fp32_corr', True, 'v6e polar, corrected'),
+              ('tpu-v6e', 'pfa/fp32_corr', 'pfa/fp32_corr', True, 'v6e polar format'),
               ('tpu-v5e', 'ffbp/fp32_fast_direct', 'ffbp/fp32_fast', True, 'v5e single-pass'), ('tpu-v5e', 'ffbp/fp32_high_direct', 'ffbp/fp32_high_direct', True, 'v5e three-pass'),
-              ('tpu-v5e', 'pfa/fp32_taps', 'pfa/fp32_taps', False, 'v5e polar, uncorrected'), ('tpu-v5e', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'v5e polar, corrected'),
+              ('tpu-v5e', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'v5e polar format'),
               ('cpu-c4d16', 'ffbp/fp32_conv_direct', 'ffbp/fp32_conv_direct', True, 'CPU float32'), ('cpu-c4d16', 'ffbp/fp64_conv_direct', 'ffbp/fp64_conv_direct', True, 'CPU float64'),
-              ('cpu-c4d16', 'pfa/fp32_taps', 'pfa/fp32', False, 'CPU polar, uncorrected'), ('cpu-c4d16', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'CPU polar, corrected')]
+              ('cpu-c4d16', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'CPU polar format')]
     pts = []
     for lab, ttag, mtag, filled, name in record:
         t = timing[lab].get(ttag)
@@ -70,19 +70,19 @@ def teaser(m):
         else:
             ax.scatter(p['x'], p['y'], s=36, c=COL[p['lab']] if p['filled'] else 'white', alpha=0.35, **kw)
     # labels for the front only, placed above-left of each point along the front
-    offsets = {'L4 polar, uncorrected': (6, 6), 'L4 polar, corrected': (7, 7), 'v5e single-pass': (-7, 6), 'L4 float16': (-7, 7),
+    offsets = {'L4 polar format': (7, 7), 'v5e single-pass': (-7, 6), 'L4 float16': (-7, 7),
                'L4 float32': (-7, -10), 'v5e three-pass': (7, -9), 'CPU float32': (-7, 7), 'CPU float64': (-7, -10)}
     for p in front:
         dx, dy = offsets.get(p['name'], (6, 6))
         ax.annotate(p['name'], (p['x'], p['y']), xytext=(dx, dy), textcoords='offset points', fontsize=7.5, color=COL[p['lab']],
                     ha='left' if dx > 0 else 'right', va='bottom' if dy > 0 else 'top', fontweight='medium')
     # the visible-change groups of Table 3, named at the right margin
-    for y, txt, va in ((-57.3, 'A  no visible change', 'bottom'), (-45.8, 'B  coherence loss beside bright returns', 'bottom'), (-32.1, 'C  striped coherence loss', 'bottom'), (2.9, 'D  visibly displaced', 'bottom')):
+    for y, txt, va in ((-57.3, 'A  no visible change', 'bottom'), (-45.8, 'B  coherence loss beside bright returns', 'bottom'), (-32.1, 'C  striped coherence loss', 'bottom')):
         ax.text(820, y + 0.6, txt, fontsize=7, color='0.3', ha='right', va=va)
         ax.axhline(y, color='0.75', lw=0.5, ls=':', zorder=1)
     ax.set_xscale('log')
     ax.set_xlim(0.2, 900)
-    ax.set_ylim(-64, 9)
+    ax.set_ylim(-64, -24)
     ax.set_xlabel('Cost per 1000 Panama images (US dollars, on-demand us-central1)')
     ax.set_ylabel('Error relative to the float64 image (dB)')
     from matplotlib.lines import Line2D
@@ -293,8 +293,8 @@ if __name__ == '__main__':
         rings(m)
     scenes()
     profile()
-    zoom('panama', [('gpu-l4/bp_cuda_f16', 'L4 exact BP, fp16'), ('gpu-l4/ffbp_f16', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32', 'polar format'), ('tpu-v6e/pfa_fp32_corr', 'polar, corrected')],
+    zoom('panama', [('gpu-l4/bp_cuda_f16', 'L4 exact BP, fp16'), ('gpu-l4/ffbp_f16', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format, corrected')],
          ['locks', 'port', 'ships', 'corner'])
-    pixel_zoom('panama', [('gpu-l4/ffbp_f16', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32', 'polar format'), ('tpu-v6e/pfa_fp32_corr', 'polar, corrected')],
+    pixel_zoom('panama', [('gpu-l4/ffbp_f16', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format, corrected')],
                ['locks', 'port', 'ships'])
     print('figures written')
