@@ -14,9 +14,10 @@ R = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'result
 B = 'gs://' + os.environ.get('GCS_BUCKET', 'set-GCS_BUCKET') + '/v2'
 SCENES = ['panama', 'melbourne', 'iowa']
 BUILDS = [('baseline', None), ('pallas', 'pallas'), ('pallas2', 'pallas2'), ('pallas3', 'pallas3'), ('pallas4', 'pallas4'), ('pallas5', 'pallas5'), ('pallas6', 'pallas6'), ('pallas7', 'pallas7'), ('pallas8', 'pallas8'),
-          ('cuda', 'cuda'), ('cuda2', 'cuda2'), ('cuda3', 'cuda3'), ('cuda4', 'cuda4'), ('cuda5', 'cuda5'), ('cuda6', 'cuda6'), ('cuda7', 'cuda7')]
-FINAL = {'tpu-v6e': 'pallas8', 'tpu-v5e': 'pallas8', 'gpu-l4': 'cuda6'}
-LABELS = ['tpu-v6e', 'tpu-v5e', 'gpu-l4']
+          ('cuda', 'cuda'), ('cuda2', 'cuda2'), ('cuda3', 'cuda3'), ('cuda4', 'cuda4'), ('cuda5', 'cuda5'), ('cuda6', 'cuda6'), ('cuda7', 'cuda7'),
+          ('cpp', 'cpp'), ('cpp2', 'cpp2'), ('cpp3', 'cpp3'), ('cpp4', 'cpp4')]
+FINAL = {'tpu-v6e': 'pallas8', 'tpu-v5e': 'pallas8', 'gpu-l4': 'cuda6', 'cpu-c4d16': 'cpp4'}
+LABELS = ['tpu-v6e', 'tpu-v5e', 'gpu-l4', 'cpu-c4d16']
 
 
 def fetch(path):
@@ -55,7 +56,7 @@ def main():
             for tag, rec in t.items():
                 if tag.startswith('_') or not isinstance(rec, dict):
                     continue
-                if ('pallas2' in tag or 'cuda' in tag) and not (d == 'cuda7' and tag != 'ffbp/f16_cuda'):
+                if ('pallas2' in tag or 'cuda' in tag or 'cpp' in tag) and not (d == 'cuda7' and tag != 'ffbp/f16_cuda'):
                     cur[tag] = rec
                     n += 1
             json.dump(cur, open(p, 'w'), indent=1)

@@ -1,0 +1,10 @@
+{
+ "threads": 8,
+ "cpu": "AMD EPYC 9B45",
+ "hbm_copy_GBps": 49.06505058525224,
+ "fir_mix_Gout_s": 3.5733437902102336,
+ "fir_mix_GFMA_s": 314.45425353850055,
+ "final_mix_GFMA_s": 1042.405186490688,
+ "rot_mix_Gelem_s": 61.15398092024467,
+ "sincos_G_s": 0.7869825623591117
+}

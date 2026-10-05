@@ -90,7 +90,7 @@ def drive(submit, n_min, min_seconds, depth):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('mode', choices=['ref', 'ffbp', 'cuda', 'pfa', 'ffbpcuda'])
+    ap.add_argument('mode', choices=['ref', 'ffbp', 'cuda', 'pfa', 'ffbpcuda', 'ffbpcpu'])
     ap.add_argument('--resample', default='dense', help='pfa: pulse resampling as dense matmul or taps gather')
     ap.add_argument('--orient', default='1,-1', help='pfa: exponent signs along y (range) and x (azimuth)')
     ap.add_argument('--correct', action='store_true', help='pfa: resample the image at the apparent positions of the planar-wavefront model')
@@ -245,6 +245,48 @@ def main():
           except Exception as e:
               cp.get_default_memory_pool().free_all_blocks()
               print(tag, 'FAILED', type(e).__name__, str(e)[:400], flush=True)
+        return
+
+    if a.mode == 'ffbpcpu':
+        # factorized backprojection with the C++/OpenMP kernels (float32), timed like the other paths; the stream is
+        # sequential, one image after another, since the kernels already occupy every core
+        from sarbench import ffbp2, ffbp_cpu
+        t = time.perf_counter()
+        plan = ffbp2.make_plan(col, nx, ny, spx, spy, T=a.T, nlev=a.levels, pmax=a.pmax, e1=e1, e2=e2)
+        print('plan', [(l['sx'], l['sy'], l['Dk'], l['Dp'], l['Ko'], l['Po']) for l in plan['levels']], f'{time.perf_counter() - t:.1f}s', 'threads', ffbp_cpu.lib().ffbp_cpu_threads(), flush=True)
+        tag = 'ffbp/fp32_cpp' + pad_tag
+        try:
+            Sw = (S * wp[:, None] * wk[None, :]).astype(np.complex64)
+
+            def run_one(coll):
+                return ffbp_cpu.make_ffbp_cpu(plan, coll)(Sw, ng=a.pallas_ng)
+            t = time.perf_counter()
+            coll = ffbp2.collection_arrays(plan, col.ant)
+            out = run_one(coll)
+            first = time.perf_counter() - t
+            runs, hosts = [], []
+            ffbp_cpu.PROFILE.clear(); ffbp_cpu.PROFILE['on'] = True
+            with Monitor() as mon:
+                for _ in range(a.reps):
+                    t = time.perf_counter()
+                    coll = ffbp2.collection_arrays(plan, col.ant)
+                    hosts.append(time.perf_counter() - t)
+                    out = run_one(coll)
+                    runs.append(time.perf_counter() - t)
+            prof = {k: v / max(1, a.reps) for k, v in ffbp_cpu.PROFILE.items() if k != 'on'}
+            ffbp_cpu.PROFILE['on'] = False
+            img = out.astype(np.complex64)
+            rec = dict(first_s=first, run_s=min(runs) if runs else first, host_s=min(hosts) if hosts else None, filt='cpp', monitor=mon.result(),
+                       stages=prof, threads=ffbp_cpu.lib().ffbp_cpu_threads())
+            if a.stream:
+                def submit(i):
+                    return lambda: run_one(coll)
+                with Monitor() as mon:
+                    rec['stream'] = drive(submit, a.stream, a.stream_seconds, 1)
+                rec['stream']['monitor'] = mon.result()
+            done(tag, img, **rec)
+        except Exception as e:
+            print(tag, 'FAILED', type(e).__name__, str(e)[:400], flush=True)
         return
 
     if a.mode == 'cuda':

@@ -13,7 +13,7 @@ for s in panama melbourne iowa; do
     gcloud storage ls $B/v2/$D/$s/$L/timing.json >/dev/null 2>&1 || continue
     rm -rf /data/$OUT/$s/${D}_$L; mkdir -p /data/$OUT/$s/${D}_$L
     # the device's float32 (six-pass) image of record supplies the family gain, as in the original scoring
-    { gcloud storage cp -r "$B/v2/$D/$s/$L/*" /data/$OUT/$s/${D}_$L/ >/dev/null 2>&1; gcloud storage cp "$B/v2/out/$s/$L/ffbp_fp32.npy" /data/$OUT/$s/${D}_$L/ >/dev/null 2>&1; } &
+    { gcloud storage cp -r "$B/v2/$D/$s/$L/*" /data/$OUT/$s/${D}_$L/ >/dev/null 2>&1; gcloud storage cp "$B/v2/out/$s/$L/ffbp_fp32.npy" /data/$OUT/$s/${D}_$L/ >/dev/null 2>&1; gcloud storage cp "$B/v2/out/$s/$L/ffbp_fp32_conv_direct.npy" /data/$OUT/$s/${D}_$L/ >/dev/null 2>&1; } &
   done; done
 done
 wait

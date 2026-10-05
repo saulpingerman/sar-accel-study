@@ -36,7 +36,7 @@ def teaser(m):
               ('tpu-v6e', 'pfa/fp32_corr', 'pfa/fp32_corr', True, 'v6e polar format'),
               ('tpu-v5e', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_fast_pallas2_direct', True, 'v5e single-pass'), ('tpu-v5e', 'ffbp/fp32_high_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', True, 'v5e three-pass'),
               ('tpu-v5e', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'v5e polar format'),
-              ('cpu-c4d16', 'ffbp/fp32_conv_direct', 'ffbp/fp32_conv_direct', True, 'CPU float32'), ('cpu-c4d16', 'ffbp/fp64_conv_direct', 'ffbp/fp64_conv_direct', True, 'CPU float64'),
+              ('cpu-c4d16', 'ffbp/fp32_cpp', 'ffbp/fp32_cpp', True, 'CPU float32'), ('cpu-c4d16', 'ffbp/fp64_conv_direct', 'ffbp/fp64_conv_direct', True, 'CPU float64'),
               ('cpu-c4d16', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'CPU polar format')]
     pts = []
     for lab, ttag, mtag, filled, name in record:
@@ -46,12 +46,12 @@ def teaser(m):
             continue
         st = t.get('stream') or {}
         per = st.get('s_per_image') or t.get('run_s')
-        if lab == 'cpu-c4d16' and ttag.startswith('ffbp/fp32') and cpu_best:
+        if lab == 'cpu-c4d16' and ttag.startswith('ffbp/fp32') and 'cpp' not in ttag and cpu_best:
             per = cpu_best
         usd = PRICE[lab] / 3600.0 * per * 1000
         pts.append(dict(lab=lab, alg=ttag.split('/')[0], filled=filled, name=name, x=usd, y=r['err_db']))
     for p in pts:
-        p['front'] = not any(q is not p and q['x'] <= p['x'] and q['y'] <= p['y'] and (q['x'] < p['x'] or q['y'] < p['y']) for q in pts)
+        p['front'] = not any(q is not p and q['x'] <= p['x'] and q['y'] <= p['y'] + 0.05 and (q['x'] < p['x'] or q['y'] < p['y'] - 0.05) for q in pts)
     front = sorted((p for p in pts if p['front']), key=lambda p: p['x'])
     fig, ax = plt.subplots(figsize=(7.2, 4.3))
     # dominated region, lightly shaded above and to the right of the front
@@ -99,6 +99,37 @@ def teaser(m):
 
 def db(x):
     return 20 * np.log10(np.abs(x) + 1e-12)
+
+
+def sicd_fig():
+    """Three Panama regions: the reference, the vendor image as delivered, the vendor image resampled through the
+    displacement model, and the coherence of the last with the reference."""
+    p, q = f'{R}/sicd/sicd4_panama_crops.npz', f'{R}/sicd/sicd_panama_raw_crops.npz'
+    if not (os.path.exists(p) and os.path.exists(q)):
+        return
+    d, e = np.load(p), np.load(q)
+    regions = [n for n in ('port', 'locks', 'ships') if f'{n}/ref' in d and f'{n}/raw' in e]
+    if not regions:
+        return
+    fig, axes = plt.subplots(len(regions), 4, figsize=(7.2, 1.95 * len(regions)), squeeze=False)
+    titles = ('reference', 'vendor image as delivered', 'vendor image, resampled', 'coherence (0 to 1)')
+    for i, n in enumerate(regions):
+        a, raw, b, c = d[f'{n}/ref'], e[f'{n}/raw'], d[f'{n}/sicd'], d[f'{n}/coh']
+        ref_db = 20 * np.log10(np.abs(a) + 1e-12); top = np.percentile(ref_db, 99.9)
+        for j, img in enumerate((a, raw, b)):
+            g = 1.0 if j == 0 else float(np.sqrt((np.abs(img) ** 2).mean() / (np.abs(a) ** 2).mean()))
+            db = 20 * np.log10(np.abs(img) / g + 1e-12)
+            axes[i, j].imshow(np.clip(db.T, top - 45, top), cmap='gray', vmin=top - 45, vmax=top, origin='lower', interpolation='nearest')
+        axes[i, 3].imshow(c.T, cmap='viridis', vmin=0, vmax=1, origin='lower', interpolation='nearest')
+        axes[i, 3].set_xlabel(f'mean {c.mean():.2f}', fontsize=6.5, labelpad=1)
+        axes[i, 0].set_ylabel({'port': 'Port', 'locks': 'Locks', 'ships': 'Ship'}[n], fontsize=8)
+        for j, ax in enumerate(axes[i]):
+            ax.set_xticks([]); ax.set_yticks([])
+            if i == 0:
+                ax.set_title(titles[j], fontsize=7.5)
+    fig.tight_layout(pad=0.3)
+    fig.savefig(f'{FIG}/sicd_panama.pdf')
+    plt.close(fig)
 
 
 def zoom(scene, picks, names):
@@ -293,6 +324,7 @@ if __name__ == '__main__':
         rings(m)
     scenes()
     profile()
+    sicd_fig()
     zoom('panama', [('gpu-l4/bp_cuda_f16', 'L4 exact BP, fp16'), ('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format')],
          ['locks', 'port', 'ships', 'corner'])
     pixel_zoom('panama', [('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format')],

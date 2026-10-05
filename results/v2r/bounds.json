@@ -124,5 +124,31 @@
    "bound_sum": 0.4751930551951099,
    "measured": 0.9818388471603394
   }
+ ],
+ "cpu-c4d16": [
+  {
+   "stage": "levels (rotation and frequency filter)",
+   "bound_comp": 4.1866081647254765,
+   "bound_mem": 1.981101348364182,
+   "bound": 4.1866081647254765,
+   "bound_sum": 6.167709513089658,
+   "measured": 4.87294590799992
+  },
+  {
+   "stage": "pulse filter",
+   "bound_comp": 0.5354860096347321,
+   "bound_mem": 2.0562445601620354,
+   "bound": 2.0562445601620354,
+   "bound_sum": 2.5917305697967676,
+   "measured": 2.166991654500066
+  },
+  {
+   "stage": "final (float32)",
+   "bound_comp": 2.670113474559985,
+   "bound_mem": 0.11079599705200331,
+   "bound": 2.670113474559985,
+   "bound_sum": 2.780909471611988,
+   "measured": 3.759668205999958
+  }
  ]
 }

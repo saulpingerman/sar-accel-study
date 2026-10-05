@@ -86,6 +86,45 @@ def gpu_bounds(ub, prof):
     return out
 
 
+# filter lengths of the Panama plan (frequency, pulse) per level, from the plan of record
+LK = [44, 51, 37]
+LP = [30, 65, 46]
+
+
+def cpu_bounds(ub, prof):
+    """Per-stage bounds for the C++ kernels: arithmetic at the measured rate of each kernel's own inner mix on
+    cache-resident data, memory at the measured copy bandwidth."""
+    out = []
+    hbm = ub['hbm_copy_GBps'] * 1e9
+    fir_fma = ub['fir_mix_GFMA_s'] * 1e9
+    rot_el = ub['rot_mix_Gelem_s'] * 1e9
+    fin_fma = ub['final_mix_GFMA_s'] * 1e9
+    fma = rot = rb = wb = 0.0
+    for lv, Lk in zip(LEVELS, LK):
+        children = lv['C'] * lv['parents']
+        kw = lv['Dk'] * (lv['Ko'] - 1) + Lk
+        fma += children * lv['P'] * lv['Ko'] * Lk * 2                     # two planes, real taps
+        rot += children * lv['P'] * kw                                    # complex multiplies
+        rb += lv['parents'] * lv['P'] * lv['K'] * 8
+        wb += children * lv['P'] * lv['Ko'] * 8
+    b_comp = fma / fir_fma + rot / rot_el
+    b_mem = (rb + wb) / hbm
+    out.append(dict(stage='levels (rotation and frequency filter)', bound_comp=b_comp, bound_mem=b_mem, bound=max(b_comp, b_mem), bound_sum=b_comp + b_mem, measured=prof['rot_fir_k']))
+    fma = byt = 0.0
+    for lv, Lp in zip(LEVELS, LP):
+        children = lv['C'] * lv['parents']
+        fma += children * lv['Po'] * lv['Ko'] * Lp * 2
+        byt += children * (lv['P'] + lv['Po']) * lv['Ko'] * 8
+    b_comp, b_mem = fma / fir_fma, byt / hbm
+    out.append(dict(stage='pulse filter', bound_comp=b_comp, bound_mem=b_mem, bound=max(b_comp, b_mem), bound_sum=b_comp + b_mem, measured=prof['fir_p']))
+    n = FINAL['Pf'] * FINAL['Qf']
+    fma = FINAL['tiles'] * FINAL['T'] * FINAL['T'] * n * 4.0
+    b_comp = fma / fin_fma
+    b_mem = FINAL['tiles'] * n * 8 / hbm
+    out.append(dict(stage='final (float32)', bound_comp=b_comp, bound_mem=b_mem, bound=b_comp, bound_sum=b_comp + b_mem, measured=prof['final_tile']))
+    return out
+
+
 def main():
     res = {}
     for lab in ('tpu-v6e', 'tpu-v5e'):
@@ -97,6 +136,10 @@ def main():
     prof = load(os.path.join(PROF, 'profile_cuda6_gpu-l4.json'))
     if ub and prof:
         res['gpu-l4'] = gpu_bounds(ub, prof)
+    ub = load(os.path.join(PROF, 'ubench_cpu-c4d16.json'))
+    prof = load(os.path.join(PROF, 'profile_cpp4_cpu-c4d16.json'))
+    if ub and prof:
+        res['cpu-c4d16'] = cpu_bounds(ub, prof['stages'])
     for lab, rows in res.items():
         print(lab)
         for r in rows:

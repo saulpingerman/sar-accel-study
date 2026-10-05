@@ -66,7 +66,7 @@ def config_name(tag, lab=''):
         return a, f'{store} profiles' + (', 16x oversampled' if 'ov16' in parts else '')
     pol = parts[0] + ('_' + parts[1] if len(parts) > 1 and parts[1] in ('fast', 'high', 'mm') else '')
     words = {'conv': 'conv. filters', 'taps': 'tap sums' if alg == 'ffbp' else 'gather', 'direct': 'direct ramps', 'pad256': 'padded',
-             'pallas': 'fused level kernel (v1)', 'pallas2': 'fused kernels', 'xlafinal': 'XLA final stage', 'final1': 'direct-trig final', 'cuda': 'CUDA kernels'}
+             'pallas': 'fused level kernel (v1)', 'pallas2': 'fused kernels', 'xlafinal': 'XLA final stage', 'final1': 'direct-trig final', 'cuda': 'CUDA kernels', 'cpp': 'C++ kernels'}
     extra = [words[x] for x in parts if x in words and not (x == 'direct' and 'pallas2' in parts)]   # the kernels build their own ramps
     tpu = lab.startswith('tpu')
     if alg == 'pfa':
@@ -87,9 +87,9 @@ def gen_power(num):
             ('TPU v5e', 'Factorized BP, three-pass, fused kernels', 'design-power bound', '120 to 200', num.get('c.panama.tpu-v5e.ffbp.fp32_high_direct.s', ''), f"{num.get('pw.v5e.3.lo', '')} to {num.get('pw.v5e.3.hi', '')}"),
             ('TPU v6e', 'Factorized BP, single-pass, fused kernels', 'design-power bound', '200 to 350', num.get('c.panama.tpu-v6e.ffbp.fp32_fast_direct.s', ''), f"{num.get('pw.v6e.lo', '')} to {num.get('pw.v6e.hi', '')}"),
             ('TPU v6e', 'Factorized BP, three-pass, fused kernels', 'design-power bound', '200 to 350', num.get('c.panama.tpu-v6e.ffbp.fp32_high_direct.s', ''), f"{num.get('pw.v6e.3.lo', '')} to {num.get('pw.v6e.3.hi', '')}"),
-            ('CPU', 'Factorized BP, float32', 'pro-rata estimate', f"25 at {num.get('cs.panama.util1', '')}\\%", num.get('c.panama.cpu-c4d16.ffbp.fp32_conv_direct.s', ''), num.get('pw.cpu.kj', ''))]
+            ('CPU', 'Factorized BP, float32, C++ kernels', 'pro-rata estimate', f"25 at {num.get('pw.cpu.occ', '')}\\%", num.get('c.panama.cpu-c4d16.ffbp.fp32_cpp.s', ''), num.get('pw.cpu.kj', ''))]
     out = [r'\begin{table}[tb]', r'\centering',
-           r'\caption{Energy per Panama image for the processor alone. The L4 draw is the mean of \texttt{nvidia-smi} samples during the timed run; the TPU figures are bounds from the design-power figures third parties quote~\cite{introl2025,gpuadvisor2025}, since Google publishes none, assuming the chip ran at that power throughout; the CPU figure is the pro-rata share of the 8 cores (25~W of the 400~W package) times the measured utilization. Hosts, memory and the other components of each instance are excluded.}',
+           r'\caption{Energy per Panama image for the processor alone. The L4 draw is the mean of \texttt{nvidia-smi} samples during the pipelined loop; the TPU figures are bounds from the design-power figures third parties quote~\cite{introl2025,gpuadvisor2025}, since Google publishes none, assuming the chip ran at that power throughout; the CPU figure is the pro-rata share of the 8 cores (25~W of the 400~W package) times their occupancy, the busy fraction of the 16 hardware threads doubled and capped at one. Hosts, memory and the other components of each instance are excluded.}',
            r'\label{tab:power}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrr}', r'\toprule',
            r'Device & Configuration & Basis & Power (W) & Time (s) & Energy (kJ) \\', r'\midrule']
     out += [' & '.join(r) + r' \\' for r in rows]
@@ -118,7 +118,12 @@ KERNEL_ROWS = {
             ('cuda4', 'ffbp/f16tc_cuda', 'ffbp/fp32_cuda', 'Coalesced window loads, children as in-place phase steps; float16 tensor-core final'),
             ('cuda5', 'ffbp/f16tc_cuda', 'ffbp/fp32_cuda', 'Rotation as a geometric sequence per thread; interleaved complex tables in the final'),
             ('cuda6', 'ffbp/f16tc_cuda', 'ffbp/fp32_cuda', 'Output tiles staged in shared memory for coalesced stores (float32 build of record)'),
-            ('cuda7', 'ffbp/f16_cuda', 'ffbp/fp32_cuda', 'Float16 phase history, intermediates and final-stage operands, float32 accumulation in the filters (float16 build of record)')]}
+            ('cuda7', 'ffbp/f16_cuda', 'ffbp/fp32_cuda', 'Float16 phase history, intermediates and final-stage operands, float32 accumulation in the filters (float16 build of record)')],
+    'cpu': [('baseline', None, 'ffbp/fp32_conv_direct', 'JAX program: conv. filters, direct ramps, one process'),
+            ('cpp', None, 'ffbp/fp32_cpp', 'C++ with OpenMP: polyphase filter vectorized along the output columns (stride-D gathers)'),
+            ('cpp2', None, 'ffbp/fp32_cpp', 'Children in the vector lanes (no gathers), input rows read once in the pulse filter, final tables by two recurrences'),
+            ('cpp3', None, 'ffbp/fp32_cpp', 'Named accumulators, complex products as FMA pairs, 512-bit vectors, reused intermediates'),
+            ('cpp4', None, 'ffbp/fp32_cpp', 'Final-stage tables built and consumed three pulses at a time (second-level cache); final build')]}
 
 
 def gen_kernels():
@@ -132,10 +137,10 @@ def gen_kernels():
         lab = os.path.basename(f)[7:-5]
         base[lab] = json.load(open(f))
     out = [r'\begin{table}[tb]', r'\centering',
-           r'\caption{Device time per Panama image (s) of each build of the factorized algorithm, two precisions per device: sixteen-bit means single-pass products on the TPUs and, on the L4, float16 products (JAX program), the float32 build with the float16 tensor-core final stage (CUDA builds four to six) or float16 storage throughout (build seven); float32 class means three-pass products on the TPUs and float32 on the L4. Each row adds to the one above; the builds of record in Table~\ref{tab:cost} are marked; the float32-class entry in the last L4 row is a rerun of the float32 configuration of the sixth build.}',
+           r'\caption{Device time per Panama image (s) of each build of the factorized algorithm, two precisions per accelerator and float32 on the CPU: sixteen-bit means single-pass products on the TPUs and, on the L4, float16 products (JAX program), the float32 build with the float16 tensor-core final stage (CUDA builds four to six) or float16 storage throughout (build seven); float32 class means three-pass products on the TPUs and float32 on the L4. Each row adds to the one above; the builds of record in Table~\ref{tab:cost} are marked; the float32-class entry in the last L4 row is a rerun of the float32 configuration of the sixth build.}',
            r'\label{tab:kernels}', r'\small', r'\resizebox{\textwidth}{!}{\begin{tabular}{llrr}', r'\toprule', r'Device & Build & 16-bit (s) & float32 class (s) \\', r'\midrule']
-    for lab in ('tpu-v6e', 'tpu-v5e', 'gpu-l4'):
-        rows = KERNEL_ROWS['tpu' if lab.startswith('tpu') else 'gpu']
+    for lab in ('tpu-v6e', 'tpu-v5e', 'gpu-l4', 'cpu-c4d16'):
+        rows = KERNEL_ROWS['tpu' if lab.startswith('tpu') else ('cpu' if lab.startswith('cpu') else 'gpu')]
         first = True
         for build, t1, t2, name in rows:
             src = base.get(lab, {}) if build == 'baseline' else k.get(lab, {}).get(build, {})
@@ -163,7 +168,7 @@ def gen_bounds():
            r'\caption{Each stage of the final kernel builds against the lower bound set by the unit that binds it, Panama image, single-pass or float32 arithmetic. The bounds divide the inherent work of the stage by rates measured on the same device with microbenchmarks in the same framework (vector unit on the rotation mix of the kernel with data resident on chip, high-bandwidth memory copy, matrix units at the product shapes of the kernel, sines in XLA; on the L4 the inner mixes of the kernels on resident shared memory and the memory copy rate). A ratio near one means the stage runs at the rate of that unit; the last column divides the measured time by the sum of all the bounds of the stage, the time it would take if none of its units overlapped.}',
            r'\label{tab:bounds}', r'\small', r'\resizebox{\textwidth}{!}{\begin{tabular}{llrrrrr}', r'\toprule',
            r'Device & Stage & Binding unit & Bound (s) & Measured (s) & Ratio & To the sum \\', r'\midrule']
-    for lab in ('tpu-v6e', 'tpu-v5e', 'gpu-l4'):
+    for lab in ('tpu-v6e', 'tpu-v5e', 'gpu-l4', 'cpu-c4d16'):
         rows = b.get(lab)
         if not rows:
             continue
@@ -182,6 +187,46 @@ def gen_bounds():
     out[-1] = r'\bottomrule'
     out += [r'\end{tabular}}', r'\end{table}']
     return out
+
+
+def gen_sicd(num):
+    """The float64 reference against the vendor's SICD image, per collection (results/v2r/sicd/sicd4_<scene>.json)."""
+    rows = []
+    for s_ in SCENE:
+        f = f'{R}/sicd/sicd4_{s_}.json'
+        if not os.path.exists(f):
+            continue
+        r = json.load(open(f))
+        w = [x for x in r['windows'] if x.get('valid') and 'model' in x]
+        if not w:
+            continue
+        import numpy as _np
+        meas = _np.array([x['measured'] for x in w]); mod = _np.array([x['model'] for x in w])
+        rms = _np.sqrt(((meas - mod) ** 2).mean(0))
+        ww = [x for x in r.get('windows_warped', []) if x.get('valid')]
+        resid = _np.sqrt((_np.array([x['measured'] for x in ww]) ** 2).mean(0)) if ww else [float('nan')] * 2
+        wa = r.get('warped', {})
+        wcoh = float(_np.median([x['coh_mean'] for x in ww])) if ww else float('nan')
+        wlog = float(_np.median([x['logamp_corr'] for x in ww])) if ww else float('nan')
+        key = s_
+        num[f'sicd.{key}.n'] = str(len(w))
+        num[f'sicd.{key}.meas.az'], num[f'sicd.{key}.meas.rg'] = f"{_np.abs(meas[:, 0]).max():.1f}", f"{_np.abs(meas[:, 1]).max():.1f}"
+        num[f'sicd.{key}.model.az'], num[f'sicd.{key}.model.rg'] = f"{_np.abs(mod[:, 0]).max():.1f}", f"{_np.abs(mod[:, 1]).max():.1f}"
+        num[f'sicd.{key}.rms.az'], num[f'sicd.{key}.rms.rg'] = f"{rms[0]:.2f}", f"{rms[1]:.2f}"
+        num[f'sicd.{key}.coh'] = f"{wa.get('coh_mean', float('nan')):.2f}"
+        num[f'sicd.{key}.cohmed'] = f"{wa.get('coh_median', float('nan')):.3f}"
+        num[f'sicd.{key}.wcoh'] = f"{wcoh:.2f}"
+        num[f'sicd.{key}.wlog'] = f"{wlog:.2f}"
+        num[f'sicd.{key}.logamp'] = f"{wa.get('log_amplitude_correlation', float('nan')):.2f}"
+        num[f'sicd.{key}.ramp.az'], num[f'sicd.{key}.ramp.rg'] = f"{r['phase_ramp_cycles_per_px'][0]:.3f}", f"{r['phase_ramp_cycles_per_px'][1]:.3f}"
+        num[f'sicd.{key}.shift.az'], num[f'sicd.{key}.shift.rg'] = f"{r['shift_pixels'][0]:.1f}", f"{r['shift_pixels'][1]:.1f}"
+        rows.append(f"{SCENE[s_]} & {len(w)} & {_np.abs(meas[:, 0]).max():.1f} / {_np.abs(meas[:, 1]).max():.1f} & {_np.abs(mod[:, 0]).max():.1f} / {_np.abs(mod[:, 1]).max():.1f} & {rms[0]:.2f} / {rms[1]:.2f} & {resid[0]:.2f} / {resid[1]:.2f} & {wa.get('coh_mean', float('nan')):.2f} & {wcoh:.2f} & {wlog:.2f} \\\\")
+    if not rows:
+        return []
+    return [r'\begin{table}[tb]', r'\centering',
+            r'\caption{The reference (float64 exact backprojection) against the vendor\textquoteright s complex image (SICD) of the same collection, which Umbra forms by polar format. Columns: the number of 512 by 512 windows, centered on a grid with 1024-pixel spacing, with enough contrast for an amplitude cross-correlation; the largest displacement of the vendor image relative to the reference over the windows (azimuth / range, pixels); the largest displacement the planar-wavefront model of Appendix~\ref{app:pfa} predicts at the same windows; the root-mean-square difference between measured and predicted displacement; the root-mean-square residual displacement after the vendor image is resampled through the model; and, after that resampling and a local re-alignment and phase-ramp removal in each window, the 5 by 5 coherence of the two images (mean over all pixels of the scene; median of the window means) and the median over the windows of the correlation of their log amplitudes.}',
+            r'\label{tab:sicd}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lrrrrrrrr}', r'\toprule',
+            r'Collection & Windows & Measured (px) & Model (px) & RMS difference (px) & Residual after resampling (px) & Coherence, scene mean & window median & Log-amplitude correlation \\', r'\midrule'] + rows + [r'\bottomrule', r'\end{tabular}}', r'\end{table}']
 
 
 def gen_pfaedge():
@@ -236,8 +281,8 @@ def main():
                               r'Device & Algorithm, label & Data in memory & Geometry & Ramps & Products \\', r'\midrule',
                               r'L4 & Exact BP, float32 profiles & float32 profiles & float64 per tile & float32 & float32 sums \\',
                               r'L4 & Exact BP, float16 profiles & float16 profiles & float64 per tile & float32 & float32 sums \\',
-                              r'L4 & Factorized, float32, CUDA kernels & float32 & float64 (2 levels), float32 & float32 & float32 fused multiply-adds (levels and final) \\',
-                              r'L4 & Factorized, float16 throughout, CUDA kernels & float16 & float64 (2 levels), float32 & float32 & float16 data into float32 fused multiply-adds in the levels; float16 operands on the tensor cores in the final stage \\',
+                              r'L4 & Factorized, float32, CUDA kernels & float32 & float64 & float32 & float32 fused multiply-adds (levels and final) \\',
+                              r'L4 & Factorized, float16 throughout, CUDA kernels & float16 & float64 & float32 & float16 data into float32 fused multiply-adds in the levels; float16 operands on the tensor cores in the final stage \\',
                               r'L4 & Factorized, float16 products & float16 & float64 (2 levels), float32 & float32 & float16 operands, tensor cores \\',
                               r'L4 & Factorized, float32 & float32 & float64 (2 levels), float32 & float32 & float32 (highest setting) \\',
                               r'L4 & Factorized, TF32 products & float32 & float64 (2 levels), float32 & float32 & TF32 operands (default setting) \\',
@@ -250,6 +295,7 @@ def main():
                               r'TPU & Polar format, float32 & float32 & float64 & float32 & resampling product 6 passes; float32 FFTs \\',
                               r'TPU & Polar format, single-pass product & float32 & float64 & float32 & resampling product 1 pass; float32 FFTs \\',
                               r'L4, CPU & Polar format, float32 & float32 & float64 & float32 & float32 products and FFTs \\',
+                              r'CPU & Factorized, float32, C++ kernels & float32 & float64 & float32 & float32 fused multiply-adds (levels and final) \\',
                               r'CPU & Factorized, float32 & float32 & float64 (2 levels), float32 & float32 & float32 \\',
                               r'CPU & Factorized, float64 & float64 & float64 & float64 & float64 \\',
                               r'\bottomrule', r'\end{tabular}}', r'\end{table}'])
@@ -268,14 +314,21 @@ def main():
         if not t:
             return None, None, None
         st = t.get('stream') or {}
-        mon = dict(t.get('monitor') or {})
-        for k, v in (st.get('monitor') or {}).items():          # a loop's monitor stands in when the single run had none
+        mon = dict(st.get('monitor') or {})                      # the pipelined loop's monitor, matching the time the cost uses
+        for k, v in (t.get('monitor') or {}).items():           # the single run's monitor where the loop had none
             mon.setdefault(k, v)
         return t.get('run_s'), st.get('s_per_image'), mon
 
     TPU_W = {'tpu-v5e': (120, 200), 'tpu-v6e': (200, 350)}                 # published third-party design-power figures, a band
 
-    def kwh(lab, per, mon, util=None):
+    def occupancy(mon, util, threads):
+        """Fraction of the 8 cores busy: the monitor counts hardware threads (16), so a run pinned to one thread per
+        core reports at most one half."""
+        u = util if util is not None else ((mon or {}).get('cpu_util') or 1.0)
+        n = (mon or {}).get('ncpu') or 16
+        return min(1.0, u * n / 8.0)
+
+    def kwh(lab, per, mon, util=None, threads=None):
         """kWh per 1000 images of the processor alone: measured board power on the L4, the design-power band on the TPUs,
         a pro-rata share of the package at the measured utilization on the CPU (util overrides the monitor's, for the
         multi-process loop). Returns a string."""
@@ -288,12 +341,12 @@ def main():
             lo, hi = TPU_W[lab]
             return f'{lo * per * 1000 / 3.6e6:.2f} to {hi * per * 1000 / 3.6e6:.2f}'
         if lab == 'cpu-c4d16':
-            w = 400 * 8 / 128 * (util if util is not None else ((mon or {}).get('cpu_util') or 1.0))
+            w = 400 * 8 / 128 * occupancy(mon, util, threads)
             return f'{w * per * 1000 / 3.6e6:.2f}'
         return ''
 
     BEST = {('gpu-l4', 'ffbp/fp32_cuda'), ('gpu-l4', 'ffbp/f16_cuda'), ('tpu-v5e', 'ffbp/fp32_high_pallas2_direct'), ('tpu-v5e', 'ffbp/fp32_fast_pallas2_direct'),
-            ('tpu-v6e', 'ffbp/fp32_high_pallas2_direct'), ('tpu-v6e', 'ffbp/fp32_fast_pallas2_direct'), ('cpu-c4d16', 'ffbp/fp32_conv_direct')}
+            ('tpu-v6e', 'ffbp/fp32_high_pallas2_direct'), ('tpu-v6e', 'ffbp/fp32_fast_pallas2_direct'), ('cpu-c4d16', 'ffbp/fp32_cpp')}
 
     def bold(c):
         c = c.strip()
@@ -333,7 +386,7 @@ def main():
                 r'Device & Algorithm & Arithmetic & Time (s) & Images/h & \$ per 1000 & kWh per 1000 \\', r'\midrule']
 
     lines = [r'\begin{table}[tb]', r'\centering',
-             r'\caption{Panama Canal: the selected configurations, cheapest first. Bold rows are the Pareto front of Figure~\ref{fig:teaser}, the configurations that no other configuration beats on both cost and error. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, with cost computed from the device time. Energy is that of the processor alone over the pipelined per-image time that the cost column uses. On the L4 it is measured by \texttt{nvidia-smi}. On the TPUs it is a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, applied as if the chip ran at that power throughout. On the CPU it is the 8 cores\textquoteright{} pro-rata share of the 400~W package at the measured utilization. Throughput and the other two collections are in Table~\ref{tab:costother}.}',
+             r'\caption{Panama Canal: the selected configurations, cheapest first. Bold rows are the Pareto front of Figure~\ref{fig:teaser}, the configurations that no other configuration beats on both cost and error (errors within 0.05~dB counted as equal). Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, with cost computed from the device time. Energy is that of the processor alone over the pipelined per-image time that the cost column uses. On the L4 it is measured by \texttt{nvidia-smi}. On the TPUs it is a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, applied as if the chip ran at that power throughout. On the CPU it is the 8 cores\textquoteright{} pro-rata share of the 400~W package times their occupancy, taken as the busy fraction of the 16 hardware threads doubled and capped at one. Throughput and the other two collections are in Table~\ref{tab:costother}.}',
              r'\label{tab:cost}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrr}', r'\toprule',
              r'Device & Algorithm & Arithmetic & Time (s) & \$ per 1000 & kWh per 1000 & Error (dB) \\', r'\midrule']
     panama_rows = []
@@ -343,7 +396,7 @@ def main():
                 ('gpu-l4', ['ffbp/fp32_cuda', 'ffbp/fp32_conv', 'ffbp/fp32']), ('gpu-l4', ['pfa/fp32_taps_corr']),
                 ('tpu-v5e', ['ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_fast_direct']), ('tpu-v5e', ['ffbp/fp32_high_pallas2_direct', 'ffbp/fp32_high_direct', 'ffbp/fp32_high']), ('tpu-v5e', ['pfa/fp32_taps_corr']),
                 ('tpu-v6e', ['ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_fast_direct']), ('tpu-v6e', ['ffbp/fp32_high_pallas2_direct', 'ffbp/fp32_high_direct', 'ffbp/fp32_high']), ('tpu-v6e', ['pfa/fp32_corr']),
-                ('cpu-c4d16', ['ffbp/fp32_conv_direct']), ('cpu-c4d16', ['ffbp/fp64_conv_direct']), ('cpu-c4d16', ['pfa/fp32_taps_corr'])]
+                ('cpu-c4d16', ['ffbp/fp32_cpp', 'ffbp/fp32_conv_direct']), ('cpu-c4d16', ['ffbp/fp64_conv_direct']), ('cpu-c4d16', ['pfa/fp32_taps_corr'])]
 
     def pick(s_, lab, cands):
         best = None
@@ -379,8 +432,9 @@ def main():
             if tag is None:
                 continue
             run, sp, mon = tim(s_, lab, tag)
+            thr = (timing.get((s_, lab), {}).get(tag) or {}).get('threads')
             util = None
-            if lab == 'cpu-c4d16' and tag.startswith('ffbp/fp32') and s_ in cpu_stream:
+            if lab == 'cpu-c4d16' and tag.startswith('ffbp/fp32') and 'cpp' not in tag and s_ in cpu_stream:
                 sp = cpu_stream[s_]['s_per_image']
                 util = cpu_stream[s_]['cpu_util']
             per = sp if sp else run
@@ -388,11 +442,11 @@ def main():
             usd = PRICE[lab] / 3600.0 * per * 1000
             a, arith = config_name(tag, lab)
             if s_ == 'panama':
-                panama_rows.append(dict(lab=lab, tag=tag, a=a, arith=arith, run=run, per=per, star=star, usd=usd, kwh=kwh(lab, per, mon, util)))
+                panama_rows.append(dict(lab=lab, tag=tag, a=a, arith=arith, run=run, per=per, star=star, usd=usd, kwh=kwh(lab, per, mon, util, thr)))
             else:
                 if first:
                     out_lines.append(f"\\multicolumn{{7}}{{l}}{{\\emph{{{SCENE[s_]}}}}} \\\\")
-                cells = [DEV[lab], a, arith, fmt(run, 1), f'{3600.0 / per:,.0f}{star}', f'{usd:.2f}', kwh(lab, per, mon, util)]
+                cells = [DEV[lab], a, arith, fmt(run, 1), f'{3600.0 / per:,.0f}{star}', f'{usd:.2f}', kwh(lab, per, mon, util, thr)]
                 out_lines.append(cells)
             key = f"c.{s_}.{lab}.{tag.replace('/', '.')}"
             for key in [key] + [f"c.{s_}.{lab}.{c_.replace('/', '.')}" for c_ in cands]:
@@ -446,13 +500,13 @@ def main():
         d_['pareto'] = False
     pts = [d_ for d_ in panama_rows if d_['err'] is not None]
     for d_ in pts:
-        d_['pareto'] = not any(o is not d_ and o['usd'] <= d_['usd'] and o['err'] <= d_['err'] and (o['usd'] < d_['usd'] or o['err'] < d_['err']) for o in pts)
+        d_['pareto'] = not any(o is not d_ and o['usd'] <= d_['usd'] and o['err'] <= d_['err'] + 0.05 and (o['usd'] < d_['usd'] or o['err'] < d_['err'] - 0.05) for o in pts)
     num['pareto.n'] = str(sum(d_['pareto'] for d_ in pts))
     for d_ in panama_rows:                                                   # energy per thousand images, by role
         num[f"kwh.{d_['lab']}.{d_['tag'].replace('/', '.')}"] = d_['kwh']
     for role, lab, tag in (('l4.fp32', 'gpu-l4', 'ffbp/fp32_cuda'), ('l4.f16', 'gpu-l4', 'ffbp/f16_cuda'), ('v6e.high', 'tpu-v6e', 'ffbp/fp32_high_pallas2_direct'),
                            ('v5e.high', 'tpu-v5e', 'ffbp/fp32_high_pallas2_direct'), ('v6e.fast', 'tpu-v6e', 'ffbp/fp32_fast_pallas2_direct'), ('v5e.fast', 'tpu-v5e', 'ffbp/fp32_fast_pallas2_direct'),
-                           ('cpu.fp32', 'cpu-c4d16', 'ffbp/fp32_conv_direct'), ('l4.pfa', 'gpu-l4', 'pfa/fp32_taps_corr')):
+                           ('cpu.fp32', 'cpu-c4d16', 'ffbp/fp32_cpp'), ('l4.pfa', 'gpu-l4', 'pfa/fp32_taps_corr')):
         for d_ in panama_rows:
             if d_['lab'] == lab and d_['tag'] == tag:
                 num[f'kwh.{role}'] = d_['kwh']
@@ -475,6 +529,7 @@ def main():
     gen['cost'] = '\n'.join(lines)
     gen['costother'] = '\n'.join(lines_other)
     gen['pfaedge'] = '\n'.join(gen_pfaedge())
+    gen['sicd'] = '\n'.join(gen_sicd(num))
     gen['kernels'] = '\n'.join(gen_kernels())
     gen['bounds'] = '\n'.join(gen_bounds())
     # every timed configuration, for the appendix and the numbers
@@ -500,7 +555,7 @@ def main():
                   ('gpu-l4', 'ffbp/fp32'), ('gpu-l4', 'ffbp/fp32_fast'), ('gpu-l4', 'ffbp/f16_conv'),
                   ('tpu-v6e', 'ffbp/fp32_high_pallas2_direct'), ('tpu-v6e', 'ffbp/fp32_fast_pallas2_direct'), ('tpu-v5e', 'ffbp/fp32_high_pallas2_direct'), ('tpu-v5e', 'ffbp/fp32_fast_pallas2_direct'),
                   ('tpu-v6e', 'ffbp/fp32'), ('tpu-v6e', 'ffbp/fp32_high_direct'), ('tpu-v6e', 'ffbp/fp32_fast'), ('tpu-v6e', 'ffbp/bf16_mm'),
-                  ('tpu-v5e', 'ffbp/fp32_high_direct'), ('tpu-v5e', 'ffbp/fp32_fast'), ('cpu-c4d16', 'ffbp/fp64_conv_direct'), ('cpu-c4d16', 'ffbp/fp32_conv_direct'),
+                  ('tpu-v5e', 'ffbp/fp32_high_direct'), ('tpu-v5e', 'ffbp/fp32_fast'), ('cpu-c4d16', 'ffbp/fp64_conv_direct'), ('cpu-c4d16', 'ffbp/fp32_cpp'), ('cpu-c4d16', 'ffbp/fp32_conv_direct'),
                   ('tpu-v6e', 'pfa/fp32_corr'), ('gpu-l4', 'pfa/fp32_corr'), ('cpu-c4d16', 'pfa/fp32_taps_corr')]
     for lab, tag in prec_order:
         r = rows.get((lab, tag))
@@ -557,7 +612,7 @@ def main():
     # ---- derived numbers
     KTAG = {('tpu-v6e', 'ffbp/fp32_high_direct'): 'ffbp/fp32_high_pallas2_direct', ('tpu-v6e', 'ffbp/fp32_fast_direct'): 'ffbp/fp32_fast_pallas2_direct',
             ('tpu-v5e', 'ffbp/fp32_high_direct'): 'ffbp/fp32_high_pallas2_direct', ('tpu-v5e', 'ffbp/fp32_fast_direct'): 'ffbp/fp32_fast_pallas2_direct',
-            ('gpu-l4', 'ffbp/fp32_conv'): 'ffbp/fp32_cuda', ('gpu-l4', 'ffbp/f16_conv'): 'ffbp/f16_cuda'}
+            ('gpu-l4', 'ffbp/fp32_conv'): 'ffbp/fp32_cuda', ('gpu-l4', 'ffbp/f16_conv'): 'ffbp/f16_cuda', ('cpu-c4d16', 'ffbp/fp32_conv_direct'): 'ffbp/fp32_cpp'}
 
     def ktag(lab, tag, s_='panama'):
         """The kernel build's tag for a role when it was timed on that scene, else the XLA tag."""
@@ -581,7 +636,7 @@ def main():
 
     v = ratio(t_raw('panama', 'gpu-l4', 'ffbp/fp32'), t_raw('panama', 'gpu-l4', 'ffbp/fp32_conv'))
     if v: num['fair.l4.convgain32'] = v
-    v = ratio(t_of('panama', 'cpu-c4d16', 'ffbp/fp64_conv_direct'), t_of('panama', 'cpu-c4d16', 'ffbp/fp32_conv_direct'))
+    v = ratio(t_raw('panama', 'cpu-c4d16', 'ffbp/fp64_conv_direct'), t_raw('panama', 'cpu-c4d16', 'ffbp/fp32_conv_direct'))
     if v: num['fair.cpu.speedup'] = v
     v = ratio(t_raw('panama', 'gpu-l4', 'ffbp/f16'), t_raw('panama', 'gpu-l4', 'ffbp/f16_conv'), 2)
     if v: num['fair.l4.convgain'] = v
@@ -594,13 +649,18 @@ def main():
 
     for lab, a_, b_, key in (('tpu-v6e', 'ffbp/fp32_high_direct', 'ffbp/fp32_high_pallas2_direct', 'v6e.3'), ('tpu-v6e', 'ffbp/fp32_fast_direct', 'ffbp/fp32_fast_pallas2_direct', 'v6e.1'),
                              ('tpu-v5e', 'ffbp/fp32_high_direct', 'ffbp/fp32_high_pallas2_direct', 'v5e.3'), ('tpu-v5e', 'ffbp/fp32_fast_direct', 'ffbp/fp32_fast_pallas2_direct', 'v5e.1'),
-                             ('gpu-l4', 'ffbp/fp32_conv', 'ffbp/fp32_cuda', 'l4.32'), ('gpu-l4', 'ffbp/f16_conv', 'ffbp/f16_cuda', 'l4.16')):
+                             ('gpu-l4', 'ffbp/fp32_conv', 'ffbp/fp32_cuda', 'l4.32'), ('gpu-l4', 'ffbp/f16_conv', 'ffbp/f16_cuda', 'l4.16'),
+                             ('cpu-c4d16', 'ffbp/fp32_conv_direct', 'ffbp/fp32_cpp', 'cpu.32')):
         v = ratio(t_base(lab, a_), t_raw('panama', lab, b_))
         if v:
             num[f'kgain.{key}'] = v
             num[f'kbase.{key}.s'] = fmt(t_base(lab, a_), 1)
             num[f'knew.{key}.s'] = fmt(t_raw('panama', lab, b_), 1)
     num['l4.f16tc.s'] = fmt(t_raw('panama', 'gpu-l4', 'ffbp/f16tc_cuda'), 1)
+    for i_, bld in enumerate(('cpp', 'cpp2', 'cpp3', 'cpp4'), 1):
+        v_ = (kj.get('cpu-c4d16', {}).get(bld, {}).get('ffbp/fp32_cpp') or {}).get('run_s')
+        if v_:
+            num[f'kcpu.{i_}.s'] = fmt(v_, 1)
     t32, t16 = t_raw('panama', 'gpu-l4', 'ffbp/fp32_cuda'), t_raw('panama', 'gpu-l4', 'ffbp/f16_cuda')
     if t32 and t16:
         num['l4.f16.gain.s'] = fmt(t32 - t16, 1)
@@ -610,7 +670,8 @@ def main():
     if v: num['concl.v6e.vs.l4.fp32'] = v
     num['concl.v6e.price.vs.l4'] = f"{PRICE['tpu-v6e'] / PRICE['gpu-l4']:.1f}"
     try:
-        num['concl.cpu.vs.l4'] = f"{float(num['c.panama.cpu-c4d16.ffbp.fp32_conv_direct.usd']) / float(num['c.panama.gpu-l4.ffbp.fp32.usd']):.0f}"
+        _r = float(num['c.panama.cpu-c4d16.ffbp.fp32_conv_direct.usd']) / float(num['c.panama.gpu-l4.ffbp.fp32.usd'])
+        num['concl.cpu.vs.l4'] = f"{_r:.1f}" if _r < 10 else f"{_r:.0f}"
     except KeyError:
         pass
     # power: L4 measured watts times device time; TPU and CPU bounds from design figures
@@ -631,9 +692,11 @@ def main():
     t = t_of('panama', 'tpu-v6e', 'ffbp/fp32_fast_direct')
     if t:
         num['pw.v6e.lo'], num['pw.v6e.hi'] = f'{200 * t / 1000:.1f}', f'{350 * t / 1000:.1f}'
-    t, mon = t_of('panama', 'cpu-c4d16', 'ffbp/fp32_conv_direct'), t_of('panama', 'cpu-c4d16', 'ffbp/fp32_conv_direct', 'monitor')
+    t, mon = t_of('panama', 'cpu-c4d16', 'ffbp/fp32_cpp'), (t_of('panama', 'cpu-c4d16', 'ffbp/fp32_cpp', 'stream') or {}).get('monitor')
     if t and mon:
-        num['pw.cpu.kj'] = f"{400 * 8 / 128 * (mon.get('cpu_util') or 1.0) * t / 1000:.1f}"
+        occ = min(1.0, (mon.get('cpu_util') or 1.0) * (mon.get('ncpu') or 16) / 8.0)
+        num['pw.cpu.kj'] = f"{400 * 8 / 128 * occ * t / 1000:.2f}"
+        num['pw.cpu.occ'] = f"{100 * occ:.0f}"
     # reference cost: 48 vCPU n2-highmem-48 at 2.3 USD/h
     rt = {}
     for f in glob.glob(f'{R}/timing/*_ref.json'):
@@ -693,6 +756,25 @@ def main():
     for tag, key, ref_ in (('bp/cuda_f16', 'bp.time.vs.ffbp16', 'ffbp/fp32_cuda'), ('bp/cuda_fp32', 'bp.time.vs.ffbp32', 'ffbp/fp32_cuda')):
         v = ratio(t_raw('panama', 'gpu-l4', tag), t_raw('panama', 'gpu-l4', ref_), 0)
         if v: num[key] = v
+    # the same over Panama and Melbourne (the two collections where exact backprojection is not more accurate)
+    tr, cr = [], []
+    for s_ in ('panama', 'melbourne'):
+        for tag in ('bp/cuda_f16', 'bp/cuda_fp32'):
+            a_, b_ = t_raw(s_, 'gpu-l4', tag), t_raw(s_, 'gpu-l4', 'ffbp/fp32_cuda')
+            if a_ and b_:
+                tr.append(a_ / b_)
+            u1, u2 = usd_of(s_, 'gpu-l4', tag), usd_of(s_, 'gpu-l4', 'ffbp/fp32_cuda')
+            if u1 and u2:
+                cr.append(u1 / u2)
+    if tr:
+        num['bp.time.pm.lo'], num['bp.time.pm.hi'] = f'{min(tr):.0f}', f'{max(tr):.0f}'
+    if cr:
+        num['bp.cost.pm.lo'], num['bp.cost.pm.hi'] = f'{min(cr):.0f}', f'{max(cr):.0f}'
+    ri = rows_of(m, 'iowa')
+    if ('gpu-l4', 'ffbp/fp32_cuda') in ri and ('gpu-l4', 'bp/cuda_fp32') in ri and ('gpu-l4', 'bp/cuda_f16') in ri:
+        d1 = ri[('gpu-l4', 'ffbp/fp32_cuda')]['err_db'] - ri[('gpu-l4', 'bp/cuda_f16')]['err_db']
+        d2 = ri[('gpu-l4', 'ffbp/fp32_cuda')]['err_db'] - ri[('gpu-l4', 'bp/cuda_fp32')]['err_db']
+        num['bp.iowa.gain.lo'], num['bp.iowa.gain.hi'] = f'{min(d1, d2):.1f}', f'{max(d1, d2):.1f}'
     pr_ = rows_of(m, 'panama')
     if ('gpu-l4', 'ffbp/f16_cuda') in pr_ and ('gpu-l4', 'ffbp/fp32_cuda') in pr_:
         num['l4.f16.loss'] = f"{pr_[('gpu-l4', 'ffbp/f16_cuda')]['err_db'] - pr_[('gpu-l4', 'ffbp/fp32_cuda')]['err_db']:.1f}"
@@ -709,9 +791,13 @@ def main():
         num['sp.vs.l4f16.db'] = f'{e_sp - e_l4f16:.1f}'
     v = ratio(t_raw('panama', 'gpu-l4', 'ffbp/fp32_cuda'), t_raw('panama', 'gpu-l4', 'pfa/fp32_taps_corr'))
     if v: num['pfa.time.vs.ffbp.l4'] = v
+    v = ratio(t_raw('panama', 'cpu-c4d16', 'ffbp/fp32_cpp'), t_raw('panama', 'cpu-c4d16', 'pfa/fp32_taps_corr'))
+    if v: num['pfa.time.vs.ffbp.cpu'] = v
     num['concl.l4.price.frac'] = f"{PRICE['gpu-l4'] / PRICE['tpu-v6e']:.2f}"
     v = ratio(t_raw('panama', 'tpu-v6e', 'pfa/fp32_corr'), t_raw('panama', 'gpu-l4', 'pfa/fp32_taps_corr'), 0)
     if v: num['pfa.tpu.vs.l4'] = v
+    v = ratio(t_raw('panama', 'tpu-v5e', 'pfa/fp32_taps_corr'), t_raw('panama', 'gpu-l4', 'pfa/fp32_taps_corr'), 0)
+    if v: num['pfa.v5e.vs.l4'] = v
     # polar format against the factorized float32 image on the L4 (now, and with the JAX program) and on the CPU
     up, uf = usd_of('panama', 'gpu-l4', 'pfa/fp32_taps_corr'), usd_of('panama', 'gpu-l4', 'ffbp/fp32_cuda')
     if up and uf:
@@ -778,6 +864,9 @@ def main():
     a_, b_ = rows_of(m, 'panama').get(('cpu-c4d16', 'ffbp/fp32_conv_direct')), rows_of(m, 'panama').get(('cpu-c4d16', 'ffbp/fp64_conv_direct'))
     if a_ and b_:
         num['cpu.f32vsf64.db'] = f"{a_['err_db'] - b_['err_db']:.1f}"
+    c_ = rows_of(m, 'panama').get(('cpu-c4d16', 'ffbp/fp32_cpp'))
+    if c_ and b_:
+        num['cpu.cppvsf64.db'] = f"{c_['err_db'] - b_['err_db']:.1f}"
     # corrected polar format on the other scenes
     for s_ in ('melbourne', 'iowa'):
         r = rows_of(m, s_).get(('gpu-l4', 'pfa/fp32_corr'))
