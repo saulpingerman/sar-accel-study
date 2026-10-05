@@ -2,7 +2,7 @@
 
 Code, measurement records and paper build for the study of that title (Singerman and Braun, Penn State University, 2026). Three Umbra spotlight collections are imaged at native size (8,500 to 12,200 pixels on a side) on a Google Cloud TPU v5e, a TPU v6e, an Nvidia L4 and a 16-vCPU AMD instance by exact backprojection, factorized backprojection expressed as matrix products, and polar format, and every image is compared with a float64 exact backprojection. The paper is `report/v2/sar_accel_v2.pdf`.
 
-The image-formation kernels are also published on their own as [SARfocus](https://github.com/saulpingerman/SARfocus), one Python call with TPU, GPU and CPU backends.
+The image-formation kernels are also published on their own as [FastSAR](https://github.com/saulpingerman/FastSAR), one Python call with TPU, GPU and CPU backends.
 
 ## Layout
 
