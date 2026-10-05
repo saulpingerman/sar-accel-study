@@ -76,8 +76,8 @@ def teaser(m):
         dx, dy = offsets.get(p['name'], (6, 6))
         ax.annotate(p['name'], (p['x'], p['y']), xytext=(dx, dy), textcoords='offset points', fontsize=7.5, color=COL[p['lab']],
                     ha='left' if dx > 0 else 'right', va='bottom' if dy > 0 else 'top', fontweight='medium')
-    # the visible-change groups of Table 3, named at the right margin
-    for y, txt, va in ((-57.3, 'A  no visible change', 'bottom'), (-45.8, 'B  coherence loss beside bright returns', 'bottom'), (-32.1, 'C  striped coherence loss', 'bottom')):
+    # the regimes of visible change (Section 6), named at the right margin
+    for y, txt, va in ((-57.3, 'no visible change', 'bottom'), (-45.8, 'coherence loss beside bright returns', 'bottom'), (-32.1, 'striped coherence loss', 'bottom')):
         ax.text(820, y + 0.6, txt, fontsize=7, color='0.3', ha='right', va=va)
         ax.axhline(y, color='0.75', lw=0.5, ls=':', zorder=1)
     ax.set_xscale('log')

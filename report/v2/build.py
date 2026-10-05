@@ -333,9 +333,9 @@ def main():
                 r'Device & Algorithm & Arithmetic & Time (s) & Images/h & \$ per 1000 & kWh per 1000 \\', r'\midrule']
 
     lines = [r'\begin{table}[tb]', r'\centering',
-             r'\caption{Panama Canal: the selected configurations grouped by the visible change relative to the float64 image, cheapest first within each group. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, with cost computed from the device time. Energy is that of the processor alone over the pipelined per-image time that the cost column uses. On the L4 it is measured by \texttt{nvidia-smi}. On the TPUs it is a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, applied as if the chip ran at that power throughout. On the CPU it is the 8 cores\textquoteright{} pro-rata share of the 400~W package at the measured utilization. Bold marks the fastest configuration in each group; a bullet marks the rows on the Pareto front of Figure~\ref{fig:teaser}. The groups are defined in Section~\ref{sec:results}; throughput and the other two collections are in Table~\ref{tab:costother}.}',
-             r'\label{tab:cost}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrrc}', r'\toprule',
-             r'Device & Algorithm & Arithmetic & Time (s) & \$ per 1000 & kWh per 1000 & Error (dB) & Pareto \\', r'\midrule']
+             r'\caption{Panama Canal: the selected configurations, cheapest first. Bold rows are the Pareto front of Figure~\ref{fig:teaser}, the configurations that no other configuration beats on both cost and error. Cost and error as defined in Section~\ref{sec:protocol}; an asterisk marks rows timed without a pipelined loop, with cost computed from the device time. Energy is that of the processor alone over the pipelined per-image time that the cost column uses. On the L4 it is measured by \texttt{nvidia-smi}. On the TPUs it is a range from the design-power figures third parties quote (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since Google publishes none~\cite{google2024trillium}, applied as if the chip ran at that power throughout. On the CPU it is the 8 cores\textquoteright{} pro-rata share of the 400~W package at the measured utilization. Throughput and the other two collections are in Table~\ref{tab:costother}.}',
+             r'\label{tab:cost}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrr}', r'\toprule',
+             r'Device & Algorithm & Arithmetic & Time (s) & \$ per 1000 & kWh per 1000 & Error (dB) \\', r'\midrule']
     panama_rows = []
     lines_other = cost_header(r'\label{tab:costother}', r'\caption{Melbourne and Iowa: device time, throughput and cost for the selected configurations, as in Table~\ref{tab:cost}; bold marks the fastest configuration on each collection. }')
     # candidates per selected row; the fastest timed form is used (ties broken toward a pipelined record)
@@ -457,23 +457,19 @@ def main():
             if d_['lab'] == lab and d_['tag'] == tag:
                 num[f'kwh.{role}'] = d_['kwh']
     num['pareto.list'] = '; '.join(f"{DEV[d_['lab']]} {d_['a'].lower()}, {d_['arith']}" for d_ in sorted((d_ for d_ in pts if d_['pareto']), key=lambda d_: d_['usd']))
-    for code, name in TIERS:
+    for code, name in TIERS:                                             # the regimes of visible change, used by the text
         grp = sorted((d_ for d_ in panama_rows if d_['tier'] == code), key=lambda d_: d_['usd'])
-        if not grp:
-            continue
-        lines.append(f"\\multicolumn{{8}}{{l}}{{\\emph{{{code}. {name}}}}} \\\\")
-        grp_cells = []
-        for d_ in grp:
-            e = db(d_['err']) if d_['err'] is not None else ''
-            cells = [DEV[d_['lab']], d_['a'], d_['arith'], fmt(d_['run'], 1), f"{d_['usd']:.2f}{d_['star']}", d_['kwh'], e, '$\\bullet$' if d_['pareto'] else '']
-            grp_cells.append(cells)
-        bold_fastest(grp_cells)
-        lines += [' & '.join(c) + ' \\\\' for c in grp_cells]
-        lines.append(r'\midrule')
-        num[f'tier.{code}.cheapest'] = f"{DEV[grp[0]['lab']]} {grp[0]['a'].lower()}, {grp[0]['arith']}"
-        num[f'tier.{code}.cheapest.usd'] = f"{grp[0]['usd']:.2f}"
-    lines[-1] = r'\bottomrule'
-    lines += [r'\end{tabular}}', r'\end{table}']                   # the Panama table is in a resizebox
+        if grp:
+            num[f'tier.{code}.cheapest'] = f"{DEV[grp[0]['lab']]} {grp[0]['a'].lower()}, {grp[0]['arith']}"
+            num[f'tier.{code}.cheapest.usd'] = f"{grp[0]['usd']:.2f}"
+    # one flat table, cheapest first; the Pareto front in bold
+    for d_ in sorted(panama_rows, key=lambda d_: d_['usd']):
+        e = db(d_['err']) if d_['err'] is not None else ''
+        cells = [DEV[d_['lab']], d_['a'], d_['arith'], fmt(d_['run'], 1), f"{d_['usd']:.2f}{d_['star']}", d_['kwh'], e]
+        if d_['pareto']:
+            cells = [bold(c) if c.strip() else c for c in cells]
+        lines.append(' & '.join(cells) + ' \\\\')
+    lines += [r'\bottomrule', r'\end{tabular}}', r'\end{table}']                   # the Panama table is in a resizebox
     lines_other[-1] = r'\bottomrule'
     lines_other += [r'\end{tabular}}', r'\end{table}']
     gen['cost'] = '\n'.join(lines)
