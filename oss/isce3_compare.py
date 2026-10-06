@@ -16,7 +16,7 @@ Inputs ISCE3 needs and CPHD does not hold directly, and how they are made:
   orbit's time axis is the pulse index scaled by the mean interval, with each pulse's own transmit position and
   velocity at its knot. ISCE3 evaluates pulses exactly at the knots.
 """
-import sys, json, time
+import os, sys, json, time
 import numpy as np, scipy.fft
 from scipy.signal.windows import taylor
 import isce3
@@ -93,7 +93,14 @@ out_geom = isce3.container.RadarGeometry(out_grid, orbit, dop)
 kern = isce3.core.TabulatedKernelF32(isce3.core.KnabKernel(8.0, K / nfft), 4096)
 out = np.zeros((L, W), np.complex64)
 t = time.perf_counter()
-ok = isce3.focus.backproject(out, out_geom, buf, in_geom, dem, fref, 1e-3, kern, 'nodelay')
+bp_fn = isce3.focus.backproject
+if os.environ.get('ISCE_CUDA') == '1':
+    import isce3.cuda.focus
+    bp_fn = isce3.cuda.focus.backproject
+    bp_fn(np.zeros((8, 8), np.complex64), isce3.container.RadarGeometry(isce3.product.RadarGridParameters(out_grid.sensing_start, wvl, out_grid.prf, out_grid.starting_range, 0.3, side, 8, 8, epoch), orbit, dop), buf, in_geom, dem, fref, 1e-3, kern, 'nodelay')   # warm-up (context, transfer)
+    t = time.perf_counter()
+ok = bp_fn(out, out_geom, buf, in_geom, dem, fref, 1e-3, kern, 'nodelay')
+info['device'] = 'cuda' if os.environ.get('ISCE_CUDA') == '1' else 'cpu'
 info['isce3'] = dict(seconds=time.perf_counter() - t, converged=bool(ok))
 del buf
 # ISCE3's targets

@@ -1,0 +1,42 @@
+{
+ "gpu_center": {
+  "ramp_range": -0.0014592526438249158,
+  "ramp_az": -0.0007452004455159877,
+  "error_after_ramp_db": -52.171669011538704,
+  "gpu_vs_cpu_isce3_db": -55.30539811507683
+ },
+ "gpu_locks": {
+  "ramp_range": -0.0014589078514555681,
+  "ramp_az": -0.0007400824770835744,
+  "error_after_ramp_db": -31.9035248829038,
+  "gpu_vs_cpu_isce3_db": -55.047702665902456
+ },
+ "gpu_port": {
+  "ramp_range": -0.0014653280544276509,
+  "ramp_az": -0.0007430232915872912,
+  "error_after_ramp_db": -31.51005761336499,
+  "gpu_vs_cpu_isce3_db": -53.34940043590243
+ },
+ "gpu_big": {
+  "ramp_range": -0.0014583412934544376,
+  "ramp_az": -0.0007442686670139503,
+  "error_after_ramp_db": -42.56530154626873,
+  "gpu_vs_cpu_isce3_db": null
+ },
+ "cpu_center": {
+  "ramp_range": -0.0014591905288456452,
+  "ramp_az": -0.0007451135692166184,
+  "error_after_ramp_db": -54.88998416303357
+ },
+ "cpu_locks": {
+  "ramp_range": -0.0014588675003970675,
+  "ramp_az": -0.0007401251663864942,
+  "error_after_ramp_db": -31.916296252924823
+ },
+ "cpu_port": {
+  "ramp_range": -0.0014654638048743904,
+  "ramp_az": -0.0007434142266175398,
+  "error_after_ramp_db": -31.528456719972596
+ },
+ "description": "ISCE3 (CPU n2-highmem-16 and CUDA on an Nvidia L4) against the reference after removal of a fitted linear phase ramp (rad per pixel); gpu_vs_cpu is the error of the CUDA image against the CPU image of ISCE3; big = 1024 by 1024 pixel patch at the scene center (CUDA only)"
+}

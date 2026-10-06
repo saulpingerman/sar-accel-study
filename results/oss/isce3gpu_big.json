@@ -1,0 +1,38 @@
+{
+ "pulses": 15186,
+ "samples": 14399,
+ "fref": 9600001095.095627,
+ "reference_bistatic": false,
+ "look_side": "left",
+ "doppler_centroid_hz": 232102.2330399286,
+ "squint_deg": 28.15144005980471,
+ "buffer": {
+  "width": 95242,
+  "range_spacing": 0.19518209987203033,
+  "seconds": 15.64944034000007
+ },
+ "device": "cuda",
+ "isce3": {
+  "seconds": 15.685194299000045,
+  "converged": false
+ },
+ "reference_seconds": 2023.8256343949997,
+ "error_db": -6.434126413606639,
+ "conj_error_db": -0.00031112194697690507,
+ "gain": [
+  0.10990438569765322,
+  0.19771870911721975
+ ],
+ "amp_corr": 0.9999696353540606,
+ "phase_std_bright_deg": 25.162365705014025,
+ "patch": {
+  "L": 1024,
+  "W": 1024,
+  "center_local": [
+   0.0,
+   0.0
+  ],
+  "height": -0.3427461193378153
+ },
+ "seconds_total": 2066.684153978
+}

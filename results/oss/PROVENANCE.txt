@@ -1,0 +1,8 @@
+Instances of the open-source comparison (Google Cloud, 2026-10-06 UTC; deleted after each run)
+- RITSAR as published and exact-axis runs (ritsar_panama.json): n2-highmem-32, us-east1-b, one Python thread
+- RITSAR with both defects worked around (ritsar_even.json): n2-highmem-16, us-east1-b, one Python thread
+- bpBasic in GNU Octave 8.4 (nga_results.json): n2-highmem-32, us-east1-b, one thread
+- ISCE3 0.25.17 (isce3_*.json): n2-highmem-16, us-east1-b, 16 OpenMP threads
+- torchbp (torchbp_panama.json, torchbp_ffbp_regions.json): g2-standard-8 with one Nvidia L4, us-central1
+- torchbp CPU checks (torchbp_checks_cpu.json): local workstation, CPU build of the same torchbp commit
+- FastSAR rows come from the study's own runs (report/v2/numbers.json): c4d-highmem-16 and g2-standard-4 (L4)

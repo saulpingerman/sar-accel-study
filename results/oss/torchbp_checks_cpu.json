@@ -1,0 +1,9 @@
+{
+ "description": "Checks of the torchbp input and arithmetic on a 128 by 128 pixel crop inside the Panama lock region (rows 3592 to 3720, columns 6892 to 7020 of the reference image), run with the CPU build of torchbp (same commit) and NumPy; inputs built by oss/torchbp_panama.py (QUICK=1, twofold profiles on one absolute delay axis). Scripts: oss/tbp_emulate.py, oss/tbp_ffbp_check.py.",
+ "torchbp_cartesian_exact_error_db": -0.0002,
+ "numpy_emulation_of_torchbp_formula_float64_error_db": -28.3,
+ "numpy_emulation_of_torchbp_formula_float32_error_db": -0.0,
+ "torchbp_polar_exact_then_polar_to_cart_error_db": -0.0,
+ "torchbp_ffbp_then_polar_to_cart": "all-zero image (error undefined)",
+ "note": "values as printed by the runs on 2026-10-06; the float64 emulation is limited by the twofold profile oversampling"
+}
