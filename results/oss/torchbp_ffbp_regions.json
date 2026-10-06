@@ -1,0 +1,33 @@
+{
+ "pulses": 15186,
+ "samples": 14399,
+ "pixels": [
+  12207,
+  8808
+ ],
+ "gpu": "NVIDIA L4",
+ "methods": {
+  "torchbp exact, 2x profiles": {
+   "errors": {
+    "locks": -3.127087940162258e-05,
+    "port": -1.0326392784785061e-06,
+    "ships": -0.0002386644290269982
+   },
+   "range_compression_seconds": 2.466598927000007
+  },
+  "torchbp factorized, regions": {
+   "locks": {
+    "error": NaN,
+    "seconds": 0.7249047039999823
+   },
+   "port": {
+    "error": NaN,
+    "seconds": 0.7037685290000013
+   },
+   "ships": {
+    "error": NaN,
+    "seconds": 0.716387382999983
+   }
+  }
+ }
+}
