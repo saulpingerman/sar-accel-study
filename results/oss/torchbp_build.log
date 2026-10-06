@@ -1,0 +1,7 @@
+Using Python 3.12.15 environment at: ~/venv
+Resolved 32 packages in 5.38s
+   Building torchbp @ file://~/w/torchbp
+      Built torchbp @ file://~/w/torchbp
+Prepared 1 package in 6m 01s
+Installed 1 package in 0.62ms
+ + torchbp==0.0.1 (from file://~/w/torchbp)

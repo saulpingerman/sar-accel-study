@@ -1,0 +1,43 @@
+{
+ "n": 4096,
+ "range_m": 4000.0,
+ "pulses": 7242,
+ "samples": 7242,
+ "device": "cuda",
+ "methods": {
+  "torchbp exact backprojection (cartesian)": {
+   "seconds": 1.5302718039999945,
+   "kernel_seconds": 1.2664677230000052,
+   "error_db": -28.703551009953458,
+   "error_db_gpu_range_compression": -28.703550291599825
+  },
+  "torchbp fast factorized backprojection (+ polar_to_cart)": {
+   "seconds": 1.1386664969999174,
+   "kernel_seconds": 0.8571547239999973,
+   "error_db": -13.858781054002963,
+   "polar_grid": [
+    12288,
+    12288
+   ]
+  },
+  "torchbp exact backprojection (polar + polar_to_cart)": {
+   "seconds": 4.675047348000021,
+   "error_db": -23.88303404213393
+  },
+  "FastSAR cuda float32 (T=32, 3 levels)": {
+   "seconds": 1.1378068340000027,
+   "setup_seconds": 5.21106677399996,
+   "error_db": -37.67283190864521
+  },
+  "FastSAR cuda float16 (T=32, 3 levels)": {
+   "seconds": 0.7232033919999594,
+   "setup_seconds": 5.09900548600001,
+   "error_db": -37.67169178280362
+  },
+  "FastSAR cuda float32 (T=16, 2 levels)": {
+   "seconds": 1.8515872840000611,
+   "setup_seconds": 4.66992773100003,
+   "error_db": -46.96414609984308
+  }
+ }
+}

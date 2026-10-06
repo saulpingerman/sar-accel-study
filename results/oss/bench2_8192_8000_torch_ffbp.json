@@ -1,0 +1,12 @@
+{
+ "n": 8192,
+ "range_m": 8000.0,
+ "pulses": 14482,
+ "samples": 14482,
+ "device": "cuda",
+ "methods": {
+  "torchbp fast factorized backprojection (+ polar_to_cart)": {
+   "error": "OutOfMemoryError: CUDA out of memory. Tried to allocate 4.57 GiB. GPU 0 has a total capacity of 22.03 GiB of which 3.94 GiB is free. Including non-PyTorch memory, this process has 18.09 GiB memory in use. Of the allocated memory 17.87 GiB is allocated by PyTorch, and 3.44 MiB is reserved by PyTorch but unallocated. I"
+  }
+ }
+}

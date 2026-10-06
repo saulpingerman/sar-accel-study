@@ -1,0 +1,31 @@
+== test_api
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+~/w/FastSAR/tests/test_api.py:18: RuntimeWarning: divide by zero encountered in log10
+  return 10 * np.log10(np.sum(np.abs(a - b) ** 2) / np.sum(np.abs(b) ** 2))
+backends here: ['cuda', 'cpu']
+cuda  vs jax: -87.3 dB
+cpu   vs jax: -86.9 dB
+cuda float16 vs jax: -68.9 dB
+pfa amplitude correlation with ffbp: 0.998
+ok
+ImageFormer (cuda) vs form_image: -inf dB; second call 0.034 s
+ok
+== test_bp
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+backends: ['cpu', 'jax', 'cuda']
+range 5 km, monostatic: cpu -82.4 dB, jax -74.8 dB, cuda -75.0 dB
+range 5 km, bistatic: cpu -77.1 dB, jax -72.5 dB, cuda -74.0 dB
+range 600 km, monostatic: cpu -80.1 dB, jax -75.1 dB, cuda -75.7 dB
+range 600 km, bistatic: cpu -79.7 dB, jax -73.3 dB, cuda -74.3 dB
+ffbp vs exact backprojection on the ffbp grid: -53.8 dB
+ok
+cpu: moving reference point vs fixed: -60.3 dB
+jax: moving reference point vs fixed: -60.3 dB
+cuda: moving reference point vs fixed: -60.3 dB
+ok
+== test_ffbp_cuda
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+levels [(214, 214, 3, 2, 16), (115, 80, 2, 2, 4)]
+nlev 2: cuda vs dense float32: -87.3 dB, peak ratio 1.0000
+levels [(214, 214, 1, 1, 4), (214, 214, 3, 2, 4), (115, 80, 2, 2, 4)]
+nlev 3: cuda vs dense float32: -79.5 dB, peak ratio 1.0000

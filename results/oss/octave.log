@@ -1,0 +1,4 @@
+sim nfft 0: 0.8 s for 16384 pixels and 214 pulses
+sim nfft 262144: 4.8 s for 16384 pixels and 214 pulses
+panama nfft 0: 3013.1 s for 786432 pixels and 15186 pulses
+panama nfft 262144: 3118.4 s for 786432 pixels and 15186 pulses

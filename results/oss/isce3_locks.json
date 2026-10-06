@@ -1,0 +1,37 @@
+{
+ "pulses": 15186,
+ "samples": 14399,
+ "fref": 9600001095.095627,
+ "reference_bistatic": false,
+ "look_side": "left",
+ "doppler_centroid_hz": 232102.2330399286,
+ "squint_deg": 28.15144005980471,
+ "buffer": {
+  "width": 95242,
+  "range_spacing": 0.19518209987203033,
+  "seconds": 10.601211451999973
+ },
+ "isce3": {
+  "seconds": 20.78644072899999,
+  "converged": false
+ },
+ "reference_seconds": 104.62447728199999,
+ "error_db": -18.45731636131742,
+ "conj_error_db": -4.008651351514485e-05,
+ "gain": [
+  0.12405562347833982,
+  -3.075665959182252
+ ],
+ "amp_corr": 0.9994566996285766,
+ "phase_std_bright_deg": 6.691010849244646,
+ "patch": {
+  "L": 256,
+  "W": 256,
+  "center_local": [
+   -1010.62,
+   907.57
+  ],
+  "height": -0.5843638487327132
+ },
+ "seconds_total": 138.405145071
+}

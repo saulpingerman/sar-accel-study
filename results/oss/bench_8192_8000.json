@@ -1,0 +1,27 @@
+{
+ "n": 8192,
+ "range_m": 8000.0,
+ "pulses": 14482,
+ "samples": 14482,
+ "device": "cuda",
+ "methods": {
+  "torchbp exact backprojection (cartesian)": {
+   "seconds": 21.670013573999995,
+   "kernel_seconds": 20.300122995000038,
+   "error_db": -22.834493212217694,
+   "error_db_gpu_range_compression": -22.834493767486386
+  },
+  "torchbp fast factorized backprojection (+ polar_to_cart)": {
+   "error": "OutOfMemoryError: CUDA out of memory. Tried to allocate 4.57 GiB. GPU 0 has a total capacity of 22.03 GiB of which 3.76 GiB is free. Including non-PyTorch memory, this process has 18.26 GiB memory in use. Of the allocated memory 13.30 GiB is allocated by PyTorch, and 4.74 GiB is reserved by PyTorch but unallocated. I"
+  },
+  "FastSAR cuda float32 (T=32, 3 levels)": {
+   "error": "OutOfMemoryError: Out of memory allocating 838,913,536 bytes (allocated so far: 3,459,950,080 bytes)."
+  },
+  "FastSAR cuda float16 (T=32, 3 levels)": {
+   "error": "OutOfMemoryError: Out of memory allocating 561,206,784 bytes (allocated so far: 3,776,684,544 bytes)."
+  },
+  "FastSAR cuda float32 (T=16, 2 levels)": {
+   "error": "ValueError: 2 levels cannot split 8192 pixels into tiles of 16: use more levels or a larger T"
+  }
+ }
+}

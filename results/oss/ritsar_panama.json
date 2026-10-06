@@ -1,0 +1,121 @@
+{
+ "pixels": 786432,
+ "pulses": 15186,
+ "samples": 14399,
+ "runs": {
+  "RITSAR as published (Python 3 port), 6x": {
+   "seconds": 1268.158955007,
+   "seconds_per_pulse_per_mpixel": 0.10618645458630889,
+   "errors": {
+    "locks": {
+     "reference (float64 exact BP)": -24.194792433587523,
+     "CPU C++ kernels": -24.186472237110216,
+     "L4 CUDA float32": -24.186740599500713,
+     "L4 CUDA float16": -24.185619864493987,
+     "TPU v6e three-pass": -24.190837602241793,
+     "TPU v6e single-pass": -24.11652302135192
+    },
+    "port": {
+     "reference (float64 exact BP)": -21.272601068671506,
+     "CPU C++ kernels": -21.26571683950875,
+     "L4 CUDA float32": -21.265541327008485,
+     "L4 CUDA float16": -21.265582835926857,
+     "TPU v6e three-pass": -21.272865160124816,
+     "TPU v6e single-pass": -21.267053448507788
+    },
+    "ships": {
+     "reference (float64 exact BP)": -22.34967284291674,
+     "CPU C++ kernels": -22.344588428980533,
+     "L4 CUDA float32": -22.345442892502497,
+     "L4 CUDA float16": -22.34539085218424,
+     "TPU v6e three-pass": -22.35137329229582,
+     "TPU v6e single-pass": -22.345234791196322
+    }
+   }
+  },
+  "RITSAR as published (Python 3 port), 16x": {
+   "seconds": 1900.48101209,
+   "seconds_per_pulse_per_mpixel": 0.15913252821001703,
+   "errors": {
+    "locks": {
+     "reference (float64 exact BP)": -26.158357011428834,
+     "CPU C++ kernels": -26.150737307183856,
+     "L4 CUDA float32": -26.150856709889805,
+     "L4 CUDA float16": -26.149197862069432,
+     "TPU v6e three-pass": -26.157517002322713,
+     "TPU v6e single-pass": -26.03967587779576
+    },
+    "port": {
+     "reference (float64 exact BP)": -25.315484720073517,
+     "CPU C++ kernels": -25.307758276999248,
+     "L4 CUDA float32": -25.307231467827364,
+     "L4 CUDA float16": -25.307204835514145,
+     "TPU v6e three-pass": -25.328126069059664,
+     "TPU v6e single-pass": -25.312460758618585
+    },
+    "ships": {
+     "reference (float64 exact BP)": -27.252671068903926,
+     "CPU C++ kernels": -27.247583012914134,
+     "L4 CUDA float32": -27.24910638585795,
+     "L4 CUDA float16": -27.24886530692979,
+     "TPU v6e three-pass": -27.270683377252702,
+     "TPU v6e single-pass": -27.251752988859614
+    }
+   }
+  },
+  "RITSAR with exact FFT range axis, 16x": {
+   "seconds": 1962.7425541500002,
+   "seconds_per_pulse_per_mpixel": 0.16434585922213077,
+   "errors": {
+    "locks": {
+     "reference (float64 exact BP)": -27.06831005623131,
+     "CPU C++ kernels": -27.062150629285725,
+     "L4 CUDA float32": -27.06191862022846,
+     "L4 CUDA float16": -27.060029109480293,
+     "TPU v6e three-pass": -27.07041435053227,
+     "TPU v6e single-pass": -26.92392198045081
+    },
+    "port": {
+     "reference (float64 exact BP)": -28.3853584543892,
+     "CPU C++ kernels": -28.382523505903272,
+     "L4 CUDA float32": -28.381281028987885,
+     "L4 CUDA float16": -28.38098528017897,
+     "TPU v6e three-pass": -28.428402897657925,
+     "TPU v6e single-pass": -28.39484247407802
+    },
+    "ships": {
+     "reference (float64 exact BP)": -31.55221892229806,
+     "CPU C++ kernels": -31.550295755749843,
+     "L4 CUDA float32": -31.55136479909093,
+     "L4 CUDA float16": -31.550456233692966,
+     "TPU v6e three-pass": -31.618158860841213,
+     "TPU v6e single-pass": -31.567212382273638
+    }
+   }
+  }
+ },
+ "ours_vs_reference": {
+  "locks": {
+   "CPU C++ kernels": -55.79465714860297,
+   "L4 CUDA float32": -55.72026187950001,
+   "L4 CUDA float16": -54.592689826043866,
+   "TPU v6e three-pass": -54.91424578073562,
+   "TPU v6e single-pass": -41.452641555171404
+  },
+  "port": {
+   "CPU C++ kernels": -59.89765758317846,
+   "L4 CUDA float32": -59.87010486205748,
+   "L4 CUDA float16": -59.2864222139732,
+   "TPU v6e three-pass": -57.13269731958774,
+   "TPU v6e single-pass": -48.9296242110559
+  },
+  "ships": {
+   "CPU C++ kernels": -61.18665266295771,
+   "L4 CUDA float32": -61.16166901644356,
+   "L4 CUDA float16": -60.374647505738835,
+   "TPU v6e three-pass": -57.70701435401137,
+   "TPU v6e single-pass": -49.431613734367346
+  }
+ },
+ "full_image_estimate_hours_6x": 48.16108538736772
+}

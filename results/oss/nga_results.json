@@ -1,0 +1,56 @@
+{
+ "sim, Nfft default": {
+  "error_db": -41.395092917286185,
+  "conj_error_db": -0.01800176310174741
+ },
+ "sim, Nfft 262144": {
+  "error_db": -67.79627823087671,
+  "conj_error_db": -0.017870689051526126
+ },
+ "panama, Nfft default": {
+  "seconds": 3013.106425,
+  "errors": {
+   "locks": {
+    "reference (float64 exact BP)": -38.07475350235701,
+    "CPU C++ kernels": -37.961281812213386,
+    "L4 CUDA float32": -37.961686604169756,
+    "TPU v6e three-pass": -37.94462050451416
+   },
+   "port": {
+    "reference (float64 exact BP)": -43.16290999943874,
+    "CPU C++ kernels": -42.990725192963424,
+    "L4 CUDA float32": -42.98560775185141,
+    "TPU v6e three-pass": -42.9252188736779
+   },
+   "ships": {
+    "reference (float64 exact BP)": -41.54154802178715,
+    "CPU C++ kernels": -41.549230225412366,
+    "L4 CUDA float32": -41.54877150770079,
+    "TPU v6e three-pass": -41.493382770159435
+   }
+  }
+ },
+ "panama, Nfft 262144": {
+  "seconds": 3118.394222,
+  "errors": {
+   "locks": {
+    "reference (float64 exact BP)": -52.85576564075363,
+    "CPU C++ kernels": -50.84081817845085,
+    "L4 CUDA float32": -50.82181043045503,
+    "TPU v6e three-pass": -50.54142595665036
+   },
+   "port": {
+    "reference (float64 exact BP)": -55.36837304888632,
+    "CPU C++ kernels": -54.03303228777187,
+    "L4 CUDA float32": -54.01185600130862,
+    "TPU v6e three-pass": -53.16427996437404
+   },
+   "ships": {
+    "reference (float64 exact BP)": -54.455276200261196,
+    "CPU C++ kernels": -54.147433049971795,
+    "L4 CUDA float32": -54.141303396506366,
+    "TPU v6e three-pass": -53.2145194917899
+   }
+  }
+ }
+}

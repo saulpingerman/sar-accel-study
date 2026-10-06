@@ -1,0 +1,15 @@
+{
+ "n": 8192,
+ "range_m": 8000.0,
+ "pulses": 14482,
+ "samples": 14482,
+ "device": "cuda",
+ "methods": {
+  "torchbp exact backprojection (cartesian)": {
+   "seconds": 22.949248822000072,
+   "kernel_seconds": 20.972919250000132,
+   "error_db": -22.834493212217694,
+   "error_db_gpu_range_compression": -22.834493767486386
+  }
+ }
+}

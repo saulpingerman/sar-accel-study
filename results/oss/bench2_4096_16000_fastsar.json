@@ -1,0 +1,24 @@
+{
+ "n": 4096,
+ "range_m": 16000.0,
+ "pulses": 7242,
+ "samples": 7242,
+ "device": "cuda",
+ "methods": {
+  "FastSAR cuda float32 (T=32, 3 levels)": {
+   "seconds": 1.156939618999786,
+   "setup_seconds": 4.746077033999882,
+   "error_db": -49.82825392859935
+  },
+  "FastSAR cuda float16 (T=32, 3 levels)": {
+   "seconds": 0.744055944000138,
+   "setup_seconds": 4.6407284920001075,
+   "error_db": -49.81629344149714
+  },
+  "FastSAR cuda float32 (T=32 auto, 3 levels)": {
+   "seconds": 1.159860141000081,
+   "setup_seconds": 4.623620195000058,
+   "error_db": -49.82825392859935
+  }
+ }
+}
