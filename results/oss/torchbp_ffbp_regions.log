@@ -1,12 +1,12 @@
 torchbp exact, 2x profiles {'locks': -3.127087940162258e-05, 'port': -1.0326392784785061e-06, 'ships': -0.0002386644290269982}
-/home/paul/w/torchbp/torchbp/ops/ffbp.py:612: UserWarning: ffbp: theta guard band capped at 110 bins (24081 needed for full interpolation support at the near range edge). Edge accuracy at near range may be reduced; increase guard_max_ratio (more memory) if it matters.
+~/w/torchbp/torchbp/ops/ffbp.py:612: UserWarning: ffbp: theta guard band capped at 110 bins (24081 needed for full interpolation support at the near range edge). Edge accuracy at near range may be reduced; increase guard_max_ratio (more memory) if it matters.
   warn(f"ffbp: theta guard band capped at {guard_shortfall[2]} bins "
-/home/paul/w/torchbp_panama.py:66: RuntimeWarning: invalid value encountered in scalar divide
+~/w/torchbp_panama.py:66: RuntimeWarning: invalid value encountered in scalar divide
   g = np.vdot(a, b) / np.vdot(a, a)
 locks {'error': nan, 'seconds': 0.7249047039999823}
-/home/paul/w/torchbp/torchbp/ops/ffbp.py:612: UserWarning: ffbp: theta guard band capped at 110 bins (24088 needed for full interpolation support at the near range edge). Edge accuracy at near range may be reduced; increase guard_max_ratio (more memory) if it matters.
+~/w/torchbp/torchbp/ops/ffbp.py:612: UserWarning: ffbp: theta guard band capped at 110 bins (24088 needed for full interpolation support at the near range edge). Edge accuracy at near range may be reduced; increase guard_max_ratio (more memory) if it matters.
   warn(f"ffbp: theta guard band capped at {guard_shortfall[2]} bins "
 port {'error': nan, 'seconds': 0.7037685290000013}
-/home/paul/w/torchbp/torchbp/ops/ffbp.py:612: UserWarning: ffbp: theta guard band capped at 110 bins (24066 needed for full interpolation support at the near range edge). Edge accuracy at near range may be reduced; increase guard_max_ratio (more memory) if it matters.
+~/w/torchbp/torchbp/ops/ffbp.py:612: UserWarning: ffbp: theta guard band capped at 110 bins (24066 needed for full interpolation support at the near range edge). Edge accuracy at near range may be reduced; increase guard_max_ratio (more memory) if it matters.
   warn(f"ffbp: theta guard band capped at {guard_shortfall[2]} bins "
 ships {'error': nan, 'seconds': 0.716387382999983}
