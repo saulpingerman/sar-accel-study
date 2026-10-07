@@ -278,7 +278,7 @@ The measured image errors agree with the operand resolutions of Table~\ref{tab:f
 \label{fig:profile}
 \end{figure}
 
-\paragraph{Measures that did not reduce the JAX program's TPU time.} (The kernels of Appendix~\ref{app:kernels} supersede this program on the TPUs; the figures here describe it.) Padding the pulse and sample counts to multiples of 256 increased the v5e device time from @@pad.v5e.base@@ to @@pad.v5e.pad@@~s (both timed in one session, earlier than the 8.0~s of Table~\ref{tab:fullpanama}); the padded samples are carried through every level. Bfloat16 storage slowed both TPUs on the Panama and Melbourne images (@@t.panama.tpu-v6e.ffbp.bf16_mm.s@@ compared with @@t.panama.tpu-v6e.ffbp.fp32_fast.s@@~s on the v6e), because the ramps remain float32 and the resulting conversions take longer than the reduction in memory traffic recovers; on the smaller Iowa image the difference was about 10\% in either direction. The split-table ramps, which cut the number of transcendental evaluations by a factor of about 60, were slower than direct evaluation on both TPUs (@@t.panama.tpu-v6e.ffbp.fp32_fast.s@@ compared with @@t.panama.tpu-v6e.ffbp.fp32_fast_direct.s@@~s on the v6e). The compiler fuses the direct form into the multiplication, whereas the table products require a pass over memory of their own. At the stage level the strided convolution was five times slower than the dense product on the frequency axis and twelve times on the pulse axis (Figure~\ref{fig:profile}); at the image level the factor was about four for Panama and Melbourne and two to three for Iowa on both TPUs (Appendix~\ref{app:stats}).
+\paragraph{Measures that did not reduce the JAX program's TPU time.} (The kernels of Appendix~\ref{app:kernels} supersede this program on the TPUs; the figures here describe it.) Padding the pulse and sample counts to multiples of 256 increased the v5e device time from @@pad.v5e.base@@ to @@pad.v5e.pad@@~s (both timed in one session, earlier than the 8.0~s of the supplementary tables); the padded samples are carried through every level. Bfloat16 storage slowed both TPUs on the Panama and Melbourne images (@@t.panama.tpu-v6e.ffbp.bf16_mm.s@@ compared with @@t.panama.tpu-v6e.ffbp.fp32_fast.s@@~s on the v6e), because the ramps remain float32 and the resulting conversions take longer than the reduction in memory traffic recovers; on the smaller Iowa image the difference was about 10\% in either direction. The split-table ramps, which cut the number of transcendental evaluations by a factor of about 60, were slower than direct evaluation on both TPUs (@@t.panama.tpu-v6e.ffbp.fp32_fast.s@@ compared with @@t.panama.tpu-v6e.ffbp.fp32_fast_direct.s@@~s on the v6e). The compiler fuses the direct form into the multiplication, whereas the table products require a pass over memory of their own. At the stage level the strided convolution was five times slower than the dense product on the frequency axis and twelve times on the pulse axis (Figure~\ref{fig:profile}); at the image level the factor was about four for Panama and Melbourne and two to three for Iowa on both TPUs (Appendix~\ref{app:stats}).
 
 \paragraph{Host transfers.} A 1.75~GB collection moves from host memory to the v6e at 14~GB/s as two float32 planes, and an order of magnitude more slowly as a complex64 array, which passes through a conversion; the same holds for the image on the return path. The pipelined measurements move planes in both directions; before this change, the polar-format throughput on the v6e corresponded to 3.0~s per image against a device time of 1.3~s.
 
@@ -338,7 +338,7 @@ The image is resampled through the mapping: the spectrum is placed in a raster o
 The resampled image's error against the reference is $-39$~dB in the central 1024 by 1024 pixels and $-32$~dB over the whole Panama image, growing toward the edges (the rings of Table~\ref{tab:pfaedge} and Figure~\ref{fig:rings} are quarters of the half-width, not this crop). On the full Panama image the resampling kernel (4, 6 and 8 taps) and the oversampling of the intermediate raster (2 and 3 times) change the whole-image error by less than 0.6~dB and the outermost ring, where the displacement is 10 to 18 pixels, by less than 0.4~dB (Table~\ref{tab:pfaedge}); lengthening the pulse interpolator from 16 to 32 or 48 taps, with a narrower Kaiser window, made the error slightly worse. The registration, measured from the cross-spectrum phase, is 0.001~pixel, and the reference's own convergence is more than 30~dB below the residual.
  \begin{table}[tb]
 \centering
-\caption{Panama Canal, polar format on the CPU: whole-image error and error by ring (dB) for variations of the final resampling. Rings are the four concentric regions of Appendix~\ref{app:stats}, inner to outer; the selected configuration is the first row.}
+\caption{Panama Canal, polar format on the CPU: whole-image error and error by ring (dB) for variations of the final resampling. Rings are the quarters of the half-width from the scene center outward, inner to outer; the selected configuration is the first row.}
 \label{tab:pfaedge}
 \small
 \begin{tabular}{lrrrrr}
@@ -471,10 +471,10 @@ The ship appears on the eastern bank, inland of the channel, as a consequence of
 \label{fig:channel}
 \end{figure}
 
-\section{Full tables}
+\section{Precision and cost tables}
 \label{app:stats}
 
-Table~\ref{tab:prec} gives the error statistics of the selected Panama configurations, and Tables~\ref{tab:costother} to \ref{tab:fulliowa} the cost figures for Melbourne and Iowa and, for every configuration timed or measured on each scene, the device time and the statistics. The column \emph{Rings} gives the error in four concentric regions, the quarters of the half-width from the scene center outward. Configurations are labeled as in the body: on the TPUs \emph{single-pass}, \emph{three-pass} and \emph{six-pass products} are the one, three and six bfloat16 passes of a float32 product and \emph{bfloat16 storage} keeps the data in bfloat16; on the L4 \emph{TF32 products} is the product at JAX's default precision and \emph{float32} the product at the highest setting, used for every float32 figure in the body; \emph{gather} marks the gather form of the pulse resampling and of the final resampling; \emph{direct ramps}, \emph{conv. filters} and \emph{tap sums} are the forms described in Appendix~\ref{app:algorithms}.
+Table~\ref{tab:prec} gives the error statistics of the selected Panama configurations and Table~\ref{tab:costother} the cost figures for Melbourne and Iowa; the device time and statistics of every configuration timed or measured on each scene are in the supplementary tables of the study repository (\texttt{report/v2/supplement\_tables.pdf}). Configurations are labeled as in the body: on the TPUs \emph{single-pass}, \emph{three-pass} and \emph{six-pass products} are the one, three and six bfloat16 passes of a float32 product and \emph{bfloat16 storage} keeps the data in bfloat16; on the L4 \emph{TF32 products} is the product at JAX's default precision and \emph{float32} the product at the highest setting, used for every float32 figure in the body; \emph{gather} marks the gather form of the pulse resampling and of the final resampling; \emph{direct ramps}, \emph{conv. filters} and \emph{tap sums} are the forms described in Appendix~\ref{app:algorithms}.
 
 % BEGIN GEN prec
 % END GEN prec
@@ -482,7 +482,5 @@ Table~\ref{tab:prec} gives the error statistics of the selected Panama configura
 % BEGIN GEN costother
 % END GEN costother
 
-% BEGIN GEN fullstats
-% END GEN fullstats
 
 \end{document}

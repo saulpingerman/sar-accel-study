@@ -910,6 +910,10 @@ def main():
         print(r.stdout[-2000:])
         sys.exit(1)
     print([l for l in r.stdout.splitlines() if 'Output written' in l][:1])
+    # the tables of every configuration, outside the paper
+    for _ in range(2):
+        r2 = subprocess.run(['pdflatex', '-interaction=nonstopmode', '-halt-on-error', 'supplement_tables.tex'], cwd=OUT, capture_output=True, text=True)
+    print([l for l in r2.stdout.splitlines() if 'Output written' in l][:1] or r2.stdout[-500:])
 
 
 if __name__ == '__main__':
