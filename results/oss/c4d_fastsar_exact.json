@@ -1,0 +1,35 @@
+{
+ "fastsar": "0.1.0",
+ "upsample": 8,
+ "regions": {
+  "locks": {
+   "error_db": -54.948334829236714,
+   "seconds": 21.037818147000003,
+   "cpu_seconds": 123.74948423299999,
+   "threads_used": 5.882239468385493
+  },
+  "port": {
+   "error_db": -58.73327765335647,
+   "seconds": 19.619844040000004,
+   "cpu_seconds": 121.736013474,
+   "threads_used": 6.20473910117789
+  },
+  "ships": {
+   "error_db": -56.31155356317468,
+   "seconds": 19.399834130000002,
+   "cpu_seconds": 122.81934715999998,
+   "threads_used": 6.33094831311323
+  }
+ },
+ "full_image_estimate_hours_from_lock": 2.396870247553443,
+ "full_image": {
+  "seconds": 2767.769268675,
+  "cpu_seconds": 44086.041683715004,
+  "threads_used": 15.92836591643352,
+  "errors": {
+   "locks": -54.948334829236714,
+   "port": -58.73327765335647,
+   "ships": -56.31155356317468
+  }
+ }
+}

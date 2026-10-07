@@ -1,0 +1,152 @@
+CPU(s):                                  16
+Model name:                              AMD EPYC 9B45
+Thread(s) per core:                      2
+Core(s) per socket:                      8
+16
+== RITSAR
+Command terminated by signal 9
+	Command being timed: "~/venv/bin/python -I ritsar_time.py /data/w hw_ritsar.json"
+	User time (seconds): 10.24
+	System time (seconds): 9.93
+	Percent of CPU this job got: 113%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:17.84
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 127454668
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 411
+	Minor (reclaiming a frame) page faults: 873181
+	Voluntary context switches: 575
+	Involuntary context switches: 1688
+	Swaps: 0
+	File system inputs: 104728
+	File system outputs: 56024
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+== bpBasic 0
+panama nfft 0: 499.0 s for 262144 pixels and 15186 pulses
+	Command being timed: "octave --no-gui -q nga_run.m /data/w panama 0"
+	User time (seconds): 418.84
+	System time (seconds): 102.00
+	Percent of CPU this job got: 103%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 8:22.06
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 6877628
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 534
+	Minor (reclaiming a frame) page faults: 128442056
+	Voluntary context switches: 90145
+	Involuntary context switches: 2474
+	Swaps: 0
+	File system inputs: 105432
+	File system outputs: 4120
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+== bpBasic 262144
+panama nfft 262144: 603.7 s for 262144 pixels and 15186 pulses
+	Command being timed: "octave --no-gui -q nga_run.m /data/w panama 262144"
+	User time (seconds): 529.13
+	System time (seconds): 112.66
+	Percent of CPU this job got: 105%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 10:06.19
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 6879020
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 172407108
+	Voluntary context switches: 94063
+	Involuntary context switches: 3302
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 4120
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+== ISCE3 center
+	Command being timed: "/data/w/env/bin/python -I isce3_compare.py panama.cphd hw_isce3_center.json 256 256 0 0 16 2"
+	User time (seconds): 385.59
+	System time (seconds): 32.16
+	Percent of CPU this job got: 562%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:14.28
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 15177100
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 365566
+	Voluntary context switches: 3026
+	Involuntary context switches: 1775
+	Swaps: 0
+	File system inputs: 96
+	File system outputs: 4200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+== ISCE3 locks
+	Command being timed: "/data/w/env/bin/python -I isce3_compare.py panama.cphd hw_isce3_locks.json 256 256 -1010.62 907.57 16 2"
+	User time (seconds): 386.96
+	System time (seconds): 32.16
+	Percent of CPU this job got: 563%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:14.32
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 15177048
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 380740
+	Voluntary context switches: 3015
+	Involuntary context switches: 1670
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 4008
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+== ISCE3 port
+	Command being timed: "/data/w/env/bin/python -I isce3_compare.py panama.cphd hw_isce3_port.json 256 256 1508.19 -1066.18 16 2"
+	User time (seconds): 386.08
+	System time (seconds): 32.15
+	Percent of CPU this job got: 561%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:14.52
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 15177184
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 380749
+	Voluntary context switches: 2998
+	Involuntary context switches: 1697
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 3992
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

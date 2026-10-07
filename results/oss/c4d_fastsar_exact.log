@@ -1,0 +1,30 @@
+Model name:                              AMD EPYC 9B45
+16
+FastSAR 0ea5c791afd01406efb00c1bceccd137e9d90376 2026-10-06 11:31:27 +0000
+locks {'error_db': -54.948334829236714, 'seconds': 21.037818147000003, 'cpu_seconds': 123.74948423299999, 'threads_used': 5.882239468385493}
+port {'error_db': -58.73327765335647, 'seconds': 19.619844040000004, 'cpu_seconds': 121.736013474, 'threads_used': 6.20473910117789}
+ships {'error_db': -56.31155356317468, 'seconds': 19.399834130000002, 'cpu_seconds': 122.81934715999998, 'threads_used': 6.33094831311323}
+full image {'seconds': 2767.769268675, 'cpu_seconds': 44086.041683715004, 'threads_used': 15.92836591643352, 'errors': {'locks': -54.948334829236714, 'port': -58.73327765335647, 'ships': -56.31155356317468}}
+	Command being timed: "~/venv/bin/python -I fastsar_exact.py /data/w fsx.json full"
+	User time (seconds): 44442.28
+	System time (seconds): 17.59
+	Percent of CPU this job got: 1570%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 47:10.23
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 12236104
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 7
+	Minor (reclaiming a frame) page faults: 522702
+	Voluntary context switches: 1011
+	Involuntary context switches: 63087
+	Swaps: 0
+	File system inputs: 552
+	File system outputs: 35328
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

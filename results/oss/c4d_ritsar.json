@@ -1,0 +1,18 @@
+{
+ "pixels": 262144,
+ "pulse_block": 4096,
+ "runs": {
+  "as published, 16x": {
+   "seconds": 384.457532558,
+   "cpu_seconds": 409.641997403,
+   "threads_used": 1.0655064934673912,
+   "full_image_hours": 43.80182463776476
+  },
+  "defects worked around, 8x": {
+   "seconds": 222.07815532,
+   "cpu_seconds": 234.97104292600005,
+   "threads_used": 1.0580556317546057,
+   "full_image_hours": 25.301698084787624
+  }
+ }
+}

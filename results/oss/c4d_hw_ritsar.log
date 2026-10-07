@@ -1,0 +1,31 @@
+CPU(s):                                  16
+Model name:                              AMD EPYC 9B45
+Thread(s) per core:                      2
+Core(s) per socket:                      8
+16
+== RITSAR
+as published, 16x {'seconds': 384.457532558, 'cpu_seconds': 409.641997403, 'threads_used': 1.0655064934673912, 'full_image_hours': 43.80182463776476}
+defects worked around, 8x {'seconds': 222.07815532, 'cpu_seconds': 234.97104292600005, 'threads_used': 1.0580556317546057, 'full_image_hours': 25.301698084787624}
+	Command being timed: "~/venv/bin/python -I ritsar_time.py /data/w hw_ritsar.json"
+	User time (seconds): 579.76
+	System time (seconds): 72.89
+	Percent of CPU this job got: 106%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 10:11.60
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 57970348
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 3
+	Minor (reclaiming a frame) page faults: 24896865
+	Voluntary context switches: 209
+	Involuntary context switches: 3542
+	Swaps: 0
+	File system inputs: 280
+	File system outputs: 56048
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

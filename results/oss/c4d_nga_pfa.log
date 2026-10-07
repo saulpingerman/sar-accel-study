@@ -1,0 +1,28 @@
+GNU Octave, version 8.4.0
+Model name:                              AMD EPYC 9B45
+16
+MATLAB_SAR 63f0401726840e82dadb7fdf937c7ec5603e70c5 2024-11-22 16:54:46 -0500
+pulses 15186 samples 14399
+== smoke
+warning: function /data/w/MATLAB_SAR/Tools/PulseExplorer/stft.m shadows a core library function
+warning: called from
+    nga_pfa_run at line 3 column 29
+
+warning: function /data/w/octshim/cross.m shadows a core library function
+warning: called from
+    nga_pfa_run at line 3 column 76
+
+pfa_mem: 1.5 s, image 1500 x 3000, class single
+== full
+warning: function /data/w/MATLAB_SAR/Tools/PulseExplorer/stft.m shadows a core library function
+warning: called from
+    nga_pfa_run at line 3 column 29
+
+warning: function /data/w/octshim/cross.m shadows a core library function
+warning: called from
+    nga_pfa_run at line 3 column 76
+
+pfa_mem: 44.5 s, image 22779 x 21598, class single
+locks {'nonfinite_fraction_in_window': 0.0, 'orientation': [-1, 1], 'shift_ref_px': [-4, -2], 'residual_shift_px': [-8, -4], 'amp_corr': 0.25484850592090985, 'error_db': -7.661125285782062e-05, 'error_after_ramp_db': -0.0005746391044586423, 'ramp': [0.0544068207267897, 0.052967060299478716]}
+port {'nonfinite_fraction_in_window': 0.0, 'orientation': [-1, 1], 'shift_ref_px': [-7, -4], 'residual_shift_px': [-14, -8], 'amp_corr': 0.08005445133235885, 'error_db': -0.0002415163497262574, 'error_after_ramp_db': -0.001058691227341203, 'ramp': [-0.014535507342404209, 0.05529987494618149]}
+ships {'nonfinite_fraction_in_window': 0.0, 'orientation': [-1, 1], 'shift_ref_px': [0, 0], 'residual_shift_px': [0, 0], 'amp_corr': 0.9704232203206677, 'error_db': -0.014881579482767443, 'error_after_ramp_db': -0.14958106272267588, 'ramp': [-0.11886623766855751, -0.09604210113843548]}
