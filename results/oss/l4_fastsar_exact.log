@@ -1,0 +1,6 @@
+NVIDIA L4
+FastSAR 0ea5c791afd01406efb00c1bceccd137e9d90376
+locks {'error_db': -54.81513536905662, 'seconds': 8.816530222999994, 'cpu_seconds': 7.711191887000001, 'threads_used': 0.8746288723520215}
+port {'error_db': -58.707167247420735, 'seconds': 2.9090861419999996, 'cpu_seconds': 3.7243857590000022, 'threads_used': 1.2802597026018223}
+ships {'error_db': -56.29652350675849, 'seconds': 2.908951234, 'cpu_seconds': 3.7239512710000007, 'threads_used': 1.28016971459481}
+full image {'seconds': 67.25558022599999, 'cpu_seconds': 68.101127005, 'threads_used': 1.0125721431018615, 'errors': {'locks': -54.70715572463004, 'port': -58.34870743133558, 'ships': -56.29242931146922}}

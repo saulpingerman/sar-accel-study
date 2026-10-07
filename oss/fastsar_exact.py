@@ -1,7 +1,7 @@
 """FastSAR's exact backprojection (fastsar.backproject, cpu backend) on the Panama collection: the three 512 by 512
 pixel regions against the float64 reference, the lock region timed alone, and the full image timed.
    python -I fastsar_exact.py <work dir> <out json> [full]"""
-import sys, json, time
+import os, sys, json, time
 import numpy as np
 import fastsar
 W, out = sys.argv[1:3]
@@ -21,7 +21,7 @@ def err(a, b):
 res = dict(fastsar=fastsar.__version__, upsample=8, regions={})
 for name, (i0, j0) in crops.items():
     t = time.perf_counter(); c = time.process_time()
-    img = fastsar.backproject(S, ant, fmin, df, X[i0:i0 + h, j0:j0 + h], backend='cpu', chunk=1024)
+    img = fastsar.backproject(S, ant, fmin, df, X[i0:i0 + h, j0:j0 + h], backend=os.environ.get('BACKEND', 'cpu'), chunk=1024)
     wall, cpu = time.perf_counter() - t, time.process_time() - c
     res['regions'][name] = dict(error_db=err(img, np.asarray(ref[i0:i0 + h, j0:j0 + h])), seconds=wall, cpu_seconds=cpu, threads_used=cpu / wall)
     print(name, res['regions'][name], flush=True)
@@ -29,7 +29,7 @@ lock = res['regions']['locks']['seconds']
 res['full_image_estimate_hours_from_lock'] = lock * nx * ny / h ** 2 / 3600
 if len(sys.argv) > 3:
     t = time.perf_counter(); c = time.process_time()
-    img = fastsar.backproject(S, ant, fmin, df, X, backend='cpu', chunk=1024)
+    img = fastsar.backproject(S, ant, fmin, df, X, backend=os.environ.get('BACKEND', 'cpu'), chunk=1024)
     wall, cpu = time.perf_counter() - t, time.process_time() - c
     res['full_image'] = dict(seconds=wall, cpu_seconds=cpu, threads_used=cpu / wall,
                              errors={n: err(img[i0:i0 + h, j0:j0 + h], np.asarray(ref[i0:i0 + h, j0:j0 + h])) for n, (i0, j0) in crops.items()})
