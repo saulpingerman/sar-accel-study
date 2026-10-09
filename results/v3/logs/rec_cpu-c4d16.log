@@ -1,0 +1,16 @@
+jax 0.11.2 [CpuDevice(id=0)] /data/FastSAR/fastsar/__init__.py
+Model name:                              AMD EPYC 9B45
+16
+
+20 passed, 0 failed, 1 skipped, 224 s
+not tested on this machine: cuda, tpu (run this script on such a machine with --require)
+tests exit 0
+panama cpu-c4d16 ffbp/fp32_cpp first 12.08 s, run 11.31 s, loop 11.34 s over 6 None
+panama cpu-c4d16 pfa/fp32_taps_corr first 30.53 s, run 11.41 s, loop 11.44 s over 6 None
+panama cpu-c4d16 ffbp/fp32 first 222.86 s, run 224.45 s None
+panama cpu-c4d16 bp/cubic first 402.80 s, run 402.96 s None
+panama cpu-c4d16 bp/linear first 292.35 s, run 292.06 s None
+melbourne cpu-c4d16 ffbp/fp32_cpp first 13.43 s, run 12.78 s, loop 12.63 s over 5 None
+melbourne cpu-c4d16 pfa/fp32_taps_corr first 30.90 s, run 11.91 s, loop 12.05 s over 5 None
+iowa cpu-c4d16 ffbp/fp32_cpp first 7.88 s, run 7.34 s, loop 7.54 s over 8 None
+iowa cpu-c4d16 pfa/fp32_taps_corr first 21.63 s, run 8.44 s, loop 8.49 s over 8 None

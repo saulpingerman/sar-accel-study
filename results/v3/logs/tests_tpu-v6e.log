@@ -1,0 +1,26 @@
+PASS  test_accuracy.py     4.6 s   0.4 GB
+PASS  test_api.py    21.2 s   5.6 GB
+PASS  test_autofocus.py    15.6 s   5.4 GB
+PASS  test_bp.py     9.1 s   5.3 GB
+PASS  test_burst.py   254.6 s   8.7 GB
+PASS  test_chain.py     6.1 s   0.5 GB
+PASS  test_cphd.py    26.8 s   5.9 GB
+PASS  test_exact.py    17.3 s   7.0 GB
+PASS  test_ffbp_cpu.py     4.2 s   5.1 GB
+SKIP  test_ffbp_cuda.py: no CuPy with a CUDA device
+PASS  test_insar.py     4.9 s   0.3 GB
+PASS  test_io.py     0.2 s   0.0 GB
+PASS  test_pallas_e2e_tpu.py    11.1 s   5.2 GB
+PASS  test_pallas_final.py     5.3 s   5.1 GB
+PASS  test_pallas_fused.py     8.1 s   5.2 GB
+PASS  test_patches.py   211.8 s   6.9 GB
+PASS  test_planning.py     9.7 s   5.4 GB
+PASS  test_products.py    11.0 s   5.5 GB
+PASS  test_stripmap.py    64.0 s   5.9 GB
+PASS  test_units.py    64.2 s   5.9 GB
+PASS  test_wide_angle.py     1.6 s   0.3 GB
+E1009 04:37:43.750880    5074 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+
+20 passed, 0 failed, 1 skipped, 751 s
+not tested on this machine: cuda (run this script on such a machine with --require)
+tests exit 0

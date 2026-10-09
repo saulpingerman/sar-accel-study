@@ -1,0 +1,58 @@
+[
+ [
+  "RITSAR",
+  "cpu-c4d16",
+  "bp",
+  157686.56869595314,
+  "RITSAR, 16x",
+  true
+ ],
+ [
+  "bpBasic, FFT $2^{17}$",
+  "cpu-c4d16",
+  "bp",
+  204666.55252075195,
+  "bpBasic, 2^17",
+  true
+ ],
+ [
+  "bpBasic, FFT $2^{18}$",
+  "cpu-c4d16",
+  "bp",
+  247609.614743042,
+  "bpBasic, 2^18",
+  true
+ ],
+ [
+  "ISCE3",
+  "cpu-c4d16",
+  "bp",
+  17247.35532715084,
+  "ISCE3, CPU",
+  true
+ ],
+ [
+  "ISCE3 CUDA",
+  "gpu-l4",
+  "bp",
+  1608.333989375998,
+  "ISCE3, CUDA",
+  true
+ ],
+ [
+  "torchbp",
+  "gpu-l4",
+  "bp",
+  16.015510532000008,
+  "torchbp exact",
+  true
+ ],
+ [
+  "GRDL FFBP",
+  "cpu-c4d16",
+  "ffbp",
+  77.50840211400003,
+  "GRDL FFBP",
+  true
+ ]
+]

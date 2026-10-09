@@ -1,0 +1,3 @@
+torchbp exact, 2x profiles {'locks': -3.127087940162258e-05, 'port': -1.0326392784785061e-06, 'ships': -0.0002386644290269982}
+{'errors': {'locks': -3.127087940162258e-05, 'port': -1.0326392784785061e-06, 'ships': -0.0002386644290269982}, 'range_compression_seconds': 2.498475206999956, 'full_image_seconds': 16.015510532000008}
+{'error': 'OutOfMemoryError: CUDA out of memory. Tried to allocate 5.94 GiB. GPU 0 has a total capacity of 22.03 GiB of which 4.47 GiB is free. Including non-PyTorch memory, this process has 17.56 GiB memory in use. Of the allocated memory 17.34 GiB is allocated by PyTorch, and 5.91 MiB is reserved by PyTorch but unallocated. I'}

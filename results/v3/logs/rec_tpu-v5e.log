@@ -1,0 +1,18 @@
+E1009 04:24:47.728221    4053 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+jax 0.11.2 [TpuDevice(id=0, process_index=0, coords=(0,0,0), core_on_chip=0)] ~/w/FastSAR/fastsar/__init__.py
+
+20 passed, 0 failed, 1 skipped, 795 s
+not tested on this machine: cuda (run this script on such a machine with --require)
+tests exit 0
+E1009 04:38:17.777254   26590 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+panama tpu-v5e ffbp/fp32_high_pallas2_direct first 10.53 s, run 5.20 s, loop 3.97 s over 16 None
+panama tpu-v5e ffbp/fp32_fast_pallas2_direct first 7.94 s, run 3.63 s, loop 2.47 s over 25 None
+panama tpu-v5e pfa/fp32_taps_corr first 192.99 s, run 103.35 s, loop 103.34 s over 4 None
+E1009 04:55:03.125063   28916 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+melbourne tpu-v5e ffbp/fp32_high_pallas2_direct first 11.77 s, run 5.47 s, loop 4.17 s over 15 None
+melbourne tpu-v5e ffbp/fp32_fast_pallas2_direct first 7.90 s, run 3.74 s, loop 2.46 s over 25 None
+melbourne tpu-v5e pfa/fp32_taps_corr first 133.48 s, run 68.25 s, loop 68.25 s over 4 None
+E1009 05:07:18.581207   30893 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
+iowa tpu-v5e ffbp/fp32_high_pallas2_direct first 8.22 s, run 3.54 s, loop 2.68 s over 23 None
+iowa tpu-v5e ffbp/fp32_fast_pallas2_direct first 6.31 s, run 2.52 s, loop 1.66 s over 37 None
+iowa tpu-v5e pfa/fp32_taps_corr first 113.91 s, run 48.29 s, loop 48.29 s over 4 None

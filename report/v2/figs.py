@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figures for the second-round paper from results/v2r.
+"""Figures for the paper from results/v3 (release records of FastSAR and the historical files kept there).
 
   python report/v2/figs.py
 """
@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, 'report/v2')
 from build import PRICE, DEV, SCENE, config_name, rows_of, load_metrics  # noqa: E402
 
-R = 'results/v2r'
+R = 'results/v3'
 FIG = 'report/v2/fig'
 COL = {'tpu-v5e': '#1b6ca8', 'tpu-v6e': '#0b3d91', 'gpu-l4': '#2e8b57', 'cpu-c4d16': '#b5651d'}
 MARK = {'bp': 'o', 'ffbp': 's', 'pfa': '^'}
@@ -26,18 +26,15 @@ def teaser(m):
     """The key figure: cost against error for every selected configuration; only the Pareto front is labeled."""
     rows = rows_of(m, 'panama')
     timing = {lab: json.load(open(f'{R}/timing/panama_{lab}.json')) for lab in ('gpu-l4', 'tpu-v6e', 'tpu-v5e', 'cpu-c4d16')}
-    cs = [json.loads(l) for l in open(f'{R}/timing/panama_cpu_stream.jsonl') if l.strip()]
-    cpu_best = min(cs, key=lambda r: r['s_per_image'])['s_per_image'] if cs else None
-    # (label, timing tag, metrics tag, filled, short name)
-    record = [('gpu-l4', 'bp/cuda_f16', 'bp/cuda_f16', True, 'L4 exact, f16'), ('gpu-l4', 'bp/cuda_fp32', 'bp/cuda_fp32', True, 'L4 exact, f32'),
-              ('gpu-l4', 'ffbp/f16_cuda', 'ffbp/f16_cuda', True, 'L4 float16'), ('gpu-l4', 'ffbp/fp32_cuda', 'ffbp/fp32_cuda', True, 'L4 float32'),
-              ('gpu-l4', 'pfa/fp32_taps_corr', 'pfa/fp32_corr', True, 'L4 polar format'),
+    # (label, timing tag, metrics tag, filled, short name = key in pareto_regions_v3.json)
+    record = [('gpu-l4', 'ffbp/f16_cuda', 'ffbp/f16_cuda', True, 'L4 float16'), ('gpu-l4', 'ffbp/fp32_cuda', 'ffbp/fp32_cuda', True, 'L4 float32'),
+              ('gpu-l4', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'L4 polar format'), ('gpu-l4', 'bp/cubic', 'bp/cubic', True, 'FastSAR exact, L4'),
               ('tpu-v6e', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_fast_pallas2_direct', True, 'v6e single-pass'), ('tpu-v6e', 'ffbp/fp32_high_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', True, 'v6e three-pass'),
-              ('tpu-v6e', 'pfa/fp32_corr', 'pfa/fp32_corr', True, 'v6e polar format'),
+              ('tpu-v6e', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'v6e polar format'),
               ('tpu-v5e', 'ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_fast_pallas2_direct', True, 'v5e single-pass'), ('tpu-v5e', 'ffbp/fp32_high_pallas2_direct', 'ffbp/fp32_high_pallas2_direct', True, 'v5e three-pass'),
               ('tpu-v5e', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'v5e polar format'),
-              ('cpu-c4d16', 'ffbp/fp32_cpp', 'ffbp/fp32_cpp', True, 'CPU float32'), ('cpu-c4d16', 'ffbp/fp64_conv_direct', 'ffbp/fp64_conv_direct', True, 'CPU float64'),
-              ('cpu-c4d16', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'CPU polar format')]
+              ('cpu-c4d16', 'ffbp/fp32_cpp', 'ffbp/fp32_cpp', True, 'CPU float32'), ('cpu-c4d16', 'pfa/fp32_taps_corr', 'pfa/fp32_taps_corr', True, 'CPU polar format'),
+              ('cpu-c4d16', 'bp/cubic', 'bp/cubic', True, 'FastSAR exact, CPU')]
     pts = []
     for lab, ttag, mtag, filled, name in record:
         t = timing[lab].get(ttag)
@@ -46,50 +43,74 @@ def teaser(m):
             continue
         st = t.get('stream') or {}
         per = st.get('s_per_image') or t.get('run_s')
-        if lab == 'cpu-c4d16' and ttag.startswith('ffbp/fp32') and 'cpp' not in ttag and cpu_best:
-            per = cpu_best
         usd = PRICE[lab] / 3600.0 * per * 1000
-        pts.append(dict(lab=lab, alg=ttag.split('/')[0], filled=filled, name=name, x=usd, y=r['err_db']))
+        pts.append(dict(lab=lab, alg=ttag.split('/')[0], filled=filled, name=name, x=usd, y=r['err_db'], mtag=mtag))
+    # errors over the three Panama regions for every point (the open-source implementations were scored there only)
+    reg = json.load(open(f'{R}/pareto_regions_v3.json'))['configurations']
+    for p in pts:
+        p['y'] = reg[p['name']]['pooled_db']
+    oss = json.load(open(f'{R}/oss_times.json'))
+    for name, lab, alg, secs, key, gray in oss:
+        pts.append(dict(lab=lab, alg=alg, filled=True, name=name, x=PRICE[lab] / 3600.0 * secs * 1000, y=reg[key]['pooled_db'], oss=gray))
     for p in pts:
         p['front'] = not any(q is not p and q['x'] <= p['x'] and q['y'] <= p['y'] + 0.05 and (q['x'] < p['x'] or q['y'] < p['y'] - 0.05) for q in pts)
     front = sorted((p for p in pts if p['front']), key=lambda p: p['x'])
-    fig, ax = plt.subplots(figsize=(7.2, 4.3))
+    fig, ax = plt.subplots(figsize=(7.2, 4.9))
     # dominated region, lightly shaded above and to the right of the front
     fx, fy = [], []
     for k, p in enumerate(front):
         if k:
             fx.append(p['x']); fy.append(front[k - 1]['y'])
         fx.append(p['x']); fy.append(p['y'])
-    fx.append(2000); fy.append(front[-1]['y'])
+    fx.append(2e5); fy.append(front[-1]['y'])
     ax.fill_between(fx, fy, 10, step=None, color='0.93', zorder=0)
     ax.plot(fx, fy, color='0.4', lw=1.1, zorder=2)
+    top = -20.0
     for p in pts:
+        if p.get('oss'):
+            y = min(p['y'], top)
+            ax.scatter(p['x'], y, s=46, marker='X' if p['y'] > top else MARK[p['alg']], c='0.55', edgecolor='0.25', linewidth=0.7, zorder=3)
+            if p['y'] > top:
+                ax.annotate(p['name'] + '\n(no image)', (p['x'], y), xytext=(0, -7), textcoords='offset points', fontsize=6.5, color='0.25', ha='center', va='top')
+            else:
+                ax.annotate(p['name'], (p['x'], y), xytext=(-7, 0), textcoords='offset points', fontsize=6.5, color='0.25', ha='right', va='center')
+            continue
         kw = dict(marker=MARK[p['alg']], linewidth=0.9, edgecolor=COL[p['lab']], zorder=3)
         if p['front']:
             ax.scatter(p['x'], p['y'], s=70, c=COL[p['lab']] if p['filled'] else 'white', **kw)
         else:
             ax.scatter(p['x'], p['y'], s=36, c=COL[p['lab']] if p['filled'] else 'white', alpha=0.35, **kw)
     # labels for the front only, placed above-left of each point along the front
-    offsets = {'L4 polar format': (7, 6), 'v5e single-pass': (-7, 6), 'L4 float16': (-7, 8),
+    offsets = {'FastSAR exact, L4': (7, -9), 'L4 polar format': (7, 6), 'v5e single-pass': (-7, 6), 'L4 float16': (-7, 8),
                'L4 float32': (7, -10), 'v5e three-pass': (7, -9), 'CPU float32': (-7, 7), 'CPU float64': (-7, -10)}
     for p in front:
         dx, dy = offsets.get(p['name'], (6, 6))
-        ax.annotate(p['name'], (p['x'], p['y']), xytext=(dx, dy), textcoords='offset points', fontsize=7.5, color=COL[p['lab']],
+        ax.annotate({'FastSAR exact, L4': 'L4 exact BP', 'FastSAR exact, CPU': 'CPU exact BP'}.get(p['name'], p['name']), (p['x'], p['y']), xytext=(dx, dy), textcoords='offset points', fontsize=7.5, color=COL[p['lab']],
                     ha='left' if dx > 0 else 'right', va='bottom' if dy > 0 else 'top', fontweight='medium')
-    # the regimes of visible change (Section 6), named at the right margin
-    for y, txt, va in ((-57.3, 'no visible change', 'bottom'), (-45.8, 'coherence loss beside bright returns', 'bottom'), (-32.1, 'striped coherence loss', 'bottom')):
-        ax.text(820, y + 0.6, txt, fontsize=7, color='0.3', ha='right', va=va)
+    # worst FastSAR configuration of each regime of visible change, on the three-region axis (pareto_regions.json)
+    def regime(r):
+        return 3 if r['coh_p001'] < 0.99 else (2 if r['coh_p001'] < 0.999 else 1)
+    worst = {}
+    for p in pts:
+        if p.get('oss') is None and p.get('mtag'):
+            k = regime(rows[(p['lab'], p['mtag'])])
+            worst[k] = max(worst.get(k, -1e9), p['y'])
+    lines_ = [(worst[k], t, v) for k, t, v in ((1, 'regime 1: no visible change', 'top'), (2, 'regime 2: coherence loss beside bright returns', 'bottom'),
+                                              (3, 'regime 3: striped coherence loss', 'bottom')) if k in worst]
+    for y, txt, va in lines_:
+        ax.text(1.8e5, y - 0.6 if va == 'top' else y + 0.4, txt, fontsize=7, color='0.3', ha='right', va=va)
         ax.axhline(y, color='0.75', lw=0.5, ls=':', zorder=1)
     ax.set_xscale('log')
-    ax.set_xlim(0.2, 900)
-    ax.set_ylim(-64, -24)
+    ax.set_xlim(0.2, 2e5)
+    ax.set_ylim(-76, top + 1)
     ax.set_xlabel('Cost per 1000 Panama images (US dollars, on-demand us-central1)')
-    ax.set_ylabel('Error relative to the float64 image (dB)')
+    ax.set_ylabel('Error over three regions relative to the float64 image (dB)')
     from matplotlib.lines import Line2D
     h = [Line2D([], [], marker='o', color='w', markerfacecolor=COL[k], markeredgecolor=COL[k], markersize=7, label=DEV[k]) for k in COL]
     h += [Line2D([], [], marker=MARK[a], color='w', markerfacecolor='0.6', markeredgecolor='k', markersize=7, label=n) for a, n in (('bp', 'exact backprojection'), ('ffbp', 'factorized backprojection'), ('pfa', 'polar format'))]
+    h += [Line2D([], [], marker='o', color='w', markerfacecolor='0.55', markeredgecolor='0.25', markersize=7, label='open-source implementations')]
     h += [Line2D([], [], color='0.4', lw=1.1, label='Pareto front')]
-    ax.legend(handles=h, fontsize=7, loc='center', bbox_to_anchor=(0.47, 0.62), ncol=2, framealpha=0.95)
+    ax.legend(handles=h, fontsize=7, loc='lower center', bbox_to_anchor=(0.5, 1.01), ncol=4, framealpha=0.95)
     for sp in ('top', 'right'):
         ax.spines[sp].set_visible(False)
     fig.tight_layout()
@@ -170,11 +191,11 @@ def zoom(scene, picks, names):
     fig.subplots_adjust(wspace=0.04, hspace=0.12, bottom=0.07)
     cax1 = fig.add_axes([0.13, 0.035, 0.32, 0.012])
     cb1 = fig.colorbar(im_amp, cax=cax1, orientation='horizontal', ticks=[-45, -30, -15, 0])
-    cb1.set_label('amplitude, dB below the brightest 0.1% of the region', fontsize=6)
+    cb1.set_label('amplitude (dB re brightest 0.1%)', fontsize=6)
     cb1.ax.tick_params(labelsize=5)
     cax2 = fig.add_axes([0.55, 0.035, 0.32, 0.012])
     cb2 = fig.colorbar(im, cax=cax2, orientation='horizontal', extend='min', ticks=[0.99, 0.995, 1.0])
-    cb2.set_label('5 x 5 coherence with the float64 reference (white = 1, red = loss)', fontsize=6)
+    cb2.set_label('5 x 5 coherence with the reference', fontsize=6)
     cb2.ax.tick_params(labelsize=5)
     fig.savefig(f'{FIG}/zoom_{scene}.pdf', bbox_inches='tight')
     plt.close(fig)
@@ -228,11 +249,11 @@ def pixel_zoom(scene, picks, names, win=128, up=4):
     fig.subplots_adjust(wspace=0.04, hspace=0.12, bottom=0.09)
     cax1 = fig.add_axes([0.13, 0.045, 0.32, 0.012])
     cb1 = fig.colorbar(im_amp, cax=cax1, orientation='horizontal', ticks=[-45, -30, -15, 0])
-    cb1.set_label('amplitude, dB below the brightest 0.1% of the window', fontsize=6)
+    cb1.set_label('amplitude (dB re brightest 0.1%)', fontsize=6)
     cb1.ax.tick_params(labelsize=5)
     cax2 = fig.add_axes([0.55, 0.045, 0.32, 0.012])
     cb2 = fig.colorbar(im, cax=cax2, orientation='horizontal', extend='min', ticks=[0.99, 0.995, 1.0])
-    cb2.set_label('5 x 5 coherence with the float64 reference (white = 1, red = loss)', fontsize=6)
+    cb2.set_label('5 x 5 coherence with the reference', fontsize=6)
     cb2.ax.tick_params(labelsize=5)
     fig.savefig(f'{FIG}/pixels_{scene}.pdf', bbox_inches='tight', dpi=300)
     plt.close(fig)
@@ -301,9 +322,9 @@ def rings(m):
     for s in SCENE:
         rows = rows_of(m, s)
         for (lab, tag), r in rows.items():
-            if tag == 'pfa/fp32_corr' and r.get('rings') and lab == 'gpu-l4':
+            if tag == 'pfa/fp32_taps_corr' and r.get('rings') and lab == 'gpu-l4':
                 ax.plot(x, r['rings'], marker='o', color='#c0392b', linestyle=style[s], label=f'{SCENE[s]}, polar format')
-            if tag == 'ffbp/fp32' and r.get('rings') and lab == 'gpu-l4':
+            if tag == 'ffbp/fp32_cuda' and r.get('rings') and lab == 'gpu-l4':
                 ax.plot(x, r['rings'], marker='s', color='#2c3e50', linestyle=style[s], label=f'{SCENE[s]}, factorized, float32')
     ax.set_xlabel('Distance from the scene center (fraction of the half-width)')
     ax.set_ylabel('Error relative to float64 (dB)')
@@ -325,8 +346,8 @@ if __name__ == '__main__':
     scenes()
     profile()
     sicd_fig()
-    zoom('panama', [('gpu-l4/bp_cuda_f16', 'L4 exact BP, fp16'), ('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format')],
+    zoom('panama', [('gpu-l4/bp_cubic', 'L4 exact BP'), ('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast_pallas2_direct', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high_pallas2_direct', 'TPU v6e, 3 passes'), ('gpu-l4/pfa_fp32_taps_corr', 'polar format')],
          ['locks', 'port', 'ships', 'corner'])
-    pixel_zoom('panama', [('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high', 'TPU v6e, 3 passes'), ('tpu-v6e/pfa_fp32_corr', 'polar format')],
+    pixel_zoom('panama', [('gpu-l4/ffbp_f16_cuda', 'L4 factorized, fp16'), ('tpu-v6e/ffbp_fp32_fast_pallas2_direct', 'TPU v6e, 1 pass'), ('tpu-v6e/ffbp_fp32_high_pallas2_direct', 'TPU v6e, 3 passes'), ('gpu-l4/pfa_fp32_taps_corr', 'polar format')],
                ['locks', 'port', 'ships'])
     print('figures written')

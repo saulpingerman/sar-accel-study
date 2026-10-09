@@ -1,0 +1,77 @@
+{
+ "_meta": {
+  "label": "cpu-c4d16",
+  "name": "iowa",
+  "nx": 8521,
+  "ny": 8465,
+  "spx": 0.5165927733066282,
+  "spy": 0.32782561630782575,
+  "e1": [
+   -0.9980070229380257,
+   -0.04853764528726715,
+   -0.04032467180705596
+  ],
+  "e2": [
+   -3.2421727971077205e-06,
+   0.639069356010485,
+   -0.7691491131099565
+  ],
+  "pulses": 13003,
+  "samples": 11663,
+  "crop": "",
+  "fastsar": "5bb37384cdce70ce840c34cf51d2d1cf9d10476d",
+  "fastsar_version": "0.1.0",
+  "host": "rel-cpu-c4d16",
+  "protocol": "host memory to host memory, warm; loop back to back (JAX/TPU: next history staged on a worker thread)"
+ },
+ "ffbp/fp32_cpp": {
+  "api": "ImageFormer(..., backend='cpu')",
+  "first_s": 7.880605774999822,
+  "run_s": 7.336073098999805,
+  "runs": [
+   7.336073098999805,
+   7.349961882000116
+  ],
+  "h2h": true,
+  "h2h_stage": "release",
+  "monitor": {
+   "cpu_util": 0.9479383261361101,
+   "ncpu": 16
+  },
+  "stream": {
+   "images": 8,
+   "seconds": 60.32060925600035,
+   "s_per_image": 7.540076157000044,
+   "images_per_s": 0.13262465513317417,
+   "monitor": {
+    "cpu_util": 0.9352158756583953,
+    "ncpu": 16
+   }
+  }
+ },
+ "pfa/fp32_taps_corr": {
+  "api": "form_image(..., algorithm='pfa')",
+  "first_s": 21.627999502999955,
+  "run_s": 8.443942974999572,
+  "runs": [
+   8.458556041000065,
+   8.443942974999572
+  ],
+  "h2h": true,
+  "h2h_stage": "release",
+  "monitor": {
+   "cpu_util": 0.5548390995096519,
+   "ncpu": 16
+  },
+  "stream": {
+   "images": 8,
+   "seconds": 67.91976064299979,
+   "s_per_image": 8.489970080374974,
+   "images_per_s": 0.1177860452431457,
+   "monitor": {
+    "cpu_util": 0.5517457914764555,
+    "ncpu": 16
+   }
+  }
+ }
+}

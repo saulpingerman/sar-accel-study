@@ -1,0 +1,92 @@
+{
+ "collection": "c.cphd",
+ "pulses": 54267,
+ "samples": 17282,
+ "load_seconds": 66.2039431,
+ "sicd": {
+  "rows": 7139,
+  "cols": 35459,
+  "row_ss": 0.2526709479426432,
+  "col_ss": 0.14144545273233025,
+  "col_imp_resp_bw": 5.854191068423226,
+  "col_imp_resp_wid": 0.15108574860309382
+ },
+ "grid": {
+  "nx": 35540,
+  "ny": 7162,
+  "spx": 0.14144545273233025,
+  "spy": 0.7002822657789681,
+  "e1": [
+   0.9999950750968083,
+   0.0031384362553353888,
+   0.0
+  ],
+  "e2": [
+   -0.0031384362553353888,
+   0.9999950750968083,
+   0.0
+  ],
+  "origin": [
+   -2505.603025906772,
+   -2515.5868581542154,
+   -0.0
+  ],
+  "backend": "cuda",
+  "patch": 1024
+ },
+ "first_call_seconds": 31.958405099999993,
+ "seconds": 17.887966024000008,
+ "patches": 0,
+ "memory_fallbacks": [
+  "cuda: for lack of GPU memory FastSAR forms the first level in groups of 4 children instead of 8, which is slower; full speed needs about 23.3 GB of GPU memory, 22.9 GB is free",
+  "cuda: for lack of GPU memory FastSAR forms the first level in groups of 4 children instead of 8, which is slower; full speed needs about 23.3 GB of GPU memory, 22.9 GB is free"
+ ],
+ "full_speed": false,
+ "regions": {
+  "r0": {
+   "i0": 26379,
+   "j0": 3373,
+   "error_db": -60.36585946645027,
+   "reference_seconds": 387.387138977,
+   "center": {
+    "row": 3569,
+    "col": 8864,
+    "local": [
+     1253.8470103907948,
+     37.61114400454256,
+     0.862629682744735
+    ]
+   }
+  },
+  "r1": {
+   "i0": 17514,
+   "j0": 3387,
+   "error_db": -60.29022182702082,
+   "reference_seconds": 392.289540355,
+   "center": {
+    "row": 3569,
+    "col": 17729,
+    "local": [
+     -0.13723098659659327,
+     43.35104496831879,
+     0.9850187517937763
+    ]
+   }
+  },
+  "r2": {
+   "i0": 8649,
+   "j0": 3384,
+   "error_db": -59.741283230420066,
+   "reference_seconds": 395.1669818349999,
+   "center": {
+    "row": 3569,
+    "col": 26594,
+    "local": [
+     -1254.0848221942508,
+     37.50711530316951,
+     0.8603739899765347
+    ]
+   }
+  }
+ }
+}

@@ -207,11 +207,10 @@ def main():
                   if Sd is None:
                       Sd = cp.asarray(S) * wpd[:, None] * wkd[None, :]
                   return form(Sd, ng=a.pallas_ng)
-              Sdev = cp.asarray(S) * wpd[:, None] * wkd[None, :]        # resident, as hre/him are for the JAX path
+              # timed host memory to host memory: the phase history uploaded and the image downloaded inside the clock
               t = time.perf_counter()
               coll = host()
-              out = run_one(coll, Sdev)
-              cp.cuda.Stream.null.synchronize()
+              out = cp.asnumpy(run_one(coll))
               first = time.perf_counter() - t
               runs, hosts = [], []
               with Monitor(gpu=True) as mon:
@@ -221,11 +220,10 @@ def main():
                       t = time.perf_counter()
                       coll = host()
                       hosts.append(time.perf_counter() - t)
-                      out = run_one(coll, Sdev)
-                      cp.cuda.Stream.null.synchronize()
+                      out = cp.asnumpy(run_one(coll))
                       runs.append(time.perf_counter() - t)
-              img = cp.asnumpy(out).astype(np.complex64)
-              del out, Sdev
+              img = np.asarray(out).astype(np.complex64)
+              del out
               cp.get_default_memory_pool().free_all_blocks()
               rec = dict(first_s=first, run_s=min(runs) if runs else first, host_s=min(hosts) if hosts else None, filt='cuda', monitor=mon.result())
               if a.stream:
@@ -244,7 +242,7 @@ def main():
               del img
           except Exception as e:
               cp.get_default_memory_pool().free_all_blocks()
-              print(tag, 'FAILED', type(e).__name__, str(e)[:400], flush=True)
+              print(tag, 'FAILED', type(e).__name__, str(e)[:300] + (' ... ' + str(e)[-1500:] if len(str(e)) > 300 else ''), flush=True)
         return
 
     if a.mode == 'ffbpcpu':
@@ -286,7 +284,7 @@ def main():
                 rec['stream']['monitor'] = mon.result()
             done(tag, img, **rec)
         except Exception as e:
-            print(tag, 'FAILED', type(e).__name__, str(e)[:400], flush=True)
+            print(tag, 'FAILED', type(e).__name__, str(e)[:300] + (' ... ' + str(e)[-1500:] if len(str(e)) > 300 else ''), flush=True)
         return
 
     if a.mode == 'cuda':
@@ -301,9 +299,9 @@ def main():
                 del Sd
                 return re, im
             try:
-                t = time.perf_counter()
+                t = time.perf_counter()                       # host memory to host memory
                 re, im = run_one()
-                cp.cuda.Stream.null.synchronize()
+                re, im = cp.asnumpy(re), cp.asnumpy(im)
                 first = time.perf_counter() - t
                 runs = []
                 with Monitor(gpu=True) as mon:
@@ -312,9 +310,9 @@ def main():
                         cp.get_default_memory_pool().free_all_blocks()
                         t = time.perf_counter()
                         re, im = run_one()
-                        cp.cuda.Stream.null.synchronize()
+                        re, im = cp.asnumpy(re), cp.asnumpy(im)
                         runs.append(time.perf_counter() - t)
-                img = (cp.asnumpy(re) + 1j * cp.asnumpy(im)).astype(np.complex64)
+                img = (re + 1j * im).astype(np.complex64)
                 del re, im
                 cp.get_default_memory_pool().free_all_blocks()
                 rec = dict(first_s=first, run_s=min(runs) if runs else first, monitor=mon.result())
@@ -334,7 +332,7 @@ def main():
                 del img
             except Exception as e:
                 cp.get_default_memory_pool().free_all_blocks()
-                print('cuda', st, 'FAILED', type(e).__name__, str(e)[:400], flush=True)
+                print('cuda', st, 'FAILED', type(e).__name__, str(e)[:300] + (' ... ' + str(e)[-1500:] if len(str(e)) > 300 else ''), flush=True)
         return
 
     import jax
@@ -388,27 +386,27 @@ def main():
                     re, im = prep(jnp.asarray(Sr_h), jnp.asarray(Si_h))
                     return fn(re, im, W, alpha, eps_r, shift, eps_a)
 
-                t = time.perf_counter()
-                img = run_one()
-                jax.block_until_ready(img)
+                planes = jax.jit(lambda z: jnp.stack([z.real, z.imag], axis=-1))   # complex64 leaves a TPU slowly; two planes do not
+
+                def to_host(z):
+                    return np.ascontiguousarray(np.asarray(planes(z))).view(np.complex64)[..., 0]
+
+                t = time.perf_counter()                       # host memory to host memory
+                out = to_host(run_one())
                 first = time.perf_counter() - t
                 runs = []
                 with Monitor(gpu=gpu) as mon:
                     for _ in range(a.reps):
-                        del img
+                        del out
                         t = time.perf_counter()
-                        img = run_one()
-                        jax.block_until_ready(img)
+                        out = to_host(run_one())
                         runs.append(time.perf_counter() - t)
-                out = np.asarray(img).astype(np.complex64)
-                del img
+                out = out.astype(np.complex64)
                 if (fx, fy) != (nx, ny) and not a.correct:
                     i0, j0 = (fx - nx) // 2, (fy - ny) // 2
                     out = out[i0:i0 + nx, j0:j0 + ny]
                 rec = dict(first_s=first, run_s=min(runs) if runs else first, resample=a.resample, monitor=mon.result())
                 if a.stream:
-                    planes = jax.jit(lambda z: jnp.stack([z.real, z.imag], axis=-1))   # complex64 leaves a TPU slowly; two planes do not
-
                     def submit(i):
                         y = planes(run_one())
                         return lambda: np.ascontiguousarray(np.asarray(y)).view(np.complex64)[..., 0]
@@ -418,7 +416,7 @@ def main():
                 done(tag, out, **rec)
                 del out
             except Exception as e:
-                print(tag, 'FAILED', type(e).__name__, str(e)[:400], flush=True)
+                print(tag, 'FAILED', type(e).__name__, str(e)[:300] + (' ... ' + str(e)[-1500:] if len(str(e)) > 300 else ''), flush=True)
         return
     t = time.perf_counter()
     plan = ffbp2.make_plan(col, nx, ny, spx, spy, T=a.T, nlev=a.levels, pmax=a.pmax, e1=e1, e2=e2)
@@ -433,56 +431,65 @@ def main():
             try:
                 fn = ffbp2.make_ffbp(pol, plan, filt, a.budget, a.trig, pallas_pb=a.pallas_pb, pallas_chunk=a.pallas_chunk, pallas_nc=a.pallas_nc, pallas_ng=a.pallas_ng, pallas_final=0 if a.no_pallas_final else a.pallas_final, pallas_gen=a.pallas_gen)
                 static = ffbp2.static_arrays(pol, plan, filt)
-                hre, him, scale = ffbp2.prepare(pol, Sw)
 
                 def host():
                     return ffbp2.device_arrays(pol, plan, ffbp2.collection_arrays(plan, col.ant), static)
 
+                ew = ffbp2.POLICIES[pol]['ew']
+                wpd, wkd = jnp.asarray(wp), jnp.asarray(wk)
+                Sr_h, Si_h = np.ascontiguousarray(S.real), np.ascontiguousarray(S.imag)
+
+                @jax.jit
+                def prep(sr, si):
+                    w = wpd[:, None] * wkd[None, :]
+                    sr, si = sr * w, si * w
+                    s = jnp.sqrt(jnp.max(sr * sr + si * si))
+                    return (sr / s).astype(ew), (si / s).astype(ew), s
+
+                @jax.jit
+                def finish(re, im, s):
+                    return jnp.stack([re * s, im * s], axis=-1)
+
+                def submit(i):
+                    """One image from the phase history in host memory; the returned call brings it to host memory."""
+                    arrs = host()
+                    hre, him, s = prep(jnp.asarray(Sr_h), jnp.asarray(Si_h))
+                    re, im = fn(hre, him, arrs)
+                    del hre, him
+                    y = finish(re, im, s)
+                    del re, im
+                    return lambda: np.ascontiguousarray(np.asarray(y)).view(np.complex64)[..., 0]
+
+                x64 = ffbp2.needs_x64(pol)
+                if x64:                          # float64 policies: the phase history resident (the planes trick is float32)
+                    hre, him, scale = ffbp2.prepare(pol, Sw)
+
+                    def once():
+                        r_, i_ = fn(hre, him, host())
+                        return ((np.asarray(r_) + 1j * np.asarray(i_)) * scale).astype(np.complex128)
+                else:
+                    def once():                  # host memory to host memory
+                        return submit(0)()
                 t = time.perf_counter()
-                arrs = host()
-                re, im = fn(hre, him, arrs)
-                jax.block_until_ready((re, im))
+                img = once()
                 first = time.perf_counter() - t
                 runs, hosts = [], []
                 with Monitor(gpu=gpu) as mon:
                     for _ in range(a.reps):
-                        del re, im
+                        del img
                         t = time.perf_counter()
                         arrs = host()
                         jax.block_until_ready(arrs['levels'][0]['c0'])
                         hosts.append(time.perf_counter() - t)
-                        re, im = fn(hre, him, arrs)
-                        jax.block_until_ready((re, im))
+                        del arrs
+                        t = time.perf_counter()
+                        img = once()
                         runs.append(time.perf_counter() - t)
-                img = ((np.asarray(re) + 1j * np.asarray(im)) * scale).astype(np.complex128 if ffbp2.needs_x64(pol) else np.complex64)
-                del re, im, hre, him
-                rec = dict(first_s=first, run_s=min(runs) if runs else first, host_s=min(hosts) if hosts else None, filt=filt, monitor=mon.result())
-                if a.stream:
-                    ew = ffbp2.POLICIES[pol]['ew']
-                    wpd, wkd = jnp.asarray(wp), jnp.asarray(wk)
-
-                    Sr_h, Si_h = np.ascontiguousarray(S.real), np.ascontiguousarray(S.imag)
-
-                    @jax.jit
-                    def prep(sr, si):
-                        w = wpd[:, None] * wkd[None, :]
-                        sr, si = sr * w, si * w
-                        s = jnp.sqrt(jnp.max(sr * sr + si * si))
-                        return (sr / s).astype(ew), (si / s).astype(ew), s
-
-                    @jax.jit
-                    def finish(re, im, s):
-                        return jnp.stack([re * s, im * s], axis=-1)
-
-                    def submit(i):
-                        arrs = host()
-                        hre, him, s = prep(jnp.asarray(Sr_h), jnp.asarray(Si_h))
-                        re, im = fn(hre, him, arrs)
-                        del hre, him
-                        y = finish(re, im, s)
-                        del re, im
-                        return lambda: np.ascontiguousarray(np.asarray(y)).view(np.complex64)[..., 0]
-
+                if x64:
+                    del hre, him
+                rec = dict(first_s=first, run_s=min(runs) if runs else first, host_s=min(hosts) if hosts else None, filt=filt,
+                           resident=x64, monitor=mon.result())
+                if a.stream and not x64:
                     out = submit(0)()
                     assert out.shape == (nx, ny), out.shape
                     del out
@@ -490,9 +497,9 @@ def main():
                         rec['stream'] = drive(submit, a.stream, a.stream_seconds, a.depth)
                     rec['stream']['monitor'] = mon.result()
                 done(tag, img, **rec)
-                del img, static, arrs
+                del img, static
             except Exception as e:
-                print(tag, 'FAILED', type(e).__name__, str(e)[:400], flush=True)
+                print(tag, 'FAILED', type(e).__name__, str(e)[:300] + (' ... ' + str(e)[-1500:] if len(str(e)) > 300 else ''), flush=True)
 
 
 if __name__ == '__main__':

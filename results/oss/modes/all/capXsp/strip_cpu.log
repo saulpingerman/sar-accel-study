@@ -1,0 +1,41 @@
+Model name:                              AMD EPYC 9B45
+16
+FastSAR da28ceeea3d9a4153217d749f94cc33903a89a12 2026-10-09 03:18:16 +0000
+[2 s] setup done
+-rw-rw-r-- 1 paul paul 5149106840 Oct  9 04:16 c.cphd
+-rw-rw-r-- 1 paul paul 1027277558 Oct  9 04:16 c.ntf
+[10 s] data in
+[13 s] reference cache: 21 files
+== script capella_sp.py
+read 9 s (74203, 17282) ['6 interior pulses have no samples', '6 pulses flagged SIGNAL=0 (not normal): kept'] SPOTLIGHT
+vendor PFA RGAZIM SLANT 7210 35619
+center, SGN -1 (no conjugation): peak/mean 10.4, amplitude correlation with vendor 0.780 (129 s)
+center, SGN +1 (conjugated, as declared): peak/mean 6.4, amplitude correlation with vendor -0.008 (129 s)
+off, SGN -1 (no conjugation): peak/mean 12.2, amplitude correlation with vendor 0.539 (129 s)
+off, SGN +1 (conjugated, as declared): peak/mean 8.0, amplitude correlation with vendor 0.049 (129 s)
+	Command being timed: "/opt/fastsar/env/bin/python -I capella_sp.py c.cphd c.ntf out"
+	User time (seconds): 501.15
+	System time (seconds): 159.81
+	Percent of CPU this job got: 124%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 8:49.07
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 45240004
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 921
+	Minor (reclaiming a frame) page faults: 3258258
+	Voluntary context switches: 4991
+	Involuntary context switches: 4400
+	Swaps: 0
+	File system inputs: 244024
+	File system outputs: 984
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+exit 0
+[543 s] script capella_sp.py done
+[545 s] end

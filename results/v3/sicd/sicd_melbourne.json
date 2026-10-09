@@ -1,0 +1,39 @@
+{
+ "scene": "melbourne",
+ "shape": [
+  10077,
+  10273
+ ],
+ "range_is_row": true,
+ "sicd_weighting": [
+  "",
+  ""
+ ],
+ "sicd_image_formation": "PFA",
+ "shift_parabolic": [
+  -8.574306309223175,
+  12.074952110648155
+ ],
+ "shift_pixels": [
+  -8.494306309223175,
+  12.324952110648155
+ ],
+ "refine_window_coherence": 0.5136603713035583,
+ "shift_m": [
+  -3.5871319437493874,
+  3.676742148227551
+ ],
+ "log_amplitude_correlation": 0.21137464537721454,
+ "gain_db": -60.48374938964844,
+ "coherence": {
+  "conj": false,
+  "coh_mean": 0.2638241946697235,
+  "coh_p001": 0.00861327350139618,
+  "coh_p01": 0.027282405644655228,
+  "coh_median": 0.24130186438560486,
+  "below_099": 1.0,
+  "below_09": 0.9999794711491198
+ },
+ "points": [],
+ "seconds": 84.91302394866943
+}

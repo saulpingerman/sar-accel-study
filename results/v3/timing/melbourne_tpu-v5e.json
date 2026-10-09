@@ -1,0 +1,102 @@
+{
+ "_meta": {
+  "label": "tpu-v5e",
+  "name": "melbourne",
+  "nx": 10077,
+  "ny": 10273,
+  "spx": 0.4222983976754471,
+  "spy": 0.29831695208381587,
+  "e1": [
+   -0.9998985969874168,
+   0.009798205516476807,
+   0.010333968804502923
+  ],
+  "e2": [
+   1.709385152854255e-05,
+   0.7264928962154117,
+   -0.6871739746645994
+  ],
+  "pulses": 15948,
+  "samples": 14399,
+  "crop": "",
+  "fastsar": "5bb37384cdce70ce840c34cf51d2d1cf9d10476d",
+  "fastsar_version": "0.1.0",
+  "host": "t1v-n-3ddc3c7b-w-0",
+  "protocol": "host memory to host memory, warm; loop back to back (JAX/TPU: next history staged on a worker thread)"
+ },
+ "ffbp/fp32_high_pallas2_direct": {
+  "api": "ImageFormer(..., backend='tpu')",
+  "first_s": 11.76885504500001,
+  "run_s": 5.474163495000084,
+  "runs": [
+   5.481986584999959,
+   5.474163495000084
+  ],
+  "h2h": true,
+  "h2h_stage": "release",
+  "monitor": {
+   "cpu_util": 0.023796058479121144,
+   "ncpu": 24
+  },
+  "stream": {
+   "images": 15,
+   "seconds": 62.60165773099993,
+   "s_per_image": 4.173443848733329,
+   "images_per_s": 0.239610268220934,
+   "monitor": {
+    "cpu_util": 0.031086925077941665,
+    "ncpu": 24
+   }
+  }
+ },
+ "ffbp/fp32_fast_pallas2_direct": {
+  "api": "ImageFormer(..., backend='tpu', precision='single-pass')",
+  "first_s": 7.898879542999794,
+  "run_s": 3.7415085830000407,
+  "runs": [
+   3.752578457000027,
+   3.7415085830000407
+  ],
+  "h2h": true,
+  "h2h_stage": "release",
+  "monitor": {
+   "cpu_util": 0.02989120693205921,
+   "ncpu": 24
+  },
+  "stream": {
+   "images": 25,
+   "seconds": 61.546239000000014,
+   "s_per_image": 2.4618495600000005,
+   "images_per_s": 0.40619866308971364,
+   "monitor": {
+    "cpu_util": 0.045118039078821864,
+    "ncpu": 24
+   }
+  }
+ },
+ "pfa/fp32_taps_corr": {
+  "api": "form_image(..., algorithm='pfa')",
+  "first_s": 133.48262344100021,
+  "run_s": 68.24884783100015,
+  "runs": [
+   68.24884783100015,
+   68.25674739599981
+  ],
+  "h2h": true,
+  "h2h_stage": "release",
+  "monitor": {
+   "cpu_util": 0.005671094338863889,
+   "ncpu": 24
+  },
+  "stream": {
+   "images": 4,
+   "seconds": 273.0003356740003,
+   "s_per_image": 68.25008391850008,
+   "images_per_s": 0.014651996636284529,
+   "monitor": {
+    "cpu_util": 0.005717229224876091,
+    "ncpu": 24
+   }
+  }
+ }
+}

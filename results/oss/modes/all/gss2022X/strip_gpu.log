@@ -1,0 +1,46 @@
+Model name:                              Intel(R) Xeon(R) CPU @ 2.20GHz
+32
+NVIDIA L4, 580.178.04
+FastSAR da28ceeea3d9a4153217d749f94cc33903a89a12 2026-10-09 03:18:16 +0000
+[4 s] setup done
+-rw-rw-r-- 1 paul paul 1331593804 Oct  9 04:43 c.cphd
+-rw-rw-r-- 1 paul paul  286917663 Oct  9 04:43 c.ntf
+[12 s] data in
+[15 s] reference cache: 3 files
+== fastsar cuda
+/data/w/FastSAR/fastsar/io.py:162: UserWarning: valid delay window (TOA1 to TOA2) of 2962 m exceeds the unambiguous range c/(2 df) = 1311 m: the samples are not a plain frequency-domain phase history and images will alias
+  warnings.warn(msg)
+grid 12514 5771 72.2 Mpx
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+first mosaic 71.1 s
+mosaic 57.5 s, 78 patches
+region 0: error -62.45 dB
+region 1: error -62.15 dB
+region 2: error -61.95 dB
+	Command being timed: "/opt/fastsar/env/bin/python -I modes_strip.py c.cphd c.ntf out fastsar cuda"
+	User time (seconds): 2679.90
+	System time (seconds): 40.47
+	Percent of CPU this job got: 1872%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:25.27
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 12978968
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 8985
+	Minor (reclaiming a frame) page faults: 3108617
+	Voluntary context switches: 204696
+	Involuntary context switches: 96102
+	Swaps: 0
+	File system inputs: 1099848
+	File system outputs: 54536
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+exit 0
+[160 s] stage fastsar cuda done
+GPU utilization over the stage: mean 72%, 65% of samples at 90% or more, mean power 55 W (146 s)
+[165 s] end

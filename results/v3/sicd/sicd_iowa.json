@@ -1,0 +1,39 @@
+{
+ "scene": "iowa",
+ "shape": [
+  8521,
+  8465
+ ],
+ "range_is_row": true,
+ "sicd_weighting": [
+  "",
+  ""
+ ],
+ "sicd_image_formation": "PFA",
+ "shift_parabolic": [
+  8.48405984044075,
+  13.910450510680676
+ ],
+ "shift_pixels": [
+  8.49905984044075,
+  14.160450510680676
+ ],
+ "refine_window_coherence": 0.7575071454048157,
+ "shift_m": [
+  4.390552893472276,
+  4.642158415860358
+ ],
+ "log_amplitude_correlation": 0.146983381974725,
+ "gain_db": -57.15156936645508,
+ "coherence": {
+  "conj": false,
+  "coh_mean": 0.3269774615764618,
+  "coh_p001": 0.00816347822546959,
+  "coh_p01": 0.026058010756969452,
+  "coh_median": 0.2619597911834717,
+  "below_099": 1.0,
+  "below_09": 0.9999064263926611
+ },
+ "points": [],
+ "seconds": 70.46075963973999
+}

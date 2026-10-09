@@ -1,0 +1,102 @@
+{
+ "_meta": {
+  "label": "tpu-v5e",
+  "name": "iowa",
+  "nx": 8521,
+  "ny": 8465,
+  "spx": 0.5165927733066282,
+  "spy": 0.32782561630782575,
+  "e1": [
+   -0.9980070229380257,
+   -0.04853764528726715,
+   -0.04032467180705596
+  ],
+  "e2": [
+   -3.2421727971077205e-06,
+   0.639069356010485,
+   -0.7691491131099565
+  ],
+  "pulses": 13003,
+  "samples": 11663,
+  "crop": "",
+  "fastsar": "5bb37384cdce70ce840c34cf51d2d1cf9d10476d",
+  "fastsar_version": "0.1.0",
+  "host": "t1v-n-3ddc3c7b-w-0",
+  "protocol": "host memory to host memory, warm; loop back to back (JAX/TPU: next history staged on a worker thread)"
+ },
+ "ffbp/fp32_high_pallas2_direct": {
+  "api": "ImageFormer(..., backend='tpu')",
+  "first_s": 8.22405997099986,
+  "run_s": 3.5358500600000298,
+  "runs": [
+   3.5446463099997345,
+   3.5358500600000298
+  ],
+  "h2h": true,
+  "h2h_stage": "release",
+  "monitor": {
+   "cpu_util": 0.01952167270577448,
+   "ncpu": 24
+  },
+  "stream": {
+   "images": 23,
+   "seconds": 61.7093410399998,
+   "s_per_image": 2.6830148278260784,
+   "images_per_s": 0.3727150478740564,
+   "monitor": {
+    "cpu_util": 0.025689684077085242,
+    "ncpu": 24
+   }
+  }
+ },
+ "ffbp/fp32_fast_pallas2_direct": {
+  "api": "ImageFormer(..., backend='tpu', precision='single-pass')",
+  "first_s": 6.314939613999741,
+  "run_s": 2.5246889160002866,
+  "runs": [
+   2.5332329960001516,
+   2.5246889160002866
+  ],
+  "h2h": true,
+  "h2h_stage": "release",
+  "monitor": {
+   "cpu_util": 0.027817099909503786,
+   "ncpu": 24
+  },
+  "stream": {
+   "images": 37,
+   "seconds": 61.30981413100017,
+   "s_per_image": 1.657022003540545,
+   "images_per_s": 0.6034922878895442,
+   "monitor": {
+    "cpu_util": 0.040902353598320784,
+    "ncpu": 24
+   }
+  }
+ },
+ "pfa/fp32_taps_corr": {
+  "api": "form_image(..., algorithm='pfa')",
+  "first_s": 113.91278349899994,
+  "run_s": 48.28586024100014,
+  "runs": [
+   48.29273048499999,
+   48.28586024100014
+  ],
+  "h2h": true,
+  "h2h_stage": "release",
+  "monitor": {
+   "cpu_util": 0.005327859425503588,
+   "ncpu": 24
+  },
+  "stream": {
+   "images": 4,
+   "seconds": 193.157519504,
+   "s_per_image": 48.289379876,
+   "images_per_s": 0.020708487095254743,
+   "monitor": {
+    "cpu_util": 0.00525895949034533,
+    "ncpu": 24
+   }
+  }
+ }
+}

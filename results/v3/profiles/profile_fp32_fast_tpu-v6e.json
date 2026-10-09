@@ -1,0 +1,60 @@
+{
+ "level0": {
+  "P": 15186,
+  "K": 14399,
+  "Dk": 6,
+  "Dp": 4,
+  "Po": 3805,
+  "Ko": 2408
+ },
+ "policy": "fp32_fast",
+ "device": "TPU_0(process=0,(0,0,0,0))",
+ "dense_split_image_s": 4.077688412000043,
+ "dense_split_tile_stages": {
+  "L0": 0.008526450000090335,
+  "L1": 0.013889608999988923,
+  "L2": 0.008298260000174196,
+  "final": 0.020947349999914877,
+  "final_tiles": 1680,
+  "final_PQ": [
+   80,
+   79
+  ]
+ },
+ "dense_direct_image_s": 3.4225343349999093,
+ "dense_direct_tile_stages": {
+  "L0": 0.008330000000114524,
+  "L1": 0.013280160000022079,
+  "L2": 0.007866659999990588,
+  "final": 0.021420860000034736,
+  "final_tiles": 1680,
+  "final_PQ": [
+   80,
+   79
+  ]
+ },
+ "dense_rotate_child_s": 0.009097630000042045,
+ "dense_dec_k_child_s": 0.0039120400001593225,
+ "dense_dec_p_child_s": 0.000994369999943956,
+ "pallas_direct_image_s": 4.11404919399979,
+ "pallas_direct_tile_stages": {
+  "L0": 0.009824270000081015,
+  "L1": 0.013412700000117184,
+  "L2": 0.027748709999968924,
+  "final": 0.021428140000125495,
+  "final_tiles": 1680,
+  "final_PQ": [
+   80,
+   79
+  ]
+ },
+ "pallas_rotate_child_s": 0.009104450000222641,
+ "pallas_fused_child_pb64_c512_s": 0.0033178199998928903,
+ "pallas_fused_child_pb64_c1024_s": 0.0026533099999141996,
+ "pallas_fused_child_pb64_c2048_s": 0.0030717500001173903,
+ "pallas_fused_child_pb128_c512_s": 0.002530190000015864,
+ "pallas_fused_child_pb128_c1024_s": 0.0020587399999385525,
+ "pallas_fused_child_pb128_c2048_s": 0.002689440000040122,
+ "pallas_fused_8children_map_s": 0.020519429999922068,
+ "child_bytes": 1749305712
+}

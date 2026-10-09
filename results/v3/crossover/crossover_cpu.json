@@ -1,0 +1,23 @@
+{
+ "fastsar": "c947b919f40d1dec3e2916d9a0ad4e86a8025af5",
+ "backend": "cpu",
+ "pulses": 15186,
+ "sizes": {
+  "1024": {
+   "exact_cubic_s": 5.385854949000006,
+   "factorized_s": 2.612838216
+  },
+  "2048": {
+   "exact_cubic_s": 17.620544828999996,
+   "factorized_s": 2.001597421999989
+  },
+  "4096": {
+   "exact_cubic_s": 64.40542136499997,
+   "factorized_s": 3.049837783999976
+  },
+  "8192": {
+   "exact_cubic_s": 249.58268013000009,
+   "factorized_s": 7.23478486099998
+  }
+ }
+}

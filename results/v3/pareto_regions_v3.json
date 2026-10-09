@@ -1,0 +1,185 @@
+{
+ "reference_energy": {
+  "locks": 15474862.17076979,
+  "port": 1375910144.7770038,
+  "ships": 872096420.6050999
+ },
+ "configurations": {
+  "L4 float16": {
+   "image": "gpu-l4/ffbp_f16_cuda.npy",
+   "regions": {
+    "locks": -55.31531407186166,
+    "port": -59.38785773906581,
+    "ships": -60.35333939481972
+   },
+   "pooled_db": -59.68520458706068
+  },
+  "L4 float32": {
+   "image": "gpu-l4/ffbp_fp32_cuda.npy",
+   "regions": {
+    "locks": -56.681467151681595,
+    "port": -60.008831803411546,
+    "ships": -61.13360710235344
+   },
+   "pooled_db": -60.37113608882943
+  },
+  "L4 polar format": {
+   "image": "gpu-l4/pfa_fp32_taps_corr.npy",
+   "regions": {
+    "locks": -30.54701529071908,
+    "port": -38.94733071014789,
+    "ships": -41.508201129907356
+   },
+   "pooled_db": -39.5580104334448
+  },
+  "v6e single-pass": {
+   "image": "tpu-v6e/ffbp_fp32_fast_pallas2_direct.npy",
+   "regions": {
+    "locks": -40.78513147488323,
+    "port": -49.021340766580586,
+    "ships": -49.6244031070686
+   },
+   "pooled_db": -49.07043871573105
+  },
+  "v6e three-pass": {
+   "image": "tpu-v6e/ffbp_fp32_high_pallas2_direct.npy",
+   "regions": {
+    "locks": -55.66743418593905,
+    "port": -57.201444572970814,
+    "ships": -57.69203724836401
+   },
+   "pooled_db": -57.37086299325422
+  },
+  "v6e polar format": {
+   "image": "tpu-v6e/pfa_fp32_taps_corr.npy",
+   "regions": {
+    "locks": -30.547014465213003,
+    "port": -38.947329478784404,
+    "ships": -41.50820053348774
+   },
+   "pooled_db": -39.55800938031406
+  },
+  "v5e single-pass": {
+   "image": "tpu-v5e/ffbp_fp32_fast_pallas2_direct.npy",
+   "regions": {
+    "locks": -40.780428877503276,
+    "port": -49.068639532774085,
+    "ships": -49.700706816796654
+   },
+   "pooled_db": -49.1251381247703
+  },
+  "v5e three-pass": {
+   "image": "tpu-v5e/ffbp_fp32_high_pallas2_direct.npy",
+   "regions": {
+    "locks": -55.63726258208227,
+    "port": -57.58408826964599,
+    "ships": -58.31145780097361
+   },
+   "pooled_db": -57.83229056635924
+  },
+  "v5e polar format": {
+   "image": "tpu-v5e/pfa_fp32_taps_corr.npy",
+   "regions": {
+    "locks": -30.547014655450525,
+    "port": -38.947330356772206,
+    "ships": -41.50819837065606
+   },
+   "pooled_db": -39.558009473103255
+  },
+  "CPU float32": {
+   "image": "cpu-c4d16/ffbp_fp32_cpp.npy",
+   "regions": {
+    "locks": -56.774339579967645,
+    "port": -60.03689976393603,
+    "ships": -61.15937183189729
+   },
+   "pooled_db": -60.39948779392628
+  },
+  "CPU polar format": {
+   "image": "cpu-c4d16/pfa_fp32_taps_corr.npy",
+   "regions": {
+    "locks": -30.54780904843672,
+    "port": -38.947427858131505,
+    "ships": -41.506649392076525
+   },
+   "pooled_db": -39.55773997279606
+  },
+  "FastSAR exact, L4": {
+   "image": "gpu-l4/bp_cubic.npy",
+   "regions": {
+    "locks": -59.87271146311711,
+    "port": -73.76243601500292,
+    "ships": -70.72999501988734
+   },
+   "pooled_db": -71.85963057422597
+  },
+  "FastSAR exact, CPU": {
+   "image": "cpu-c4d16/bp_cubic.npy",
+   "regions": {
+    "locks": -59.87274853339861,
+    "port": -73.76224486917401,
+    "ships": -70.73003173016718
+   },
+   "pooled_db": -71.85957795165974
+  },
+  "FastSAR exact linear, L4": {
+   "image": "gpu-l4/bp_linear.npy",
+   "regions": {
+    "locks": -54.92441525940166,
+    "port": -58.70887208605025,
+    "ships": -56.29493359165936
+   },
+   "pooled_db": -57.58307534549024
+  },
+  "RITSAR, 16x": {
+   "regions": {
+    "locks": -26.158357011428834,
+    "port": -25.315484720073517,
+    "ships": -27.252671068903926
+   },
+   "pooled_db": -25.969757024339355
+  },
+  "bpBasic, 2^17": {
+   "regions": {
+    "locks": -38.07475350235701,
+    "port": -43.16290999943874,
+    "ships": -41.54154802178715
+   },
+   "pooled_db": -42.40891578369794
+  },
+  "bpBasic, 2^18": {
+   "regions": {
+    "locks": -52.85576564075363,
+    "port": -55.36837304888632,
+    "ships": -54.455276200261196
+   },
+   "pooled_db": -54.97221719981371
+  },
+  "ISCE3, CPU": {
+   "patches": {
+    "center": -54.88998416303357,
+    "locks": -31.916296252924823,
+    "port": -31.528456719972596
+   },
+   "pooled_db": -33.46851297147339,
+   "note": "three 256 by 256 pixel patches of its own grid (center, lock, port), equal weights, after ramp removal"
+  },
+  "ISCE3, CUDA": {
+   "patches": {
+    "center": -52.171669011538704,
+    "locks": -31.9035248829038,
+    "port": -31.51005761336499
+   },
+   "pooled_db": -33.443802574129776,
+   "note": "three 256 by 256 pixel patches of its own grid (center, lock, port), equal weights, after ramp removal"
+  },
+  "torchbp exact": {
+   "pooled_db": 0.0,
+   "note": "0.0 dB on every region (torchbp_panama.json)"
+  },
+  "GRDL FFBP": {
+   "pooled_db": 0.0,
+   "note": "GRDL fast factorized backprojection (strip-map code) forms no focused image of the spotlight collection; registration correlation 0.03 to 0.22, see grdl_ffbp_scores.json and grdl_ffbp_quicklook.png"
+  }
+ }
+}

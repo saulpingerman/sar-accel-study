@@ -1,0 +1,25 @@
+jax 0.11.2 [CudaDevice(id=0)] /data/FastSAR/fastsar/__init__.py
+Model name:                              Intel(R) Xeon(R) CPU @ 2.20GHz
+4
+
+21 passed, 0 failed, 0 skipped, 680 s
+not tested on this machine: tpu (run this script on such a machine with --require)
+tests exit 0
+panama gpu-l4 ffbp/fp32_cuda first 4.07 s, run 3.78 s, loop 3.80 s over 16 61.63866666666667
+panama gpu-l4 ffbp/f16_cuda first 4.44 s, run 3.48 s, loop 3.45 s over 18 56.93933333333333
+panama gpu-l4 pfa/fp32_taps_corr first 62.83 s, run 3.03 s, loop 3.09 s over 20 49.34
+panama gpu-l4 bp/cubic first 18.50 s, run 18.71 s, loop 19.08 s over 4 71.32971830985915
+panama gpu-l4 bp/linear first 19.72 s, run 20.32 s, loop 20.03 s over 4 71.43311688311688
+panama gpu-l4 bp/linear_ov16 first 27.81 s, run 26.86 s, loop 27.07 s over 4 71.47640776699029
+melbourne gpu-l4 ffbp/fp32_cuda first 4.30 s, run 3.94 s, loop 3.99 s over 16 64.308
+melbourne gpu-l4 ffbp/f16_cuda first 4.48 s, run 3.56 s, loop 3.58 s over 17 60.26071428571429
+melbourne gpu-l4 pfa/fp32_taps_corr first 61.00 s, run 3.11 s, loop 3.11 s over 20 46.41923076923077
+melbourne gpu-l4 bp/cubic first 18.76 s, run 19.10 s, loop 19.22 s over 4 71.39287671232877
+melbourne gpu-l4 bp/linear first 20.03 s, run 20.56 s, loop 20.28 s over 4 71.44769230769231
+melbourne gpu-l4 bp/linear_ov16 first 28.86 s, run 27.77 s, loop 28.09 s over 4 71.56327102803739
+iowa gpu-l4 ffbp/fp32_cuda first 2.87 s, run 2.51 s, loop 2.54 s over 24 63.5
+iowa gpu-l4 ffbp/f16_cuda first 3.17 s, run 2.27 s, loop 2.28 s over 27 59.40555555555555
+iowa gpu-l4 pfa/fp32_taps_corr first 45.82 s, run 2.26 s, loop 2.26 s over 27 51.235
+iowa gpu-l4 bp/cubic first 11.47 s, run 11.58 s, loop 11.57 s over 6 71.3315909090909
+iowa gpu-l4 bp/linear first 12.42 s, run 12.65 s, loop 12.82 s over 5 71.04604166666667
+iowa gpu-l4 bp/linear_ov16 first 17.46 s, run 17.15 s, loop 17.34 s over 4 71.27477611940299

@@ -3,7 +3,8 @@
 
 For each test image:
   err_db        energy of the difference from the reference over the energy of the reference, after one
-                complex factor per algorithm family (fitted on the float32 image of that family and device)
+                complex factor per algorithm family (fitted on the float32 image of that family and device; in the
+                release records the float32-class image: CUDA or C++ float32, TPU three-pass)
   err_fit_db    the same after a factor fitted to the image itself, which removes any overall gain error
   gain_db       amplitude of that fitted factor relative to the family factor (overall amplitude change)
   coherence     over a sliding window (default 5 x 5): mean, 1st and 0.1th percentile, minimum, and the
@@ -122,6 +123,8 @@ def main():
                 family = name.split('_')[0]
                 suffix = ''.join('_' + s for s in name.split('_')[2:] if s in ('conv', 'taps'))
                 src = f'{d}/{family}_fp32{suffix}.npy'
+                if family == 'ffbp' and not os.path.exists(src):       # release records: the float32-class image of the device
+                    src = next((f'{d}/ffbp_{t}.npy' for t in ('fp32_cuda', 'fp32_cpp', 'fp32_high_pallas2_direct') if os.path.exists(f'{d}/ffbp_{t}.npy')), src)
                 if (family, suffix) not in fam:
                     fam[family, suffix] = ((ampgain if family == 'pfa' else lsgain)(np.load(src), ref)) if os.path.exists(src) else g_own
                 g_fam = fam[family, suffix]

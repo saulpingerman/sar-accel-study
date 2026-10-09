@@ -81,14 +81,15 @@ for os_ in (2,):
     res['methods'][key] = dict(errors=e, range_compression_seconds=t_rc)
     print(key, e, flush=True)
     if os_ == 2 and not QUICK and os.environ.get('REGIONS_FFBP') != '1':
-        # the full image, end to end on the GPU (range compression included), timed after a warm-up
+        # the full image from the phase history in host memory to the image in host memory (range compression
+        # included), timed after a warm-up
         g = grid(0, 0, nx, ny)
         try:
             torchbp.ops.backprojection_cart_2d(data, grid(0, 0, 256, 256), fref, dr, pos_t, d0=d0); sync()
             del data; (torch.cuda.empty_cache() if dev == 'cuda' else None)
             t = time.perf_counter()
             data, _, _ = rc_gpu(os_)
-            full = torchbp.ops.backprojection_cart_2d(data, g, fref, dr, pos_t, d0=d0)
+            full = torchbp.ops.backprojection_cart_2d(data, g, fref, dr, pos_t, d0=d0).cpu().numpy()
             sync(); res['methods'][key]['full_image_seconds'] = time.perf_counter() - t
             del full; (torch.cuda.empty_cache() if dev == 'cuda' else None)
         except Exception as ex:
@@ -109,8 +110,9 @@ for os_ in (2,):
             (torch.cuda.empty_cache() if dev == 'cuda' else None); sync(); t = time.perf_counter()
             ip = torchbp.ops.ffbp(data, gpol, fref, dr, pos_p, stages=8, d0=d0, dealias=True, grid_oversample=2.0)
             img = torchbp.ops.polar_to_cart(ip.reshape(1, *ip.shape[-2:]), torch.tensor([[0.0, 0.0, float(posf[:, 2].mean())]], device=dev), gpol, gcart, fref, ang, method=("lanczos", 6))
+            img = img.cpu().numpy()
             sync(); tf = time.perf_counter() - t
-            img = img.cpu().numpy().reshape(ny, nx).T
+            img = img.reshape(ny, nx).T
             res['methods']['torchbp factorized, 2x profiles'] = dict(seconds_after_range_compression=tf, polar_grid=[nr, nth],
                 errors={n_: err(img[i0:i0 + h, j0:j0 + h], np.asarray(ref_img[i0:i0 + h, j0:j0 + h])) for n_, (i0, j0) in crops.items()})
         except Exception as ex:

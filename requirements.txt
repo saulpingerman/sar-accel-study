@@ -1,9 +1,5 @@
 numpy
 scipy
 numba
+finufft
 matplotlib
-sarpy
-rasterio
-pymupdf
-jax
-ml_dtypes

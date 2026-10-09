@@ -1,0 +1,25 @@
+PASS  test_accuracy.py     6.0 s   0.3 GB
+PASS  test_api.py     4.2 s   0.5 GB
+PASS  test_autofocus.py     6.0 s   0.5 GB
+PASS  test_bp.py     2.0 s   0.4 GB
+PASS  test_burst.py    49.2 s   2.7 GB
+PASS  test_chain.py     6.4 s   0.4 GB
+PASS  test_cphd.py    11.3 s   1.0 GB
+PASS  test_exact.py     5.2 s   2.1 GB
+PASS  test_ffbp_cpu.py     1.0 s   0.4 GB
+SKIP  test_ffbp_cuda.py: no CuPy with a CUDA device
+PASS  test_insar.py     8.2 s   0.2 GB
+PASS  test_io.py     0.2 s   0.0 GB
+PASS  test_pallas_e2e_tpu.py     5.8 s   0.5 GB
+PASS  test_pallas_final.py     2.2 s   0.4 GB
+PASS  test_pallas_fused.py     4.0 s   0.5 GB
+PASS  test_patches.py    68.8 s   1.7 GB
+PASS  test_planning.py     1.0 s   0.5 GB
+PASS  test_products.py     1.2 s   0.5 GB
+PASS  test_stripmap.py    16.6 s   0.8 GB
+PASS  test_units.py    23.5 s   1.0 GB
+PASS  test_wide_angle.py     1.2 s   0.2 GB
+
+20 passed, 0 failed, 1 skipped, 224 s
+not tested on this machine: cuda, tpu (run this script on such a machine with --require)
+tests exit 0

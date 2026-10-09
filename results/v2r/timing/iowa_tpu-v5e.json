@@ -1,14 +1,8 @@
 {
  "_meta": {
-  "label": "tpu-v5e",
-  "nx": 8521,
-  "ny": 8465,
-  "spx": 0.5165927733066282,
-  "spy": 0.32782561630782575,
-  "pulses": 13003,
-  "samples": 11663,
+  "T": 32,
   "crop": "",
-  "name": "iowa",
+  "device": "TPU_0(process=0,(0,0,0,0))",
   "e1": [
    -0.9980070229380257,
    -0.04853764528726715,
@@ -19,240 +13,156 @@
    0.639069356010485,
    -0.7691491131099565
   ],
-  "device": "TPU_0(process=0,(0,0,0,0))",
-  "plan": "[(8, 8, 5, 5, 2341, 2609), (7, 7, 7, 8, 343, 335), (5, 5, 5, 5, 77, 75)]",
-  "plan_s": 5.355129803000068,
+  "label": "tpu-v5e",
+  "levels": 3,
+  "name": "iowa",
+  "nx": 8521,
+  "ny": 8465,
   "padded": [
    8960,
    8960
   ],
-  "T": 32,
-  "levels": 3,
-  "pmax": 0.4
+  "plan": "[(8, 8, 5, 5, 2341, 2609), (7, 7, 7, 8, 343, 335), (5, 5, 5, 5, 77, 75)]",
+  "plan_s": 5.355129803000068,
+  "pmax": 0.4,
+  "pulses": 13003,
+  "samples": 11663,
+  "spx": 0.5165927733066282,
+  "spy": 0.32782561630782575
  },
- "ffbp/fp32_fast": {
-  "first_s": 7.941386291999834,
-  "run_s": 5.431155679000085,
-  "host_s": 0.29288661800001137,
+ "ffbp/fp32_direct": {
   "filt": "dense",
+  "first_s": 16.56602306000059,
+  "h2h": true,
+  "h2h_stage": "finish",
+  "host_s": 0.2925153930000306,
   "monitor": {
-   "cpu_util": 0.0037947774504292005,
-   "ncpu": 24
-  }
- },
- "ffbp/fp32_high": {
-  "first_s": 11.883996340000067,
-  "run_s": 7.946529711000039,
-  "host_s": 0.29367090899995674,
-  "filt": "dense",
-  "monitor": {
-   "cpu_util": 0.0035419784194895554,
-   "ncpu": 24
-  }
- },
- "ffbp/fp32": {
-  "first_s": 19.3253347320001,
-  "run_s": 10.454035989999966,
-  "host_s": 0.29263570700004493,
-  "filt": "dense",
-  "monitor": {
-   "cpu_util": 0.0031721467590215546,
-   "ncpu": 24
-  }
- },
- "ffbp/bf16_mm": {
-  "first_s": 14.011993015999906,
-  "run_s": 4.959931890000007,
-  "host_s": 0.29385993699997925,
-  "filt": "dense",
-  "monitor": {
-   "cpu_util": 0.046046271691545085,
-   "ncpu": 24
-  }
- },
- "ffbp/fp32_fast_direct": {
-  "first_s": 7.590549229000089,
-  "run_s": 4.4261133599998175,
-  "host_s": 0.2926287669999965,
-  "filt": "dense",
-  "monitor": {
-   "cpu_util": 0.04615328097506102,
+   "cpu_util": 0.01027614635766435,
    "ncpu": 24
   },
-  "stream": {
-   "images": 15,
-   "seconds": 63.28334316099995,
-   "images_per_s": 0.23702919679572415,
-   "s_per_image": 4.218889544066664,
-   "monitor": {
-    "cpu_util": 0.05489889740893436,
-    "ncpu": 24
-   }
-  }
+  "resident": false,
+  "run_s": 9.161752814000465
  },
- "ffbp/fp32_fast_conv": {
-  "first_s": 30.397641892000138,
-  "run_s": 10.856041367999978,
-  "host_s": 0.29268151299993406,
-  "filt": "conv",
+ "ffbp/fp32_fast_pallas2_direct": {
+  "filt": "pallas2",
+  "first_s": 8.984325981999973,
+  "h2h": true,
+  "h2h_stage": "pallas8",
+  "host_s": 0.29205744699993375,
   "monitor": {
-   "cpu_util": 0.0022372188860693546,
-   "ncpu": 24
-  }
- },
- "pfa/fp32": {
-  "first_s": 21.849916574999952,
-  "run_s": 1.7600773799999843,
-  "resample": "dense",
-  "monitor": {
-   "cpu_util": 0.01711167904249644,
+   "cpu_util": 0.030665199943995636,
    "ncpu": 24
   },
+  "resident": false,
+  "run_s": 2.3468439709999984,
   "stream": {
-   "images": 17,
-   "seconds": 50.11553526600005,
-   "images_per_s": 0.33921617138814303,
-   "s_per_image": 2.9479726627058853,
+   "images": 31,
+   "images_per_s": 0.5054027169350402,
    "monitor": {
-    "cpu_util": 0.06595279082411075,
+    "cpu_util": 0.03927924394558496,
     "ncpu": 24
-   }
-  }
- },
- "pfa/fp32_fast": {
-  "first_s": 21.056129516999817,
-  "run_s": 1.5517503689998193,
-  "resample": "dense",
-  "monitor": {
-   "cpu_util": 0.016484939452882957,
-   "ncpu": 24
-  },
-  "stream": {
-   "images": 18,
-   "seconds": 49.996077801999945,
-   "images_per_s": 0.3600282420410179,
-   "s_per_image": 2.7775598778888857,
-   "monitor": {
-    "cpu_util": 0.07071097110818643,
-    "ncpu": 24
-   }
-  }
- },
- "pfa/fp32_taps": {
-  "first_s": 51.42745622900003,
-  "run_s": 2.067858199999989,
-  "resample": "taps",
-  "monitor": {
-   "cpu_util": 0.012344176862862044,
-   "ncpu": 24
-  },
-  "stream": {
-   "images": 21,
-   "seconds": 41.424713524000026,
-   "images_per_s": 0.5069437592569792,
-   "s_per_image": 1.972605405904763,
-   "monitor": {
-    "cpu_util": 0.0294864188658595,
-    "ncpu": 24
-   }
-  }
- },
- "pfa/fp32_fast_taps": {
-  "first_s": 40.639332384,
-  "run_s": 1.9555189740000287,
-  "resample": "taps",
-  "monitor": {
-   "cpu_util": 0.019183000592947502,
-   "ncpu": 24
-  },
-  "stream": {
-   "images": 16,
-   "seconds": 47.999275004000026,
-   "images_per_s": 0.33333836810382317,
-   "s_per_image": 2.9999546877500016,
-   "monitor": {
-    "cpu_util": 0.0672741704116612,
-    "ncpu": 24
-   }
-  }
- },
- "pfa/fp32_taps_corr": {
-  "first_s": 88.68196019799996,
-  "run_s": 44.213262232000034,
-  "resample": "taps",
-  "monitor": {
-   "cpu_util": 0.044853214857563335,
-   "ncpu": 24
+   },
+   "s_per_image": 1.978620150806452,
+   "seconds": 61.337224675000016
   }
  },
  "ffbp/fp32_high_direct": {
-  "first_s": 11.479388808000067,
-  "run_s": 6.100016116999996,
-  "host_s": 0.29245230599997285,
   "filt": "dense",
+  "first_s": 12.561312259999795,
+  "h2h": true,
+  "h2h_stage": "finish",
+  "host_s": 0.2924689629999193,
   "monitor": {
-   "cpu_util": 0.003645970350067469,
+   "cpu_util": 0.01385049381686883,
    "ncpu": 24
   },
+  "resident": false,
+  "run_s": 6.670162614000219,
   "stream": {
    "images": 11,
-   "seconds": 64.85212744300009,
-   "images_per_s": 0.1696166407134158,
-   "s_per_image": 5.895647949363644,
+   "images_per_s": 0.16957091685219264,
    "monitor": {
-    "cpu_util": 0.053996230349475975,
+    "cpu_util": 0.013035788024851688,
     "ncpu": 24
-   }
-  }
- },
- "ffbp/fp32_direct": {
-  "first_s": 15.80667045000007,
-  "run_s": 8.615394802999958,
-  "host_s": 0.2899934739999708,
-  "filt": "dense",
-  "monitor": {
-   "cpu_util": 0.0026398163610856723,
-   "ncpu": 24
-  }
- },
- "ffbp/fp32_fast_pallas2_direct": {
-  "first_s": 7.597251765000237,
-  "run_s": 1.8093017950000103,
-  "host_s": 0.29276927000000796,
-  "filt": "pallas2",
-  "monitor": {
-   "cpu_util": 0.008249275569008008,
-   "ncpu": 24
-  },
-  "stream": {
-   "images": 31,
-   "seconds": 61.19997172100011,
-   "images_per_s": 0.5065361817702063,
-   "s_per_image": 1.9741926361612938,
-   "monitor": {
-    "cpu_util": 0.038984832237769336,
-    "ncpu": 24
-   }
+   },
+   "s_per_image": 5.897237678272714,
+   "seconds": 64.86961446099986
   }
  },
  "ffbp/fp32_high_pallas2_direct": {
-  "first_s": 8.918062633000318,
-  "run_s": 3.035946540999703,
-  "host_s": 0.293151499999567,
   "filt": "pallas2",
+  "first_s": 10.175435391000065,
+  "h2h": true,
+  "h2h_stage": "pallas8",
+  "host_s": 0.29306994599983227,
   "monitor": {
-   "cpu_util": 0.007069191899065707,
+   "cpu_util": 0.02131040919916638,
    "ncpu": 24
   },
+  "resident": false,
+  "run_s": 3.571269115999712,
   "stream": {
    "images": 19,
-   "seconds": 60.939068600000155,
-   "images_per_s": 0.31178684604969414,
-   "s_per_image": 3.2073194000000083,
+   "images_per_s": 0.3113895052256813,
    "monitor": {
-    "cpu_util": 0.024286067525490097,
+    "cpu_util": 0.024277945476554978,
     "ncpu": 24
-   }
+   },
+   "s_per_image": 3.2114120200526486,
+   "seconds": 61.01682838100032
+  }
+ },
+ "pfa/fp32_fast_taps": {
+  "first_s": 50.95898898700034,
+  "h2h": true,
+  "h2h_stage": "pfa",
+  "monitor": {
+   "cpu_util": 0.023204508209868014,
+   "ncpu": 24
+  },
+  "resample": "taps",
+  "run_s": 2.4917814509999516,
+  "stream": {
+   "images": 24,
+   "images_per_s": 0.5078588792078318,
+   "monitor": {
+    "cpu_util": 0.027840133843146285,
+    "ncpu": 24
+   },
+   "s_per_image": 1.9690509331250041,
+   "seconds": 47.2572223950001
+  }
+ },
+ "pfa/fp32_taps": {
+  "first_s": 52.445723021999584,
+  "h2h": true,
+  "h2h_stage": "pfa",
+  "monitor": {
+   "cpu_util": 0.023065474209225577,
+   "ncpu": 24
+  },
+  "resample": "taps",
+  "run_s": 2.4776436110005307
+ },
+ "pfa/fp32_taps_corr": {
+  "first_s": 96.32646541600025,
+  "h2h": true,
+  "h2h_stage": "pfa",
+  "monitor": {
+   "cpu_util": 0.0031799570417005455,
+   "ncpu": 24
+  },
+  "resample": "taps",
+  "run_s": 44.74042183099937,
+  "stream": {
+   "images": 2,
+   "images_per_s": 0.02248241053331392,
+   "monitor": {
+    "cpu_util": 0.0034134174760405618,
+    "ncpu": 24
+   },
+   "s_per_image": 44.47921625300023,
+   "seconds": 88.95843250600046
   }
  }
 }

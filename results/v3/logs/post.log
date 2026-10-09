@@ -1,0 +1,20 @@
+locks 2.53 s, -59.88 dB
+port 2.54 s, -73.78 dB
+ships 2.53 s, -70.65 dB
+L4 float16 {'locks': -55.32, 'port': -59.39, 'ships': -60.35} -59.69
+L4 float32 {'locks': -56.68, 'port': -60.01, 'ships': -61.13} -60.37
+L4 polar format {'locks': -30.55, 'port': -38.95, 'ships': -41.51} -39.56
+v6e single-pass {'locks': -40.79, 'port': -49.02, 'ships': -49.62} -49.07
+v6e three-pass {'locks': -55.67, 'port': -57.2, 'ships': -57.69} -57.37
+v6e polar format {'locks': -30.55, 'port': -38.95, 'ships': -41.51} -39.56
+v5e single-pass {'locks': -40.78, 'port': -49.07, 'ships': -49.7} -49.13
+v5e three-pass {'locks': -55.64, 'port': -57.58, 'ships': -58.31} -57.83
+v5e polar format {'locks': -30.55, 'port': -38.95, 'ships': -41.51} -39.56
+CPU float32 {'locks': -56.77, 'port': -60.04, 'ships': -61.16} -60.4
+CPU polar format {'locks': -30.55, 'port': -38.95, 'ships': -41.51} -39.56
+FastSAR exact, L4 {'locks': -59.87, 'port': -73.76, 'ships': -70.73} -71.86
+FastSAR exact, CPU {'locks': -59.87, 'port': -73.76, 'ships': -70.73} -71.86
+FastSAR exact linear, L4 {'locks': -54.92, 'port': -58.71, 'ships': -56.29} -57.58
+locks {'amp_corr': 0.9995590350718808, 'log_amp_corr': 0.996018747542949, 'coherence_5x5_mean': 0.9989810538639627}
+port {'amp_corr': 0.9999694719724362, 'log_amp_corr': 0.9983195226986821, 'coherence_5x5_mean': 0.9994160020747089}
+ships {'amp_corr': 0.9999814263933893, 'log_amp_corr': 0.9986006613638663, 'coherence_5x5_mean': 0.9994074081447397}
