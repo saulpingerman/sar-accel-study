@@ -69,7 +69,7 @@ def teaser(m):
     for p in pts:
         if p.get('oss'):
             y = min(p['y'], top)
-            ax.scatter(p['x'], y, s=46, marker='X' if p['y'] > top else MARK[p['alg']], c='0.55', edgecolor='0.25', linewidth=0.7, zorder=3)
+            ax.scatter(p['x'], y, s=46, marker='X' if p['y'] > top else 'D', c='0.55', edgecolor='0.25', linewidth=0.7, zorder=3)
             if p['y'] > top:
                 ax.annotate(p['name'] + '\n(no image)', (p['x'], y), xytext=(0, -7), textcoords='offset points', fontsize=6.5, color='0.25', ha='center', va='top')
             else:
@@ -80,6 +80,16 @@ def teaser(m):
             ax.scatter(p['x'], p['y'], s=70, c=COL[p['lab']] if p['filled'] else 'white', **kw)
         else:
             ax.scatter(p['x'], p['y'], s=36, c=COL[p['lab']] if p['filled'] else 'white', alpha=0.35, **kw)
+    # labels for the Pareto front, in the empty margin left of and below the front, with thin leader lines
+    place = {'L4 polar format': (0.52, -36.0, 'right'), 'L4 float16': (0.52, -55.5, 'right'), 'L4 float32': (0.52, -64.5, 'right'),
+             'FastSAR exact, L4': (5.0, -74.3, 'left')}
+    names = {'FastSAR exact, L4': 'L4 exact BP'}
+    for p in front:
+        if p['name'] in place:
+            x, y, ha = place[p['name']]
+            ax.annotate(names.get(p['name'], p['name']), (p['x'], p['y']), xytext=(x, y), textcoords='data', fontsize=7.5,
+                        color=COL[p['lab']], ha=ha, va='center', fontweight='medium',
+                        arrowprops=dict(arrowstyle='-', color=COL[p['lab']], lw=0.6, shrinkA=1, shrinkB=4))
     # worst FastSAR configuration of each regime of visible change, on the three-region axis (pareto_regions.json)
     def regime(r):
         return 3 if r['coh_p001'] < 0.99 else (2 if r['coh_p001'] < 0.999 else 1)
@@ -103,8 +113,8 @@ def teaser(m):
     from matplotlib.lines import Line2D
     from matplotlib.patches import Patch
     h = [Patch(facecolor=COL[k], edgecolor=COL[k], label=f'FastSAR, {DEV[k]}') for k in COL]      # color = device (any marker)
-    h += [Line2D([], [], marker=MARK[a], color='w', markerfacecolor='0.6', markeredgecolor='k', markersize=7, label=n) for a, n in (('bp', 'exact BP'), ('ffbp', 'factorized BP'), ('pfa', 'polar format'))]
-    h += [Line2D([], [], marker='o', color='w', markerfacecolor='0.55', markeredgecolor='0.25', markersize=7, label='open source (gray)')]
+    h += [Line2D([], [], marker=MARK[a], color='w', markerfacecolor='white', markeredgecolor='k', markersize=7, label=f'FastSAR {n}') for a, n in (('bp', 'exact BP'), ('ffbp', 'factorized BP'), ('pfa', 'polar format'))]
+    h += [Line2D([], [], marker='D', color='w', markerfacecolor='0.55', markeredgecolor='0.25', markersize=6, label='open source'), Line2D([], [], marker='X', color='w', markerfacecolor='0.55', markeredgecolor='0.25', markersize=7, label='open source, no image')]
     h += [Line2D([], [], color='0.4', lw=1.1, label='Pareto front of FastSAR')]
     ax.legend(handles=h, fontsize=7, loc='lower center', bbox_to_anchor=(0.5, 1.01), ncol=4, framealpha=0.95)
     for sp in ('top', 'right'):
