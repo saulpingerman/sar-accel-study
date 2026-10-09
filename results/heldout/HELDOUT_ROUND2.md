@@ -26,3 +26,8 @@ same way, not on round 2.
 
 Harness fixes allowed before round 2 (found in round 1, not library changes): read Capella's SICD (.ntf) instead of
 its SLC GeoTIFF; per-collection logs kept when a run is killed.
+
+Amendment, 2026-10-09, before any round-2 collection was downloaded: 0.1.1 removes the troposphere delay by default
+when the CPHD gives one (Capella's SICD images remove it, Umbra's keep it). The harness reads with
+`troposphere=False`, which is what round 1's default did, so criterion 3 keeps round 1's meaning; the harness also
+reports, as a diagnostic and not a criterion, the correlation peak over shifts of up to 32 pixels and its position.

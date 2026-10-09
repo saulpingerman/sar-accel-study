@@ -34,7 +34,9 @@ def gain_err(a, b):        # error of a against b (dB) after a fitted complex ga
 
 
 t = time.perf_counter()
-col, meta = io.read_cphd(cphd, meta=True)
+# troposphere=False: what round 1 measured (the 0.1.0 default); 0.1.1 removes the delay by default, which moves the
+# image off the pixel grid of vendors whose SICD keeps it (Umbra)
+col, meta = io.read_cphd(cphd, meta=True, troposphere=False)
 S, ant, f0, df = col['S'], np.asarray(col['ant'], np.float64), float(col['fmin']), float(col['df'])
 P, K = S.shape
 res['read'] = dict(seconds=time.perf_counter() - t, pulses=int(P), samples=int(K), notes=meta.get('notes'),
@@ -108,6 +110,11 @@ if vendor:
                 out[sgn] = dict(amp_corr=float(np.corrcoef(aa, av)[0, 1]),
                                 logamp_corr=float(np.corrcoef(np.log10(aa + 1e-9 * aa.max()), np.log10(av + 1e-9 * av.max()))[0, 1]),
                                 peak_to_mean=float(aa.max() / aa.mean()))
+                if sgn == 'as read':        # diagnostic only: the correlation peak over shifts of up to 32 pixels
+                    A, V = np.abs(img), np.abs(v); A = (A - A.mean()) / A.std(); V = (V - V.mean()) / V.std()
+                    X = np.fft.fftshift(np.fft.ifft2(np.fft.fft2(A) * np.conj(np.fft.fft2(V))).real / A.size)
+                    c0 = m // 2; W = X[c0 - 32:c0 + 33, c0 - 32:c0 + 33]; i, j = np.unravel_index(np.argmax(W), W.shape)
+                    out['peak_shift'] = dict(amp_corr=float(W[i, j]), rows=int(i - 32), cols=int(j - 32))
             res['vendor']['windows'][name] = out
             log('vendor', name, out)
         del rd
