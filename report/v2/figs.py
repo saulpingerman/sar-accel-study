@@ -103,10 +103,10 @@ def teaser(m):
     for y, txt, va in lines_:
         ax.text(1.8e5, y - 0.6 if va == 'top' else y + 0.4, txt, fontsize=7, color='0.3', ha='right', va=va)
         ax.axhline(y, color='0.75', lw=0.5, ls=':', zorder=1)
-    ax.text(0.23, -28.0, 'FastSAR\n(color = device)', fontsize=8.5, fontweight='bold', color='#2e5e3e', ha='left', va='center')
+    ax.text(0.13, -28.0, 'FastSAR\n(color = device)', fontsize=8.5, fontweight='bold', color='#2e5e3e', ha='left', va='center')
     ax.text(1.5e3, -23.5, 'open-source implementations (gray)', fontsize=8.5, fontweight='bold', color='0.3', ha='center', va='bottom')
     ax.set_xscale('log')
-    ax.set_xlim(0.2, 2e5)
+    ax.set_xlim(0.1, 2e5)
     ax.set_ylim(-76, top + 1)
     ax.set_xlabel('Cost per 1000 Panama images (US dollars, on-demand us-central1)')
     ax.set_ylabel('Error over three regions relative to the float64 image (dB)')
