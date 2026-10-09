@@ -81,7 +81,7 @@ def teaser(m):
         else:
             ax.scatter(p['x'], p['y'], s=36, c=COL[p['lab']] if p['filled'] else 'white', alpha=0.35, **kw)
     # labels for the Pareto front, in the empty margin left of and below the front, with thin leader lines
-    place = {'L4 polar format': (0.52, -36.0, 'right'), 'L4 float16': (0.52, -55.5, 'right'), 'L4 float32': (0.52, -64.5, 'right'),
+    place = {'L4 polar format': (0.9, -34.5, 'left'), 'L4 float16': (0.52, -55.5, 'right'), 'L4 float32': (0.52, -64.5, 'right'),
              'FastSAR exact, L4': (5.0, -74.3, 'left')}
     names = {'FastSAR exact, L4': 'L4 exact BP'}
     for p in front:
