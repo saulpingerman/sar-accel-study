@@ -104,7 +104,7 @@ def teaser(m):
         ax.text(1.8e5, y - 0.6 if va == 'top' else y + 0.4, txt, fontsize=7, color='0.3', ha='right', va=va)
         ax.axhline(y, color='0.75', lw=0.5, ls=':', zorder=1)
     ax.text(0.23, -28.0, 'FastSAR\n(color = device)', fontsize=8.5, fontweight='bold', color='#2e5e3e', ha='left', va='center')
-    ax.text(1.5e3, -23.5, 'open-source implementations', fontsize=8.5, fontweight='bold', color='0.3', ha='center', va='bottom')
+    ax.text(1.5e3, -23.5, 'open-source implementations (gray)', fontsize=8.5, fontweight='bold', color='0.3', ha='center', va='bottom')
     ax.set_xscale('log')
     ax.set_xlim(0.2, 2e5)
     ax.set_ylim(-76, top + 1)
@@ -113,7 +113,7 @@ def teaser(m):
     from matplotlib.lines import Line2D
     from matplotlib.patches import Patch
     h = [Patch(facecolor=COL[k], edgecolor=COL[k], label=f'FastSAR, {DEV[k]}') for k in COL]      # color = device (any marker)
-    h += [Line2D([], [], marker=MARK[a], color='w', markerfacecolor='white', markeredgecolor='k', markersize=7, label=f'FastSAR {n}') for a, n in (('bp', 'exact BP'), ('ffbp', 'factorized BP'), ('pfa', 'polar format'))]
+    h += [Line2D([], [], marker=MARK[a], color='w', markerfacecolor='#2e8b57', markeredgecolor='#2e8b57', markersize=7, label=f'FastSAR {n}') for a, n in (('bp', 'exact BP'), ('ffbp', 'factorized BP'), ('pfa', 'polar format'))]
     h += [Line2D([], [], marker='D', color='w', markerfacecolor='0.55', markeredgecolor='0.25', markersize=6, label='open source'), Line2D([], [], marker='X', color='w', markerfacecolor='0.55', markeredgecolor='0.25', markersize=7, label='open source, no image')]
     h += [Line2D([], [], color='0.4', lw=1.1, label='Pareto front of FastSAR')]
     ax.legend(handles=h, fontsize=7, loc='lower center', bbox_to_anchor=(0.5, 1.01), ncol=4, framealpha=0.95)
