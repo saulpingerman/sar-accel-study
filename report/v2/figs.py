@@ -101,9 +101,10 @@ def teaser(m):
     ax.set_xlabel('Cost per 1000 Panama images (US dollars, on-demand us-central1)')
     ax.set_ylabel('Error over three regions relative to the float64 image (dB)')
     from matplotlib.lines import Line2D
-    h = [Line2D([], [], marker='o', color='w', markerfacecolor=COL[k], markeredgecolor=COL[k], markersize=7, label=f'FastSAR, {DEV[k]}') for k in COL]
-    h += [Line2D([], [], marker=MARK[a], color='w', markerfacecolor='0.6', markeredgecolor='k', markersize=7, label=n) for a, n in (('bp', 'exact backprojection'), ('ffbp', 'factorized backprojection'), ('pfa', 'polar format'))]
-    h += [Line2D([], [], marker='o', color='w', markerfacecolor='0.55', markeredgecolor='0.25', markersize=7, label='open-source implementations (gray)')]
+    from matplotlib.patches import Patch
+    h = [Patch(facecolor=COL[k], edgecolor=COL[k], label=f'FastSAR, {DEV[k]}') for k in COL]      # color = device (any marker)
+    h += [Line2D([], [], marker=MARK[a], color='w', markerfacecolor='0.6', markeredgecolor='k', markersize=7, label=n) for a, n in (('bp', 'exact BP'), ('ffbp', 'factorized BP'), ('pfa', 'polar format'))]
+    h += [Line2D([], [], marker='o', color='w', markerfacecolor='0.55', markeredgecolor='0.25', markersize=7, label='open source (gray)')]
     h += [Line2D([], [], color='0.4', lw=1.1, label='Pareto front of FastSAR')]
     ax.legend(handles=h, fontsize=7, loc='lower center', bbox_to_anchor=(0.5, 1.01), ncol=4, framealpha=0.95)
     for sp in ('top', 'right'):
