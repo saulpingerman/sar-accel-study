@@ -80,13 +80,6 @@ def teaser(m):
             ax.scatter(p['x'], p['y'], s=70, c=COL[p['lab']] if p['filled'] else 'white', **kw)
         else:
             ax.scatter(p['x'], p['y'], s=36, c=COL[p['lab']] if p['filled'] else 'white', alpha=0.35, **kw)
-    # labels for the front only, placed above-left of each point along the front
-    offsets = {'FastSAR exact, L4': (7, -9), 'L4 polar format': (7, 6), 'v5e single-pass': (-7, 6), 'L4 float16': (8, 9),
-               'L4 float32': (7, -10), 'v5e three-pass': (7, -9), 'CPU float32': (-7, 7), 'CPU float64': (-7, -10)}
-    for p in front:
-        dx, dy = offsets.get(p['name'], (6, 6))
-        ax.annotate('FastSAR ' + {'FastSAR exact, L4': 'L4 exact BP', 'FastSAR exact, CPU': 'CPU exact BP'}.get(p['name'], p['name']), (p['x'], p['y']), xytext=(dx, dy), textcoords='offset points', fontsize=7.5, color=COL[p['lab']],
-                    ha='left' if dx > 0 else 'right', va='bottom' if dy > 0 else 'top', fontweight='medium')
     # worst FastSAR configuration of each regime of visible change, on the three-region axis (pareto_regions.json)
     def regime(r):
         return 3 if r['coh_p001'] < 0.99 else (2 if r['coh_p001'] < 0.999 else 1)
