@@ -35,3 +35,13 @@ reports, as a diagnostic and not a criterion, the correlation peak over shifts o
 Amendment, 2026-10-10, before any round-2 collection was downloaded: the harness's vendor check copied the phase
 history twice (`S[sel]`, then its conjugate), which killed the 320,360-pulse Capella C11 spotlight of round 1 at
 128 GB after the library fixes; it now passes a slice and conjugates in place. No criterion changes.
+
+Amendment, 2026-10-10, before any round-2 collection was downloaded: criterion 3 is replaced. The vendor's pixel
+grid is not ground truth: each vendor applies corrections of its own (the troposphere delay, the surface its grid
+lies on) that the files do not state, and in round 1 every Capella and ICEYE collection missed the zero-shift
+correlation by 1 to 8 pixels for such reasons while its images were sharp and the geolocation checks against aerial
+and Sentinel-2 imagery (`geoloc/`) placed FastSAR's images at least as well as the vendors' products. The new
+criterion 3: on the vendor's pixels of the center window, FastSAR's exact backprojection with the phase sign
+`read_cphd` chose has a peak-to-mean amplitude ratio at least 1.5 times that of the same backprojection with the
+conjugated history (an image, not a blur). The correlation with the vendor's image, at zero shift and at its peak
+over shifts, is reported as a diagnostic and is not a criterion.
