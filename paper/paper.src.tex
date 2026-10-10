@@ -3,6 +3,7 @@
 \usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{subcaption}
 \usepackage[hidelinks]{hyperref}
 \usepackage[T1]{fontenc}
@@ -254,7 +255,6 @@ Two residuals remain unexplained: the growth of the polar-format error toward th
 \bibitem{okuta2017} R. Okuta, Y. Unno, D. Nishino, S. Hido, and C. Loomis, ``CuPy: A NumPy-compatible library for NVIDIA GPU calculations,'' in \emph{Proc. Workshop on Machine Learning Systems (LearningSys) at NIPS}, 2017.
 \end{thebibliography}
 
-\clearpage
 \appendix
 \section{Algorithms}
 \label{app:algorithms}
@@ -298,7 +298,7 @@ Table~\ref{tab:arith} gives the floating-point type of each step of every timed 
 
 Float16 (IEEE binary16, Table~\ref{tab:formats}) overflows above 65,504, so the phase history is scaled to unit peak before conversion. On the TPU every matrix product is formed from bfloat16~\cite{wang2019bfloat16} operands. A float32 operand is either rounded once (one pass) or split into a bfloat16 head and tail with the cross terms accumulated (three passes); the three-pass product keeps the first 16 significant bits of each operand. A split into three parts (six passes, used by the JAX program) recovers float32 accuracy~\cite{jax2018}. The L4's tensor cores accept float16 operands, which the final stage of float16 throughout uses. The CPU kernels use no reduced-precision arithmetic; the AVX-512 bfloat16 instructions of the processor were not evaluated.
 
-\begin{table}[tbp]
+\begin{table}[H]
 \centering
 \caption{Floating-point formats. Significant bits include the implicit bit; the spacing is the distance between adjacent representable values near 1.}
 \label{tab:formats}
@@ -515,6 +515,13 @@ On 512 by 512~pixel grids at the same regions, cubic interpolation at 16 times a
 \section{Ground truth of the Panama regions}
 \label{app:truth}
 
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.96\textwidth]{fig/ship_panama.pdf}
+\caption{The ship compensated for its motion. Top: the tile around the ship as formed and after backprojection with the antenna track shifted for a ship moving at 3.0~m/s along the channel, both resampled north up over a 760~m window (200~m bar), and the two positions on the Sentinel-2 image of 2024-02-23, with the 194~m displacement (dashed) and the estimated velocity, 3.0~m/s toward $158^\circ$, drawn at the compensated position. Bottom: 160 by 160~pixel windows around the ship in image coordinates (20~m bar), and the sharpness of the tile against the assumed speed for the channel heading of $158^\circ$ (coarse and fine sweeps) and for $148^\circ$.}
+\label{fig:ship}
+\end{figure}
+
 The identity of the Panama regions used in Figure~\ref{fig:zoom} was checked against Copernicus Sentinel-2 imagery~\cite{sentinel2}. Each pixel of the images formed here was located on the ground from the vendor's SICD header. The pixel's position in the slant plane follows from the scene center point and the row and column unit vectors. The ground point is the intersection of the line through it along the slant plane's normal with the WGS84 ellipsoid at the scene height. The image corners so computed agree with the corner coordinates in the SICD header to within 15~m.
 
 The nearest usable Sentinel-2 acquisition is from 2023-07-23, five days later, at 10~m resolution; a dry-season acquisition of 2024-02-23 is shown as well because clouds cover part of the earlier one. The lock chambers, the quays and container yard of the terminal, and the road beside the vegetation region coincide in the two sensors.
@@ -526,13 +533,6 @@ The pass of 2023-07-23 14:47 UTC precedes the Sentinel-2 image of that day by 64
 The ship appears on the eastern bank, inland of the channel, as a consequence of its motion during the aperture. A stationary-scene processor places a target with line-of-sight velocity $v_r$ at the position whose Doppler history matches, displaced along azimuth by about $R v_r / V$ (here about 100~m per m/s), and the along-track velocity defocuses it~\cite{raney1971}. Exact backprojection takes the antenna position of every pulse as data, so a target moving at constant velocity $\mathbf{v}$ is formed exactly by backprojecting with the track shifted by $-\mathbf{v} t$. This both focuses the target and places it at its position at the aperture center.
 
 The ship was assumed to follow the channel axis (bearing $158^\circ$, from the Sentinel-2 water mask) and its speed was swept from $-8$ to $8$~m/s in a tile around it (Figure~\ref{fig:ship}). The sharpness of the tile, the sum of the squared intensities, is single-peaked at $3.0$~m/s (5.8~knots toward the Pacific). At that speed the peak intensity is 10.6~dB above the stationary-scene image and the ship has moved 469~pixels (194~m) along azimuth into the navigation channel; the position of the water was not used in the estimate. A heading $10^\circ$ farther east ($148^\circ$) gives the same speed with an 18\% lower sharpness peak and a compensated position 22~m away. The images compared in Figures~\ref{fig:zoom} and~\ref{fig:pixels} are the stationary-scene images, in which the ship appears at the same displaced position under every algorithm; the motion analysis was used only to identify the target.
-
-\begin{figure}[p]
-\centering
-\includegraphics[width=0.96\textwidth]{fig/ship_panama.pdf}
-\caption{The ship compensated for its motion. Top: the tile around the ship as formed and after backprojection with the antenna track shifted for a ship moving at 3.0~m/s along the channel, both resampled north up over a 760~m window (200~m bar), and the two positions on the Sentinel-2 image of 2024-02-23, with the 194~m displacement (dashed) and the estimated velocity, 3.0~m/s toward $158^\circ$, drawn at the compensated position. Bottom: 160 by 160~pixel windows around the ship in image coordinates (20~m bar), and the sharpness of the tile against the assumed speed for the channel heading of $158^\circ$ (coarse and fine sweeps) and for $148^\circ$.}
-\label{fig:ship}
-\end{figure}
 
 \section{Precision and cost tables}
 \label{app:stats}
