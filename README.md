@@ -1,66 +1,108 @@
-# Cost and precision of spotlight SAR image formation on Google TPUs, an Nvidia GPU and a CPU
+# FastSAR on CPUs, GPUs and TPUs: measurement records and paper build
 
-Code, measurement records and paper build for the study of that title (Singerman and Braun, Penn State University, 2026). Three Umbra spotlight collections are imaged at native size (8,500 to 12,200 pixels on a side) on a Google Cloud TPU v5e, a TPU v6e, an Nvidia L4 and a 16-vCPU AMD instance by exact backprojection, factorized backprojection expressed as matrix products, and polar format, and every image is compared with a float64 exact backprojection. The paper is `report/v2/sar_accel_v2.pdf`.
+Code, measurement records and paper build for *FastSAR: High-Throughput, High-Fidelity Open-Source SAR Image
+Formation on CPUs, GPUs and TPUs* (Singerman and Braun, Penn State University, 2026). The paper is `paper/paper.pdf`; every
+number in it is computed by `paper/build.py` from the records under `results/fastsar` (release records of the
+[FastSAR](https://github.com/saulpingerman/FastSAR) library through its public interface) and `results/comparison`
+(the open-source implementations and the Capella collections). Three Umbra spotlight collections are imaged at
+native size (8,500 to 12,200 pixels on a side) on a Google Cloud TPU v5e, a TPU v6e, an NVIDIA L4 and a 16-vCPU
+AMD instance by exact backprojection, factorized backprojection and polar format, and every image is compared
+with a float64 exact backprojection; five Capella collections in three modes extend the comparison.
 
-The image-formation kernels are also published on their own as [FastSAR](https://github.com/saulpingerman/FastSAR), one Python call with TPU, GPU and CPU backends.
+## What produces each table and figure
+
+| Paper item | Script | Inputs | Device, time, cost |
+|---|---|---|---|
+| Table 1 (collections), Table 2 (platforms) | `paper/build.py` | `results/fastsar/*.info`, `pricing.py` | none |
+| Figure 1 (cost against error), Table 4 and Table 15 (cost) | `oss/release_record.py` per scene and device; `oss/region_errors.py` | `results/fastsar/timing/*.json`, `results/fastsar/pareto_regions_v3.json`, `results/fastsar/truth64/` | one run per device: c4d-highmem-16 about 1 h, L4 and each TPU about 1 h; under $10 in all |
+| Table 3 (open-source comparison), Table 12 (polar format) | `oss/*_panama.py`, `oss/nga_*.py`, `oss/isce3_compare.py`, `oss/torchbp_panama.py`, `oss/grdl_*.py`, `oss/exact_regions.py` | `results/comparison/*.json`, `results/fastsar/oss_times.json`, `results/fastsar/exact_regions.json` | c4d-highmem-16 and L4 (g2-standard-8); hours per implementation, see `results/comparison/PROVENANCE.txt` |
+| Figures 3, 4 (image quality), Table 14 (precision) | `metrics.py`, `crops.py` | `results/fastsar/<scene>_metrics.json`, `results/fastsar/figs/panama_crops.npz` (release `figure-data`) | metrics on a CPU instance with the references, about 2 h |
+| Table 5 (Capella collections) | `oss/modes_strip.py`, `oss/modes_common.py`, `oss/modes_table.py` | `results/comparison/modes/all/*/` (FastSAR tags `c*X`, `g*Y`, `*X`; ISCE3 `*e`, `ss2022ib`; GRDL `sp2024`, `sp2025`, `sm2021g`, `sm2025`), `results/comparison/modes/collections.json` | c4d-highmem-16, g2-standard-32, v6e; 1 to 6 h per collection |
+| Tables 8, 9 (kernel bounds and builds) | `stage_profile.py`, `profile_cuda.py`, `ubench_*.py`, `paper/bounds.py` | `results/fastsar/bounds.json`, `results/fastsar/kernels.json`, `results/fastsar/profiles/` (development records, see the ledger) | development runs of September and October 2026 |
+| Figure 5, Table 10 (polar format) | `form.py`, `metrics.py` | `results/fastsar/edge_panama.json`, `results/fastsar/ptaps_panama.json`, `<scene>_metrics.json` | CPU instance |
+| Figure 6, Table 11 (vendor image) | `compare_sicd.py` | `results/fastsar/sicd/`, release `figure-data` crops | CPU instance, about 30 min |
+| Appendix C (exact backprojection on the TPU) | `oss/exact_tpu.py` | `results/fastsar/tpu_exact/rc6/` | v5e and v6e, under 1 h each |
+| Figure 7, Appendix I (ground truth, ship) | `geo_panama.py`, `eo.py`, `ship_refocus.py`, `ship_fig.py` | `results/fastsar/ship/`, release `figure-data` windows | CPU instance |
+
+`results/fastsar/README.md` is the ledger: it names the FastSAR tag and commit of every record and describes the
+record files. `results/comparison/README.md` indexes the open-source comparison scripts and records.
 
 ## Layout
 
 | Path | Contents |
 |---|---|
-| `sarbench/` | The algorithms: `ffbp2.py` (factorized backprojection, JAX, any image plane; filters `dense`, `conv`, `taps`, and `pallas2` for the fused TPU kernels), `pallas_ffbp.py` (the TPU kernels: fused level kernel and recurrence final stage, Pallas), `pallas_ffbp_gpu.py` (the Triton attempt on the GPU, kept for the record), `ffbp_cuda.py` (the CUDA factorized pipeline for the L4: shared-memory FIR levels, CUDA-core and tensor-core final stages), `gpu_bp2.py` (exact backprojection, CUDA kernel via CuPy), `cpu_ref.py` (float64 exact backprojection, Numba, the reference), `pfa2.py` (polar format with chirp-z resampling and the geometric correction), `bp.py` (shared geometry), `ffbp_cpu.cpp` and `ffbp_cpu.py` (the CPU kernels: C++ with OpenMP, compiled with g++ on first use and called through ctypes) |
-| `v2_prep.py` | Reads an Umbra CPHD and SICD pair, trims invalid pulses, writes the phase history and the vendor's image grid to one `.npz` |
-| `v2_form.py` | Forms images: `ref`, `ffbp`, `cuda`, `pfa` and `ffbpcuda` modes, every arithmetic configuration, timing and pipelined throughput (`--filters pallas2` selects the TPU kernels, `ffbpcuda --cuda-final fp32,f16tc,f16` the CUDA pipeline: float32 throughout, float32 with the tensor-core float16 final stage, and float16 storage throughout with float32 accumulation) |
-| `v2_metrics.py` | Error, largest pixel difference, 5 by 5 coherence, amplitude and phase statistics, ring errors against the reference |
-| `v2_profile.py`, `profile_level0.py`, `profile_cuda.py`, `ubench_tpu.py`, `ubench_gpu.py`, `ubench_cpu.py`, `v2_cpu_stream.py`, `v2_crops.py` | Per-stage profiles of the JAX program and of the kernel builds (TPU and GPU), the unit-rate microbenchmarks behind the bounds table (memory copy, the kernels' own instruction mixes on resident data, sines, matrix products), CPU multi-process throughput, the image crops of the figures |
-| `compare_sicd.py` | The float64 reference against the vendor's SICD image: registration, phase-ramp removal, the displacement field in windows against the planar-wavefront model, and coherence after resampling through the model (the validation appendix) |
-| `geo_panama.py`, `v2_eo.py`, `ship_refocus.py`, `v2_ship_fig.py` | Pixel-to-ground mapping from the SICD header, the Sentinel-2 and multi-pass checks of the Panama regions, the moving-target refocus of the ship |
-| `cloud/` | Instance launch and run scripts for Google Cloud (`v2_*.sh`); they expect `GCP_PROJECT` and `GCS_BUCKET` in the environment |
-| `results/v2r/` | Every measurement the paper uses: `timing/` (device times, pipelined loops, monitors), `*_metrics.json` (image statistics; `*_kern_*` for the kernel builds), `kernels.json` (Panama device time of every kernel build), `bounds.json` (stage bounds from the measured unit rates, made by `report/v2/bounds.py`), `profiles/` (stage profiles of the JAX program and the kernel builds, and the `ubench_*.json` unit rates), `logs/` (run logs), `ship/` (refocus sweeps), `overrides.json` (hand-entered reference-convergence and padding figures) |
-| `oss/`, `results/oss/` | comparison with open-source implementations (RITSAR, the NGA/AFRL MATLAB toolbox, ISCE3, torchbp) on the Panama collection: scripts and records behind Appendix G |
-| `report/v2/` | `paper.src.tex` with `@@token@@` placeholders, `build.py` (fills the tables and numbers from `results/v2r`, runs pdflatex), `figs.py` (figures), `fig/`, the built PDF and the plain-text abstract |
-| `first_round/` | Scripts of the earlier internal round on simulated data and small images, kept for the record; they import `sarbench` from the repository root |
-| `tests/` | Checks of the kernels against the dense JAX image on a simulated scene: `test_pallas_fused.py`, `test_pallas_final.py` and `test_pallas_e2e_tpu.py` (TPU kernels in interpret mode on the CPU), `test_pallas_e2e.py` (Triton kernels), `test_ffbp_cuda.py` (CUDA pipeline, needs a GPU); and a bounded-memory check for the factorized plan; `test_ffbp_cpu.py` (C++ kernels against the dense image) |
+| `oss/` | The comparison scripts: FastSAR release records (`release_record.py`, `exact_record.py`, `exact_regions.py`, `crossover.py`, `region_errors.py`, `pfa_region_scores.py`, `geometry_facts.py`), the open-source implementations on Panama (RITSAR, the AFRL/NGA MATLAB toolbox in Octave, ISCE3, torchbp, GRDL) and the Capella modes comparison (`modes_*.py`, `grdl_strip*.py`) |
+| `results/fastsar/` | Release records behind the paper (ledger in its README) |
+| `results/comparison/` | Records of the open-source comparison and of the Capella collections (`modes/all/<tag>/`), with `DETAILS.md` (the long account) and `PROVENANCE.txt` (instances) |
+| `dev/` | The development versions of the algorithms the kernels were built in (`ffbp2.py`, `pallas_ffbp.py`, `ffbp_cuda.py`, `pfa2.py`, `cpu_ref.py` the float64 reference, `ffbp_cpu.cpp`); the released code is the FastSAR package |
+| `prep.py`, `form.py`, `metrics.py`, `crops.py`, `cpu_stream.py`, `stage_profile.py`, `profile_*.py`, `ubench_*.py` | Preparation of a collection from its CPHD and SICD, image formation and timing with the development code, image statistics against the reference, figure crops, CPU throughput, stage profiles and unit-rate microbenchmarks |
+| `compare_sicd.py`, `geo_panama.py`, `eo.py`, `ship_refocus.py`, `ship_fig.py`, `umbra_find.py`, `pricing.py` | Reference against the vendor's image; pixel-to-ground mapping; Sentinel-2 and multi-pass checks; the ship refocus; the Umbra archive index; on-demand prices from a billing-catalog snapshot |
+| `cloud/` | Instance setup, launch and run scripts for Google Cloud; they expect `GCP_PROJECT` and `GCS_BUCKET` in the environment |
+| `paper/` | `paper.src.tex` with `@@token@@` placeholders, `build.py` (tables and numbers from the records, then pdflatex), `figs.py`, `bounds.py`, `fig/`, `numbers.json` (every number the text uses), the built `paper.pdf` and `supplement_tables.pdf` |
+| `tests/` | Checks of the development kernels against the dense JAX image on a simulated scene |
 
 ## Data
 
-The radar data are three collections from the [Umbra Open Data Program](https://umbra.space/open-data) (CC BY 4.0), downloaded directly from the public bucket; `cloud/v2_setup_cpu.sh` has the exact keys. The optical images are Copernicus Sentinel-2 Level-2A tiles read from the AWS open-data mirror (`v2_eo.py`). Neither is redistributed here.
+The radar data are not redistributed. The three Umbra spotlight collections (Panama Canal 2023-07-18, Melbourne
+2023-02-08, Johnston, Iowa 2023-10-20) come from the [Umbra Open Data Program](https://umbra.space/open-data)
+(CC BY 4.0); `cloud/setup_cpu.sh` has the keys. The five Capella collections come from the
+[Capella Space Open Dataset](https://registry.opendata.aws/capella_opendata/); `results/comparison/modes/collections.json`
+names each by its core name and collector. The optical images are Copernicus Sentinel-2 Level-2A tiles read from
+the AWS open-data mirror (`eo.py`).
 
-The binary inputs of the figures (image crops, downsampled overviews, Sentinel-2 windows, geocoded windows of other Umbra passes, the refocused ship tiles; 135 MB) are attached to the GitHub release `v2-data` rather than committed. `fetch_data.sh` downloads them into `results/v2r/`.
+The binary inputs of the figures (image crops of the release records, reference-against-vendor crops, downsampled
+overviews, Sentinel-2 windows, geocoded windows of other Umbra passes, the refocused ship tiles; about 350 MB) are
+attached to the GitHub release `figure-data`. `fetch_data.sh` downloads them into `results/fastsar/`.
 
-## Reproducing the paper from the stored measurements
+## Reproducing the paper from the stored records
 
 ```
-./fetch_data.sh                      # figure inputs from the release
-pip install numpy scipy matplotlib pymupdf rasterio   # or: uv run --with ... as in the scripts
-python3 report/v2/figs.py            # figures from results/v2r
-python3 report/v2/build.py           # tables and numbers into paper.tex, then pdflatex
+./fetch_data.sh                                 # figure inputs from the releases, into results/fastsar/
+pip install -r requirements-report.txt          # numpy, scipy, matplotlib
+python3 paper/figs.py                       # figures from results/fastsar (fastsar must be importable for two of them)
+python3 paper/build.py                      # tables and numbers into paper.tex, then pdflatex
 ```
 
-`build.py` needs `pdflatex` with `booktabs`, `lscape`, `placeins`, `microtype` and `hyperref` (any TeX Live of the last few years). `report/v2/numbers.json` lists every number the text uses and `results/v2r` holds the records each one is computed from.
+`build.py` needs `pdflatex` with `booktabs`, `placeins`, `microtype`, `subcaption` and `hyperref` (any TeX Live of
+the last few years). `paper/numbers.json` lists every number the text uses, and `results/fastsar/README.md` and
+`results/comparison/README.md` say which record each one comes from.
 
 ## Reproducing the measurements
 
-Each device script sets up an instance, downloads the prepared collections from your bucket, runs every configuration and uploads `timing.json`, the images and logs. On-demand us-central1 prices are in `pricing.py` and in the paper's Table 2. In order:
+The release records were made with FastSAR 0.1.0 and its release candidates `rel-rc2-20261009` to
+`rel-rc7-20261009` (the ledger names the tag of each record and what differs from 0.1.0), JAX 0.11.2, CuPy 14.2.0
+with CUDA 12 and Numba 0.68.0; `requirements-run.txt` pins them. Each cloud script sets up an instance, downloads
+the prepared collections from your bucket, runs its configurations and uploads the records. In order:
 
-1. `cloud/v2_setup_cpu.sh` on a CPU instance with at least 64 GB of memory: downloads the CPHD and SICD files, runs `v2_prep.py` for each collection, uploads the `.npz` files.
-2. `cloud/v2_ref.sh` on an n2-highmem-48 (384 GB): the float64 references with 16 times oversampled range profiles (`REF_OVERSAMPLE=16`).
-3. `cloud/v2_run_accel.sh` through `cloud/v2_launch_tpu.sh` (TPU v5e, v6e) and `cloud/launch_gpu.sh` (L4): every configuration, the profile and the pipelined loops; `cloud/v2_finish_*.sh` are the later additions (direct-ramp three-pass rows, L4 pipelined loops).
-4. `cloud/v2_run_cpu.sh` on a c4d-highmem-16: the CPU configurations and `v2_cpu_stream.py`; `cloud/v2_cpp_cpu.sh [dest]` the C++ kernel build (the build of record is `cpp4`) and `cloud/v2_ubench_cpu.sh` its unit-rate microbenchmark.
-5. `cloud/v2_metrics_job.sh` on a CPU instance with the references: `v2_metrics.py` for every saved image; `v2_crops.py` for the figure crops; `cloud/v2_sicd_compare.sh` the comparison with the vendor's SICD images.
-6. `v2_eo.py` and `ship_refocus.py` (`cloud/v2_ship.sh`) for the ground-truth appendix.
-7. The kernel builds of the paper's kernels appendix: `cloud/v2_pallas_tpu.sh`, `v2_pallas2_tpu.sh` and `v2_pallas3_tpu.sh <label> <pb> <nc> <ng> [dest]` on the TPUs (the build of record is `v2_pallas8_tpu.sh`, that is `v2_pallas3_tpu.sh` with 256 8 16 and the generation-3 kernels; `v2_pallas5_tpu.sh` and `v2_pallas7_tpu.sh` are rejected variants kept for the ablation table), `cloud/v2_cuda_gpu.sh [dest]` on the L4 (installs `g++` for nvcc, which the deep-learning image lacks; the builds of record are `cuda6` for float32 and `cuda7`, run with `FINALS=fp32,f16tc,f16`, for float16), and `cloud/v2_metrics_pallas.sh <labels> <dests> <out>` to score the saved images with the family gain taken from the device's six-pass image. `report/v2/merge_kernels.py` pulls the records into `results/v2r`.
+1. `cloud/setup_cpu.sh` on a CPU instance with at least 64 GB of memory: downloads the CPHD and SICD files,
+   runs `prep.py` for each collection, uploads the `.npz` files.
+2. `cloud/ref.sh` on an n2-highmem-48 (384 GB): the float64 references with 16 times oversampled range
+   profiles (`REF_OVERSAMPLE=16`); the 64 times computations of the three regions (`oss/fastsar_exact.py`).
+3. `oss/release_record.py <scene>.npz <out> <label>` on each device with the FastSAR tag of the ledger installed:
+   every configuration of the cost table, one process per configuration, best of two warm calls, the back-to-back
+   loop; `oss/exact_record.py` and `oss/crossover.py` for exact backprojection and the crossover; `oss/exact_tpu.py`
+   on the TPUs.
+4. `cloud/metrics_job.sh` on a CPU instance with the references: `metrics.py` for every saved image,
+   `oss/region_errors.py` for the region errors, `crops.py` for the figure crops, `compare_sicd.py` for the
+   vendor comparison.
+5. The open-source implementations: the scripts named in `results/comparison/README.md`, each on the instance type in
+   `results/comparison/PROVENANCE.txt`.
+6. The Capella collections: `oss/modes_strip.py` and `oss/modes_common.py` per collection and implementation,
+   `oss/modes_table.py` to collect the records.
+7. The kernel-build and bounds tables come from the development records kept in `results/fastsar` (`cloud/v2_pallas*_tpu.sh`,
+   `cloud/cuda_gpu.sh`, `cloud/cpp_cpu.sh`, `ubench_*.py`, `paper/bounds.py`); `paper/merge_kernels.py`
+   pulled them into the record files.
 
-The whole study cost about 135 US dollars of cloud time at on-demand prices; the TPU v6e was intermittently unavailable in us-east5 and the scripts retry.
-
-## Software
-
-JAX 0.11 (TPU, GPU and CPU backends; its Pallas extension for the TPU kernels), CuPy 14 and CUDA 12 for the CUDA kernels, Numba 0.68 for the reference, sarpy for reading CPHD and SICD, rasterio for Sentinel-2, Python 3.12. `requirements.txt` lists the Python packages for the analysis and the report; the device backends are installed by the cloud scripts.
+The cloud scripts use on-demand instances in us-central1, us-east1, us-east5 and us-west4 and delete them when
+done. The whole study, including the development rounds and the open-source comparison, cost under 400 US dollars at
+on-demand prices.
 
 ## Citation
 
-See `CITATION.cff`. Please cite the arXiv version of the paper once it is posted.
+`CITATION.cff` gives the software citation and the paper as the preferred citation. An arXiv identifier will be
+added when the preprint is posted.
 
 ## License
 
-MIT (code, scripts and build). The measurement records in `results/` and the release data may be reused under CC BY 4.0 with attribution to the paper; the Umbra and Copernicus data retain their own licenses.
+MIT for the code, scripts and paper build (`LICENSE`); the measurement records and the release data under CC BY 4.0
+(`LICENSE-DATA.md`). The Umbra, Capella, ICEYE and Copernicus data retain their own licenses.

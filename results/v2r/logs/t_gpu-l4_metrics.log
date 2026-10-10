@@ -1,9 +1,0 @@
-gpu-l4    bp/cuda_f16            err  -71.8 fit  -71.8 gain -0.000 dB | coh mean 1.00000 p01 1.0000 min 1.000 <0.99 0.000% | amp p99 0.005 max 0.01 dB | phase p99 0.04 max 0.1 deg | maxdiff -79.3 dB
-gpu-l4    bp/cuda_fp32           err  -77.1 fit  -77.1 gain -0.000 dB | coh mean 1.00000 p01 1.0000 min 1.000 <0.99 0.000% | amp p99 0.003 max 0.01 dB | phase p99 0.02 max 0.1 deg | maxdiff -79.4 dB
-gpu-l4    ffbp/f16               err  -53.0 fit  -53.0 gain -0.001 dB | coh mean 1.00000 p01 1.0000 min 0.998 <0.99 0.000% | amp p99 0.046 max 0.58 dB | phase p99 0.30 max 4.6 deg | maxdiff -56.6 dB
-gpu-l4    ffbp/f16_conv          err  -53.0 fit  -53.0 gain -0.001 dB | coh mean 1.00000 p01 1.0000 min 0.998 <0.99 0.000% | amp p99 0.046 max 0.58 dB | phase p99 0.30 max 4.5 deg | maxdiff -56.6 dB
-gpu-l4    ffbp/f16_direct        err  -53.0 fit  -53.0 gain -0.001 dB | coh mean 1.00000 p01 1.0000 min 0.998 <0.99 0.000% | amp p99 0.046 max 0.59 dB | phase p99 0.30 max 4.6 deg | maxdiff -56.6 dB
-gpu-l4    ffbp/fp32              err  -53.9 fit  -53.9 gain +0.000 dB | coh mean 1.00000 p01 1.0000 min 0.998 <0.99 0.000% | amp p99 0.041 max 0.58 dB | phase p99 0.27 max 4.6 deg | maxdiff -56.4 dB
-gpu-l4    ffbp/fp32_conv         err  -53.9 fit  -53.9 gain +0.000 dB | coh mean 1.00000 p01 1.0000 min 0.998 <0.99 0.000% | amp p99 0.041 max 0.58 dB | phase p99 0.27 max 4.6 deg | maxdiff -56.4 dB
-gpu-l4    ffbp/fp32_fast         err  -53.5 fit  -53.5 gain -0.001 dB | coh mean 1.00000 p01 1.0000 min 0.998 <0.99 0.000% | amp p99 0.043 max 0.57 dB | phase p99 0.28 max 4.6 deg | maxdiff -56.4 dB
-gpu-l4    ffbp/fp32_fast_conv    err  -53.9 fit  -53.9 gain +0.000 dB | coh mean 1.00000 p01 1.0000 min 0.998 <0.99 0.000% | amp p99 0.042 max 0.58 dB | phase p99 0.27 max 4.6 deg | maxdiff -56.4 dB

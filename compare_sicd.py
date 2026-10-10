@@ -145,9 +145,9 @@ def main():
     try:
         import sys, os
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        import v2_prep
-        from sarbench import pfa2
-        col, _, grid = v2_prep.load(a.npz)
+        import prep
+        from dev import pfa2
+        col, _, grid = prep.load(a.npz)
         nx, ny, spx, spy = grid['nx'], grid['ny'], grid['spx'], grid['spy']
         dist = pfa2.distortion(col, nx, ny, spx, spy, e1=grid['e1'], e2=grid['e2'])
         powers, cx, cy, sx, sy = dist['powers'], dist['cx'], dist['cy'], dist['sx'], dist['sy']

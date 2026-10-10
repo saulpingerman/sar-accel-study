@@ -1,0 +1,81 @@
+NVIDIA L4, 580.178.04
+32
+FastSAR 0decd5a2b671b4f54034d31cd8827717bc61088d 2026-10-07 03:18:47 +0000
+isce3 0.25.17 numba 0.68.0
+-rw-rw-r-- 1 user user 9921494144 Oct  7 04:24 c.cphd
+-rw-rw-r-- 1 user user 4524796233 Oct  7 04:25 c.ntf
+== fastsar cuda
+grid 136197 8313 1132.2 Mpx
+Traceback (most recent call last):
+  File "~/w/modes_strip.py", line 66, in <module>
+    img = patches.form_mosaic(fx, ant, origin, nx, ny, spx, spy, e1, e2, patch=(ps, ps), beam=beam, awin=mc.hann, backend=dev, info=info)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "~/w/FastSAR/fastsar/patches.py", line 309, in form_mosaic
+    img = img + form(S * at[:, None]) * RectBivariateSpline(si, sj, bt.reshape(len(si), len(sj)))(
+                ^^^^^^^^^^^^^^^^^^^^^
+  File "~/w/FastSAR/fastsar/patches.py", line 303, in <lambda>
+    form = lambda S_: former(S_.astype(np.complex64))[::s1, ::s2]
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "~/w/FastSAR/fastsar/api.py", line 136, in __call__
+    return cp.asnumpy(self._form(cp.asarray(S), ng=8)).astype(np.complex64)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "~/w/FastSAR/fastsar/ffbp_cuda.py", line 456, in form
+    A, Bm = _children(kern, pre, pim, c0, sl, lv0)                           # [ng, Po, Ko]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "~/w/FastSAR/fastsar/ffbp_cuda.py", line 308, in _children
+    assert smem <= smax, (Dp, fp['L'], smem, smax)
+           ^^^^^^^^^^^^
+AssertionError: (79, 569, 414948, 101376)
+Command exited with non-zero status 1
+	Command being timed: "~/w/env/bin/python -I modes_strip.py c.cphd c.ntf out fastsar cuda"
+	User time (seconds): 80.15
+	System time (seconds): 32.71
+	Percent of CPU this job got: 148%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:15.94
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 86916560
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 71
+	Minor (reclaiming a frame) page faults: 592590
+	Voluntary context switches: 912
+	Involuntary context switches: 497
+	Swaps: 0
+	File system inputs: 14176
+	File system outputs: 2392
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+exit 1
+== isce3 cuda
+region 0: 5.1 s, error -0.00 dB (conj -0.00), CPI 15897 pulses
+region 1: 5.1 s, error -0.00 dB (conj -0.00), CPI 15897 pulses
+region 2: 5.1 s, error -0.00 dB (conj -0.00), CPI 15897 pulses
+	Command being timed: "~/w/env/bin/python -I modes_strip.py c.cphd c.ntf out isce3 cuda"
+	User time (seconds): 4113.37
+	System time (seconds): 306.68
+	Percent of CPU this job got: 843%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 8:44.27
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 126165380
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 832
+	Minor (reclaiming a frame) page faults: 4004524
+	Voluntary context switches: 32940
+	Involuntary context switches: 18838
+	Swaps: 0
+	File system inputs: 95840
+	File system outputs: 53616
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+exit 0

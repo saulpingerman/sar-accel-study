@@ -1,6 +1,0 @@
-E1003 14:38:03.245614    7064 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
-plan [(8, 8, 5, 5, 2888, 3198), (8, 7, 7, 9, 421, 364), (5, 6, 6, 5, 79, 81)] padded 10240 10752 6.7s
-ffbp/fp32_high_direct ok {'first_s': 14.8296, 'run_s': 4.6069, 'host_s': 0.3395, 'filt': 'dense'}
-E1003 14:39:54.080545    7823 hugepage_text.cc:344] RAW: File offset incorrectly aligned for file-backed THP: (600000 & ~ffffffffffe00000) = 0 != 1000 = (201000 & ~ffffffffffe00000)
-plan [(8, 8, 5, 5, 2888, 3198), (8, 7, 7, 9, 421, 364), (5, 6, 6, 5, 79, 81)] padded 10240 10752 6.7s
-ffbp/fp32_direct ok {'first_s': 20.6079, 'run_s': 6.268, 'host_s': 0.3427, 'filt': 'dense'}

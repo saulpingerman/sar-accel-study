@@ -14,8 +14,8 @@ import time
 
 import numpy as np
 
-import v2_prep
-from sarbench import bp, cpu_ref
+import prep
+from dev import bp, cpu_ref
 
 C = 299792458.0
 
@@ -34,7 +34,7 @@ def main():
     ap.add_argument('--save', default='', help='speeds whose tiles are saved, comma separated')
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
-    col, S, grid = v2_prep.load(a.data)
+    col, S, grid = prep.load(a.data)
     P, K = S.shape
     e1, e2, spx, spy, nx, ny = grid['e1'], grid['e2'], grid['spx'], grid['spy'], grid['nx'], grid['ny']
     from scipy.signal.windows import taylor

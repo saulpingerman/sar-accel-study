@@ -1,0 +1,66 @@
+{
+ "algorithm": "ffbp",
+ "read_seconds": 0.09041469500002108,
+ "signal_shape": [
+  39899,
+  6003
+ ],
+ "phase_sgn": 1,
+ "seconds": 73.77579340700001,
+ "grid": {
+  "grid_type": "XRGYCR",
+  "range_resolution": 0.6638190214628416,
+  "azimuth_resolution": 0.2724169980311009,
+  "range_sample_spacing": 0.7492314011995954,
+  "cross_range_sample_spacing": 0.13620849901555046,
+  "algorithm": "FFBP",
+  "graze_angle_deg": 60.85659609869858,
+  "side_of_track": "L",
+  "iarp_llh": [
+   8.925725406248088,
+   7.077359647377614,
+   203.93389164575663
+  ]
+ },
+ "algorithm_attrs": {
+  "_leaf_size": 8,
+  "_n_angular": 128,
+  "_xr_spacing": 0.13620849901555046,
+  "_apply_amp_sf": true,
+  "_trim_invalid": true,
+  "_use_numba": true,
+  "_verbose": true,
+  "_phase_sgn": 1,
+  "_npulses": 39883,
+  "_nsamples": 6003,
+  "_fc": 9649999872.0,
+  "_wavelength": 0.03106657637062402,
+  "_bandwidth": 200066666.66666794,
+  "_pri": 9.696533333333334e-05,
+  "_prf": 10312.964083383751,
+  "_speed": 7687.034396669048,
+  "_r0_center": 588658.6449224284,
+  "_ref_srp": [
+   6253595.076310171,
+   776417.128650266,
+   983079.340456215
+  ],
+  "_delta_r": 0.7492314011995954,
+  "_range_resolution": 0.6638190214628416,
+  "_azimuth_resolution": 0.2724169980311009,
+  "_u_range": [
+   0.7824785527762834,
+   0.5779907350552868,
+   0.23163338411244214
+  ],
+  "_u_cross_range": [
+   -0.12522582952711644,
+   -0.21832552731565172,
+   0.967808067615469
+  ]
+ },
+ "image_shape": [
+  218356,
+  6003
+ ]
+}

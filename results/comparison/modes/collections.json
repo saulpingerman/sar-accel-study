@@ -1,0 +1,32 @@
+{
+ "sp2024": {
+  "core_name": "04OCT24_CAPELLA-10_001_204249_SL0000R_31N008W_001X_HH_0101_SPY",
+  "collector": "capella-radar-10",
+  "mode_type": "SPOTLIGHT",
+  "mode_id": null
+ },
+ "sp2025": {
+  "core_name": "03MAR25_CAPELLA-9_001_131732_SL0000L_19N155W_001X_HH_0101_SPY",
+  "collector": "capella-radar-9",
+  "mode_type": "SPOTLIGHT",
+  "mode_id": null
+ },
+ "ss2022": {
+  "core_name": "30SEP22_CAPELLA-3_001_212640_DS0000R_70N163W_001X_HH_0101_SPY",
+  "collector": "capella-radar-3",
+  "mode_type": "DYNAMIC STRIPMAP",
+  "mode_id": "SS"
+ },
+ "sm2021": {
+  "core_name": "12NOV21_CAPELLA-3_001_205103_ST0000L_09N007E_001X_HH_0101_SPY",
+  "collector": "capella-radar-3",
+  "mode_type": "STRIPMAP",
+  "mode_id": "SM"
+ },
+ "sm2025": {
+  "core_name": "08DEC25_CAPELLA-14_001_125808_ST0000L_09N080E_001X_HH_0101_SPY",
+  "collector": "capella-radar-14",
+  "mode_type": "STRIPMAP",
+  "mode_id": null
+ }
+}

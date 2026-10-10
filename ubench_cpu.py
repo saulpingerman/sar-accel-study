@@ -119,7 +119,7 @@ int nthreads(void) { return omp_get_max_threads(); }
 
 
 def build():
-    d = os.path.join(os.path.expanduser('~'), '.cache', 'sarbench')
+    d = os.path.join(os.path.expanduser('~'), '.cache', 'dev')
     os.makedirs(d, exist_ok=True)
     tag = hashlib.sha1(SRC.encode()).hexdigest()[:12]
     so = os.path.join(d, f'libubench_cpu_{tag}.so')

@@ -1,0 +1,23 @@
+{
+ "fastsar": "4f14e4beded6ded895de0bed83564f2a78c3a873",
+ "backend": "cuda",
+ "pulses": 15186,
+ "sizes": {
+  "1024": {
+   "exact_cubic_s": 0.7801813410000022,
+   "factorized_s": 1.0003888880000886
+  },
+  "2048": {
+   "exact_cubic_s": 1.2897222530000363,
+   "factorized_s": 0.9557044910000059
+  },
+  "4096": {
+   "exact_cubic_s": 3.8479215800000475,
+   "factorized_s": 1.4156791099999282
+  },
+  "8192": {
+   "exact_cubic_s": 14.942555009999978,
+   "factorized_s": 2.6296560590001263
+  }
+ }
+}

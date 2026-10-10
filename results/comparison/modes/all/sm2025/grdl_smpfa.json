@@ -1,0 +1,47 @@
+{
+ "algorithm": "smpfa",
+ "read_seconds": 32.51421405000019,
+ "signal_shape": [
+  237720,
+  10368
+ ],
+ "phase_sgn": 1,
+ "seconds": 550.076184777,
+ "grid": {
+  "image_plane": "SLANT",
+  "type": "RGAZIM",
+  "rg_ss": 0.5995852629307277,
+  "rg_imp_resp_bw": 1.3342556087680677,
+  "rg_imp_resp_wid": 0.6640406786957809,
+  "rg_kctr": 64.37787030269298,
+  "rg_delta_k1": 63.71074249830895,
+  "rg_delta_k2": 65.04499810707702,
+  "az_ss": 39.894746626247056,
+  "az_imp_resp_bw": 0.020052765530629388,
+  "az_imp_resp_wid": 44.18343188856861,
+  "az_kctr": 2.0898000083896529e-10,
+  "ku_min": -0.010026382556334694,
+  "ku_max": 0.010026382974294696,
+  "range_resolution": 0.6640406786957809,
+  "azimuth_resolution": 44.18343188856861,
+  "rec_n_pulses": 484,
+  "rec_n_samples": 12960,
+  "pad_factor": 1.25,
+  "center_srp": [
+   1102821.750905072,
+   6189594.015268397,
+   1085736.119402402
+  ]
+ },
+ "algorithm_attrs": {
+  "_range_oversample": 1.0,
+  "_azimuth_oversample": 1.0,
+  "_slant": true,
+  "_pad_factor": 1.25,
+  "_verbose": true
+ },
+ "image_shape": [
+  3435,
+  12960
+ ]
+}

@@ -1,0 +1,83 @@
+NVIDIA L4, 580.178.04
+32
+FastSAR 0decd5a2b671b4f54034d31cd8827717bc61088d 2026-10-07 03:18:47 +0000
+isce3 0.25.17 numba 0.68.0
+-rw-rw-r-- 1 user user 5149106840 Oct  7 04:49 c.cphd
+-rw-rw-r-- 1 user user 1027277558 Oct  7 04:41 c.ntf
+== fastsar cuda
+grid 35678 7240 258.3 Mpx
+Traceback (most recent call last):
+  File "~/w/modes_strip.py", line 61, in <module>
+    img = former(fx['S'])
+          ^^^^^^^^^^^^^^^
+  File "~/w/FastSAR/fastsar/api.py", line 136, in __call__
+    return cp.asnumpy(self._form(cp.asarray(S), ng=8)).astype(np.complex64)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "~/w/FastSAR/fastsar/ffbp_cuda.py", line 449, in form
+    pim = cp.ascontiguousarray((S.imag / scale).astype(kern['dtype']))[None]
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "cupy/_core/core.pyx", line 783, in cupy._core.core._ndarray_base.astype
+  File "cupy/_core/core.pyx", line 811, in cupy._core.core._ndarray_base.astype
+  File "cupy/_core/core.pyx", line 770, in cupy._core.core._ndarray_base._astype
+  File "cupy/_core/core.pyx", line 176, in cupy._core.core.ndarray.__new__
+  File "cupy/_core/core.pyx", line 282, in cupy._core.core._ndarray_base._init
+  File "cupy/cuda/memory.pyx", line 904, in cupy.cuda.memory.alloc
+  File "cupy/cuda/memory.pyx", line 1614, in cupy.cuda.memory.MemoryPool.malloc
+  File "cupy/cuda/memory.pyx", line 1635, in cupy.cuda.memory.MemoryPool.malloc
+  File "cupy/cuda/memory.pyx", line 1350, in cupy.cuda.memory.SingleDeviceMemoryPool.malloc
+  File "cupy/cuda/memory.pyx", line 1376, in cupy.cuda.memory.SingleDeviceMemoryPool._malloc
+  File "cupy/cuda/memory.pyx", line 1560, in cupy.cuda.memory.SingleDeviceMemoryPool._try_malloc
+cupy.cuda.memory.OutOfMemoryError: Out of memory allocating 5,129,505,280 bytes (allocated so far: 20,960,869,376 bytes).
+Command exited with non-zero status 1
+	Command being timed: "~/w/env/bin/python -I modes_strip.py c.cphd c.ntf out fastsar cuda"
+	User time (seconds): 183.62
+	System time (seconds): 81.22
+	Percent of CPU this job got: 101%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 4:20.93
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 66343196
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 71
+	Minor (reclaiming a frame) page faults: 5002510
+	Voluntary context switches: 422
+	Involuntary context switches: 1674
+	Swaps: 0
+	File system inputs: 14176
+	File system outputs: 1176
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+exit 1
+== isce3 cuda
+region 0: 25.3 s, error -0.14 dB (conj -0.00), CPI 74203 pulses
+region 1: 25.3 s, error -0.11 dB (conj -0.00), CPI 74203 pulses
+region 2: 25.3 s, error -0.16 dB (conj -0.00), CPI 74203 pulses
+	Command being timed: "~/w/env/bin/python -I modes_strip.py c.cphd c.ntf out isce3 cuda"
+	User time (seconds): 27234.89
+	System time (seconds): 1281.17
+	Percent of CPU this job got: 1558%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 30:30.26
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 61631344
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 4473548
+	Voluntary context switches: 77426
+	Involuntary context switches: 73130
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 55472
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+exit 0

@@ -1,0 +1,108 @@
+/opt/fastsar/env/bin/python -m pytest tests/test_accuracy.py tests/test_api.py tests/test_autofocus.py tests/test_bp.py tests/test_burst.py tests/test_chain.py tests/test_cphd.py tests/test_exact.py tests/test_ffbp_cpu.py tests/test_ffbp_cuda.py tests/test_insar.py tests/test_io.py tests/test_pallas_e2e_tpu.py tests/test_pallas_final.py tests/test_pallas_fused.py tests/test_patches.py tests/test_planning.py tests/test_products.py tests/test_stripmap.py tests/test_units.py tests/test_wide_angle.py --timeout 1500 --require io,cuda -q
+.....s.....s...............ssss......................................... [ 38%]
+........................................................................ [ 76%]
+............................................                             [100%]
+=============================== warnings summary ===============================
+tests/test_api.py::test_former_reuse
+  /data/FastSAR/tests/test_api.py:18: RuntimeWarning: divide by zero encountered in log10
+    return 10 * np.log10(np.sum(np.abs(a - b) ** 2) / np.sum(np.abs(b) ** 2))
+
+tests/test_chain.py::test_amplitude
+tests/test_chain.py::test_autofocus
+tests/test_chain.py::test_moving_beam
+tests/test_chain.py::test_troposphere
+  /data/FastSAR/fastsar/sim.py:216: DeprecationWarning: Call to deprecated class CPHDWriter1. (sarpy's CPHD implementation is deprecated. Please use sarkit.)
+    with CPHDWriter1(path, meta, check_existence=False) as w:
+
+tests/test_chain.py: 18 warnings
+  /opt/fastsar/env/lib/python3.12/site-packages/sarpy/io/phase_history/cphd.py:1019: DeprecationWarning: Call to deprecated class CPHDReader. (sarpy's CPHD implementation is deprecated. Please use sarkit.)
+    return CPHDReader(cphd_details)
+
+tests/test_chain.py: 15 warnings
+  /data/FastSAR/tests/test_chain.py:121: PendingDeprecationWarning: Use `@` matmul instead of `*` mul operator for matrix multiplication
+    cr = np.array([~tr * p for p in zip(x, y)])                    # fractional (col, row) of pixel corners
+
+tests/test_chain.py: 15 warnings
+  /data/FastSAR/tests/test_chain.py:129: PendingDeprecationWarning: Use `@` matmul instead of `*` mul operator for matrix multiplication
+    cr = np.array([~tr * p for p in zip(x, y)])
+
+tests/test_chain.py: 15 warnings
+  /data/FastSAR/tests/test_chain.py:139: PendingDeprecationWarning: Use `@` matmul instead of `*` mul operator for matrix multiplication
+    x1, y1 = tr * (cc + 0.5 + par(*A[r, cc - 1:cc + 2]), r + 0.5 + par(*A[r - 1:r + 2, cc]))
+
+tests/test_chain.py::test_geotiff
+tests/test_chain.py::test_geotiff
+tests/test_chain.py::test_geotiff
+tests/test_chain.py::test_geotiff
+tests/test_chain.py::test_geotiff
+tests/test_chain.py::test_geotiff
+  /data/FastSAR/fastsar/products.py:424: PendingDeprecationWarning: Use `@` matmul instead of `*` mul operator for matrix multiplication
+    col, row = ~tr * (x, y)
+
+tests/test_chain.py::test_sicd
+tests/test_chain.py::test_sicd
+  /data/FastSAR/fastsar/products.py:178: DeprecationWarning: Call to deprecated class SICDWriter. (sarpy's SICD implementation is deprecated. Please use sarkit.)
+    with SICDWriter(path, sm, check_existence=False) as w:
+
+tests/test_chain.py::test_sicd
+tests/test_chain.py::test_sicd
+tests/test_chain.py::test_sicd
+  /opt/fastsar/env/lib/python3.12/site-packages/sarpy/io/complex/sicd.py:439: DeprecationWarning: Call to deprecated class SICDReader. (sarpy's SICD implementation is deprecated. Please use sarkit.)
+    return SICDReader(nitf_details)
+
+tests/test_ffbp_cuda.py::test_cuda_vs_dense[2]
+tests/test_ffbp_cuda.py::test_cuda_vs_dense[3]
+  /data/FastSAR/tests/test_ffbp_cuda.py:57: RuntimeWarning: divide by zero encountered in log10
+    es = 10 * np.log10(np.sum(np.abs(img_s - img) ** 2) / np.sum(np.abs(img) ** 2))
+
+tests/test_ffbp_cuda.py::test_batched_children
+  /data/FastSAR/tests/test_ffbp_cuda.py:81: RuntimeWarning: divide by zero encountered in log10
+    eb = 10 * np.log10(np.sum(np.abs(three.img_bt - three.img_pt) ** 2) / np.sum(np.abs(three.img_pt) ** 2))
+
+tests/test_ffbp_cuda.py::test_group_env
+tests/test_ffbp_cuda.py::test_out_of_memory_retry
+tests/test_ffbp_cuda.py::test_memory_warning_before_forming
+  /data/FastSAR/tests/test_ffbp_cuda.py:76: RuntimeWarning: divide by zero encountered in log10
+    rel=lambda a: 10 * np.log10(np.sum(np.abs(a - img_bt) ** 2) / np.sum(np.abs(img_bt) ** 2) + 1e-300))
+
+tests/test_ffbp_cuda.py::test_profile_window
+  /data/FastSAR/tests/test_ffbp_cuda.py:155: RuntimeWarning: divide by zero encountered in log10
+    ew = 10 * np.log10(np.sum(np.abs(img_win - img_res) ** 2) / np.sum(np.abs(img_res) ** 2))
+
+tests/test_units.py::test_aperture_weight[cpu]
+tests/test_units.py::test_input_checks
+  /data/FastSAR/tests/test_units.py:45: RuntimeWarning: divide by zero encountered in log10
+    return 10 * np.log10(np.sum(np.abs(a - b) ** 2) / np.sum(np.abs(b) ** 2) + 1e-300)
+
+tests/test_units.py::test_cpu_blocked_first_level
+  /data/FastSAR/tests/test_units.py:515: RuntimeWarning: divide by zero encountered in log10
+    check(bad, 'cpu: blocked first level against unblocked', 10 * np.log10(np.sum(abs(im_blk - im_unb) ** 2) / np.sum(abs(im_unb) ** 2)), -100)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+===================== peak resident memory per test module =====================
+  0.38 GB  tests/test_accuracy.py
+  1.77 GB  tests/test_api.py
+  3.50 GB  tests/test_autofocus.py
+  1.84 GB  tests/test_bp.py
+  3.74 GB  tests/test_burst.py
+  2.57 GB  tests/test_chain.py
+  3.14 GB  tests/test_cphd.py
+  5.18 GB  tests/test_exact.py
+  2.73 GB  tests/test_ffbp_cpu.py
+  2.80 GB  tests/test_ffbp_cuda.py
+  2.80 GB  tests/test_insar.py
+  2.80 GB  tests/test_io.py
+  2.87 GB  tests/test_pallas_e2e_tpu.py
+  2.92 GB  tests/test_pallas_final.py
+  2.91 GB  tests/test_pallas_fused.py
+  3.67 GB  tests/test_patches.py
+  3.30 GB  tests/test_planning.py
+  3.37 GB  tests/test_products.py
+  3.35 GB  tests/test_stripmap.py
+  4.11 GB  tests/test_units.py
+  3.27 GB  tests/test_wide_angle.py
+not tested on this machine: 6 tpu tests skipped (run on such a machine with --require tpu)
+=========================== short test summary info ============================
+SKIPPED [6] tests/conftest.py:107: no TPU (marked tpu)
+182 passed, 6 skipped, 89 warnings in 639.33s (0:10:39)
+tests exit 0

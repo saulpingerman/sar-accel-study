@@ -1,5 +1,5 @@
 import numpy as np, jax
-from sarbench import sim, ffbp
+from dev import sim, ffbp
 rng = np.random.default_rng(0)
 N = 1024
 res = 0.3

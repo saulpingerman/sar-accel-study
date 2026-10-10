@@ -1,0 +1,23 @@
+{
+ "fastsar": "rel-rc7-20261009 (4f14e4b), installed from the tag",
+ "backend": "cpu",
+ "pulses": 15186,
+ "sizes": {
+  "1024": {
+   "exact_cubic_s": 7.450903337,
+   "factorized_s": 2.634011676
+  },
+  "2048": {
+   "exact_cubic_s": 20.57422478300009,
+   "factorized_s": 1.980375415000026
+  },
+  "4096": {
+   "exact_cubic_s": 70.6846983229998,
+   "factorized_s": 3.012067573999957
+  },
+  "8192": {
+   "exact_cubic_s": 269.062967284,
+   "factorized_s": 7.2069118689996685
+  }
+ }
+}

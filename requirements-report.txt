@@ -1,0 +1,4 @@
+# Rebuilding the paper's tables, numbers and figures from the stored records (python3 paper/build.py, figs.py)
+numpy
+scipy
+matplotlib

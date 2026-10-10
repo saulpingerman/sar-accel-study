@@ -1,0 +1,44 @@
+Model name:                              Intel(R) Xeon(R) CPU @ 2.20GHz
+32
+NVIDIA L4, 580.178.04
+FastSAR da28ceeea3d9a4153217d749f94cc33903a89a12 2026-10-09 03:18:16 +0000
+[4 s] setup done
+-rw-rw-r-- 1 user user 968280900 Oct  9 05:56 c.cphd
+-rw-rw-r-- 1 user user 332361111 Oct  9 05:56 c.ntf
+[12 s] data in
+[15 s] reference cache: 3 files
+== fastsar cuda
+grid 21040 3960 83.3 Mpx
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+first mosaic 25.2 s
+mosaic 11.2 s, 84 patches
+region 0: error -61.29 dB
+region 1: error -62.44 dB
+region 2: error -61.93 dB
+	Command being timed: "/opt/fastsar/env/bin/python -I modes_strip.py c.cphd c.ntf out fastsar cuda"
+	User time (seconds): 102.90
+	System time (seconds): 16.51
+	Percent of CPU this job got: 196%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:00.71
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 12347632
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 8956
+	Minor (reclaiming a frame) page faults: 1306776
+	Voluntary context switches: 1044744
+	Involuntary context switches: 534
+	Swaps: 0
+	File system inputs: 1098832
+	File system outputs: 53176
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+exit 0
+[75 s] stage fastsar cuda done
+GPU utilization over the stage: mean 26%, 5% of samples at 90% or more, mean power 35 W (61 s)
+[80 s] end

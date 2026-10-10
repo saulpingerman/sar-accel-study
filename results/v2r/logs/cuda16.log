@@ -1,2 +1,0 @@
-bp/cuda_f16_ov16 ok {'first_s': 203.3322, 'run_s': 203.3322}
-bp/cuda_fp32_ov16 ok {'first_s': 295.2293, 'run_s': 295.2293}

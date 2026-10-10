@@ -14,5 +14,5 @@ done
 [ -n "$Z" ] || { echo "$name: no zone had capacity"; exit 1; }
 echo $Z > $S/zone_$name; echo "$name created in $Z $(date -u +%T)"
 for i in $(seq 1 30); do gcloud compute ssh $name --project $P --zone $Z --quiet --command 'true' -- -o ConnectTimeout=15 >/dev/null 2>&1 && break; done
-gcloud compute scp --project $P --zone $Z --quiet cloud/accel_setup.sh cloud/run_accel_v2.sh $name:~/ > /dev/null 2>&1
-gcloud compute ssh $name --project $P --zone $Z --quiet --command "bash ~/accel_setup.sh gpu $mins 2>&1 | tail -1; nohup bash ~/run_accel_v2.sh $label gpu $id $stages > ~/runv2.log 2>&1 < /dev/null & disown; echo started-$name" 2>&1 | grep -E "jax|started"
+gcloud compute scp --project $P --zone $Z --quiet cloud/accel_setup.sh cloud/accel_sequence.sh $name:~/ > /dev/null 2>&1
+gcloud compute ssh $name --project $P --zone $Z --quiet --command "bash ~/accel_setup.sh gpu $mins 2>&1 | tail -1; nohup bash ~/accel_sequence.sh $label gpu $id $stages > ~/runv2.log 2>&1 < /dev/null & disown; echo started-$name" 2>&1 | grep -E "jax|started"

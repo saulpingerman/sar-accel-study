@@ -1,0 +1,26 @@
+{
+ "oversample": 64,
+ "regions": {
+  "locks": {
+   "paper reference (float64, linear 16x)": -67.28747715714987,
+   "ExactFormer cubic 4x": -59.801624515760224,
+   "ExactFormer cubic 8x": -77.53300048641974,
+   "ExactFormer cubic 16x": -77.49290148712069,
+   "ExactFormer linear 64x": -77.6939862879079
+  },
+  "port": {
+   "paper reference (float64, linear 16x)": -68.82853228988317,
+   "ExactFormer cubic 4x": -69.62712600496039,
+   "ExactFormer cubic 8x": -81.4576292337356,
+   "ExactFormer cubic 16x": -81.20574599468405,
+   "ExactFormer linear 64x": -81.52375536321023
+  },
+  "ships": {
+   "paper reference (float64, linear 16x)": -67.50363634153169,
+   "ExactFormer cubic 4x": -67.58142988724174,
+   "ExactFormer cubic 8x": -80.78298139927475,
+   "ExactFormer cubic 16x": -80.56220803167612,
+   "ExactFormer linear 64x": -80.89406991076372
+  }
+ }
+}

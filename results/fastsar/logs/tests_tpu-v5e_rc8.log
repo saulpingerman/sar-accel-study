@@ -1,0 +1,90 @@
+~/w/FastSAR/../env/bin/python -m pytest tests/test_accuracy.py tests/test_api.py tests/test_autofocus.py tests/test_bp.py tests/test_burst.py tests/test_chain.py tests/test_cphd.py tests/test_exact.py tests/test_ffbp_cpu.py tests/test_ffbp_cuda.py tests/test_insar.py tests/test_io.py tests/test_pallas_e2e_tpu.py tests/test_pallas_final.py tests/test_pallas_fused.py tests/test_patches.py tests/test_planning.py tests/test_products.py tests/test_stripmap.py tests/test_units.py tests/test_wide_angle.py --timeout 1200 --require io,tpu -q
+......s.s...s..........ssss......s...s........................ss...s.... [ 38%]
+s..s..s..s....s..................s..s.s..sssssss........................ [ 76%]
+............................................                             [100%]
+=============================== warnings summary ===============================
+tests/test_api.py::test_former_reuse
+  ~/w/FastSAR/tests/test_api.py:18: RuntimeWarning: divide by zero encountered in log10
+    return 10 * np.log10(np.sum(np.abs(a - b) ** 2) / np.sum(np.abs(b) ** 2))
+
+tests/test_chain.py::test_amplitude
+tests/test_chain.py::test_autofocus
+tests/test_chain.py::test_moving_beam
+tests/test_chain.py::test_troposphere
+  ~/w/FastSAR/fastsar/sim.py:216: DeprecationWarning: Call to deprecated class CPHDWriter1. (sarpy's CPHD implementation is deprecated. Please use sarkit.)
+    with CPHDWriter1(path, meta, check_existence=False) as w:
+
+tests/test_chain.py: 18 warnings
+  ~/w/env/lib/python3.12/site-packages/sarpy/io/phase_history/cphd.py:1019: DeprecationWarning: Call to deprecated class CPHDReader. (sarpy's CPHD implementation is deprecated. Please use sarkit.)
+    return CPHDReader(cphd_details)
+
+tests/test_chain.py: 15 warnings
+  ~/w/FastSAR/tests/test_chain.py:121: PendingDeprecationWarning: Use `@` matmul instead of `*` mul operator for matrix multiplication
+    cr = np.array([~tr * p for p in zip(x, y)])                    # fractional (col, row) of pixel corners
+
+tests/test_chain.py: 15 warnings
+  ~/w/FastSAR/tests/test_chain.py:129: PendingDeprecationWarning: Use `@` matmul instead of `*` mul operator for matrix multiplication
+    cr = np.array([~tr * p for p in zip(x, y)])
+
+tests/test_chain.py: 15 warnings
+  ~/w/FastSAR/tests/test_chain.py:139: PendingDeprecationWarning: Use `@` matmul instead of `*` mul operator for matrix multiplication
+    x1, y1 = tr * (cc + 0.5 + par(*A[r, cc - 1:cc + 2]), r + 0.5 + par(*A[r - 1:r + 2, cc]))
+
+tests/test_chain.py::test_geotiff
+tests/test_chain.py::test_geotiff
+tests/test_chain.py::test_geotiff
+tests/test_chain.py::test_geotiff
+tests/test_chain.py::test_geotiff
+tests/test_chain.py::test_geotiff
+  ~/w/FastSAR/fastsar/products.py:424: PendingDeprecationWarning: Use `@` matmul instead of `*` mul operator for matrix multiplication
+    col, row = ~tr * (x, y)
+
+tests/test_chain.py::test_sicd
+tests/test_chain.py::test_sicd
+  ~/w/FastSAR/fastsar/products.py:178: DeprecationWarning: Call to deprecated class SICDWriter. (sarpy's SICD implementation is deprecated. Please use sarkit.)
+    with SICDWriter(path, sm, check_existence=False) as w:
+
+tests/test_chain.py::test_sicd
+tests/test_chain.py::test_sicd
+tests/test_chain.py::test_sicd
+  ~/w/env/lib/python3.12/site-packages/sarpy/io/complex/sicd.py:439: DeprecationWarning: Call to deprecated class SICDReader. (sarpy's SICD implementation is deprecated. Please use sarkit.)
+    return SICDReader(nitf_details)
+
+tests/test_units.py::test_aperture_weight[cpu]
+tests/test_units.py::test_aperture_weight[jax]
+tests/test_units.py::test_input_checks
+  ~/w/FastSAR/tests/test_units.py:45: RuntimeWarning: divide by zero encountered in log10
+    return 10 * np.log10(np.sum(np.abs(a - b) ** 2) / np.sum(np.abs(b) ** 2) + 1e-300)
+
+tests/test_units.py::test_cpu_blocked_first_level
+  ~/w/FastSAR/tests/test_units.py:515: RuntimeWarning: divide by zero encountered in log10
+    check(bad, 'cpu: blocked first level against unblocked', 10 * np.log10(np.sum(abs(im_blk - im_unb) ** 2) / np.sum(abs(im_unb) ** 2)), -100)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+===================== peak resident memory per test module =====================
+  0.46 GB  tests/test_accuracy.py
+  5.69 GB  tests/test_api.py
+  5.84 GB  tests/test_autofocus.py
+  5.85 GB  tests/test_bp.py
+  8.91 GB  tests/test_burst.py
+  8.99 GB  tests/test_chain.py
+  8.98 GB  tests/test_cphd.py
+  9.04 GB  tests/test_exact.py
+  8.99 GB  tests/test_ffbp_cpu.py
+  9.00 GB  tests/test_insar.py
+  9.00 GB  tests/test_io.py
+  9.02 GB  tests/test_pallas_e2e_tpu.py
+  9.03 GB  tests/test_pallas_final.py
+  9.07 GB  tests/test_pallas_fused.py
+  9.08 GB  tests/test_patches.py
+  9.08 GB  tests/test_planning.py
+  9.08 GB  tests/test_products.py
+  9.08 GB  tests/test_stripmap.py
+  9.08 GB  tests/test_units.py
+  9.08 GB  tests/test_wide_angle.py
+not tested on this machine: 26 cuda tests skipped (run on such a machine with --require cuda)
+=========================== short test summary info ============================
+SKIPPED [26] tests/conftest.py:107: no CuPy with a CUDA device (marked cuda)
+SKIPPED [1] tests/test_exact.py:218: this machine has a TPU
+161 passed, 27 skipped, 83 warnings in 773.31s (0:12:53)
+tests exit 0

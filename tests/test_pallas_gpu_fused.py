@@ -3,7 +3,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np, jax, jax.numpy as jnp
 jax.config.update('jax_platform_name', 'cpu')
-from sarbench.pallas_ffbp_gpu import band_blocks_gpu, pad_columns_gpu, fused_rotate_dec_k_gpu
+from dev.pallas_ffbp_gpu import band_blocks_gpu, pad_columns_gpu, fused_rotate_dec_k_gpu
 rng = np.random.default_rng(0)
 P, K, D, L = 32, 1536, 6, 44
 Ko = (K + D - 1) // D

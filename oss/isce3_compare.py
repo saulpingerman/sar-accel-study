@@ -40,7 +40,7 @@ if m.Global.SGN > 0:
 srp0 = srp[0]
 S *= (taylor(P, nbar=4, sll=35.0, norm=False)[:, None] * taylor(K, nbar=4, sll=35.0, norm=False)[None, :]).astype(np.float32)
 fref = f0 + (K // 2) * df; wvl = C / fref; h = K // 2
-# our local frame, exactly as v2_prep builds it (antenna = transmit/receive midpoint, origin at the reference point)
+# our local frame, exactly as prep builds it (antenna = transmit/receive midpoint, origin at the reference point)
 apc = 0.5 * (tx + rcv) - srp0
 up = srp0 / np.linalg.norm(srp0); mid = apc[P // 2]
 los_h = mid - (mid @ up) * up; yhat = -los_h / np.linalg.norm(los_h); xhat = np.cross(yhat, up)

@@ -10,8 +10,8 @@ import numpy as np
 import jax
 import jax.numpy as jnp
 jax.config.update('jax_platform_name', 'cpu')
-from sarbench import sim, ffbp2
-from sarbench import pallas_ffbp, pallas_ffbp_gpu
+from dev import sim, ffbp2
+from dev import pallas_ffbp, pallas_ffbp_gpu
 
 # run the kernels in interpret mode on the CPU (the CPU path selects the GPU-tiled kernel)
 _orig = pallas_ffbp.fused_rotate_dec_k

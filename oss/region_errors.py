@@ -1,4 +1,4 @@
-"""Error of each configuration of the cost figure on the three Panama regions (lock, port, ship), per region and
+"""(Release records, results/fastsar.) Error of each configuration of the cost figure on the three Panama regions (lock, port, ship), per region and
 pooled (energy of the differences over energy of the reference, each region with its own fitted gain), from the saved
 images; the open-source implementations are pooled from their per-region records with the reference energies.
    python -I region_errors.py <reference .npy> <tmp dir> <bucket prefix> <records dir> <out json>"""
@@ -20,29 +20,26 @@ def err(a, b):
     return float(10 * np.log10(np.sum(np.abs(g * a - b) ** 2) / np.sum(np.abs(b) ** 2)))
 
 
-images = {   # name in the figure: path under the bucket's v2/
-    'L4 exact, f16': 'out/panama/gpu-l4/bp_cuda_f16.npy', 'L4 exact, f32': 'out/panama/gpu-l4/bp_cuda_fp32.npy',
-    'L4 float16': 'cuda7/panama/gpu-l4/ffbp_f16_cuda.npy', 'L4 float32': 'cuda6/panama/gpu-l4/ffbp_fp32_cuda.npy',
-    'L4 polar format': 'out/panama/gpu-l4/pfa_fp32_corr.npy',
-    'v6e single-pass': 'pallas8/panama/tpu-v6e/ffbp_fp32_fast_pallas2_direct.npy', 'v6e three-pass': 'pallas8/panama/tpu-v6e/ffbp_fp32_high_pallas2_direct.npy',
-    'v6e polar format': 'out/panama/tpu-v6e/pfa_fp32_corr.npy',
-    'v5e single-pass': 'pallas8/panama/tpu-v5e/ffbp_fp32_fast_pallas2_direct.npy', 'v5e three-pass': 'pallas8/panama/tpu-v5e/ffbp_fp32_high_pallas2_direct.npy',
-    'v5e polar format': 'out/panama/tpu-v5e/pfa_fp32_taps_corr.npy',
-    'CPU float32': 'cpp4/panama/cpu-c4d16/ffbp_fp32_cpp.npy', 'CPU float64': 'out/panama/cpu-c4d16/ffbp_fp64_conv_direct.npy',
-    'CPU polar format': 'out/panama/cpu-c4d16/pfa_fp32_taps_corr.npy'}
+images = {   # name in the figure: path under the bucket's v3/out/panama/ (release records of FastSAR)
+    'L4 float16': 'gpu-l4/ffbp_f16_cuda.npy', 'L4 float32': 'gpu-l4/ffbp_fp32_cuda.npy', 'L4 polar format': 'gpu-l4/pfa_fp32_taps_corr.npy',
+    'v6e single-pass': 'tpu-v6e/ffbp_fp32_fast_pallas2_direct.npy', 'v6e three-pass': 'tpu-v6e/ffbp_fp32_high_pallas2_direct.npy',
+    'v6e polar format': 'tpu-v6e/pfa_fp32_taps_corr.npy',
+    'v5e single-pass': 'tpu-v5e/ffbp_fp32_fast_pallas2_direct.npy', 'v5e three-pass': 'tpu-v5e/ffbp_fp32_high_pallas2_direct.npy',
+    'v5e polar format': 'tpu-v5e/pfa_fp32_taps_corr.npy',
+    'CPU float32': 'cpu-c4d16/ffbp_fp32_cpp.npy', 'CPU polar format': 'cpu-c4d16/pfa_fp32_taps_corr.npy',
+    'FastSAR exact, L4': 'gpu-l4/bp_cubic.npy', 'FastSAR exact, CPU': 'cpu-c4d16/bp_cubic.npy',
+    'FastSAR exact linear, L4': 'gpu-l4/bp_linear.npy'}
 res = dict(reference_energy=E, configurations={})
 for name, rel in images.items():
     f = f'{tmp}/img.npy'
-    subprocess.run(['gcloud', 'storage', 'cp', f'{B}/{rel}', f], check=True, capture_output=True)
+    subprocess.run(['gcloud', 'storage', 'cp', f'{B}/{rel}', f], check=True, capture_output=True)  # B = gs://.../v3/out/panama
     a = np.load(f, mmap_mode='r')
     errs = {n: err(np.asarray(a[i:i + h, j:j + h]), np.asarray(ref[i:i + h, j:j + h])) for n, (i, j) in crops.items()}
     del a; os.remove(f)
     res['configurations'][name] = dict(image=rel, regions=errs, pooled_db=pooled(errs))
     print(name, {k: round(v, 2) for k, v in errs.items()}, round(pooled(errs), 2), flush=True)
-# FastSAR exact backprojection (package) and the open-source implementations, from their records
+# the open-source implementations, from their records
 L = lambda f: json.load(open(f'{rec}/{f}'))
-fx = L('c4d_fastsar_exact.json')['full_image']['errors']; res['configurations']['FastSAR exact, CPU'] = dict(regions=fx, pooled_db=pooled(fx))
-gx = L('l4_fastsar_exact.json')['full_image']['errors']; res['configurations']['FastSAR exact, L4'] = dict(regions=gx, pooled_db=pooled(gx))
 rp = L('ritsar_panama.json')['runs']['RITSAR as published (Python 3 port), 16x']['errors']
 r16 = {n: rp[n]['reference (float64 exact BP)'] for n in crops}; res['configurations']['RITSAR, 16x'] = dict(regions=r16, pooled_db=pooled(r16))
 ng = L('nga_results.json')
@@ -54,4 +51,5 @@ for pre, nm in (('cpu_', 'ISCE3, CPU'), ('gpu_', 'ISCE3, CUDA')):
     res['configurations'][nm] = dict(patches=dict(zip(('center', 'locks', 'port'), e)), pooled_db=float(10 * np.log10(np.mean([10 ** (x / 10) for x in e]))),
                                      note='three 256 by 256 pixel patches of its own grid (center, lock, port), equal weights, after ramp removal')
 res['configurations']['torchbp exact'] = dict(pooled_db=0.0, note='0.0 dB on every region (torchbp_panama.json)')
+res['configurations']['GRDL FFBP'] = json.load(open(f'{rec}/../pareto_regions.json'))['configurations']['GRDL FFBP']   # its smeared image, as scored in grdl_ffbp_scores.json
 json.dump(res, open(out, 'w'), indent=1)

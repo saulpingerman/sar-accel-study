@@ -1,0 +1,77 @@
+{
+ "collection": "c.cphd",
+ "pulses": 39898,
+ "samples": 6003,
+ "load_seconds": 6.433849000000009,
+ "sicd": {
+  "rows": 3949,
+  "cols": 21039,
+  "row_ss": 0.6171875,
+  "col_ss": 0.9140674501131292,
+  "col_imp_resp_bw": 0.772902979006976,
+  "col_imp_resp_wid": 1.0895043640045308
+ },
+ "pulse_time_deviation_s": 4.440892098500626e-16,
+ "doppler_centroid_hz": 228.66323132031732,
+ "ds": 1.293823451534367,
+ "look_side": "left",
+ "device": "cpu",
+ "buffer_seconds": 5.813695293999999,
+ "regions": {
+  "r0": {
+   "seconds": 26.17810050300001,
+   "converged": false,
+   "error_db": -69.4866787978886,
+   "conj_error_db": -1.5110039586738235e-05,
+   "cpi_pulses": 10256.0,
+   "error_fixed_receiver_db": -50.57876240785487,
+   "reference_seconds": 30.99444453700002,
+   "center": {
+    "row": 1974,
+    "col": 5259,
+    "local": [
+     4807.88884718214,
+     7.533398228368619,
+     0.7366289820917241
+    ]
+   }
+  },
+  "r1": {
+   "seconds": 26.172530103000014,
+   "converged": false,
+   "error_db": -64.8178021821475,
+   "conj_error_db": -0.0006232267161531347,
+   "cpi_pulses": 10256.0,
+   "error_fixed_receiver_db": -50.56209939576674,
+   "reference_seconds": 29.197712920000015,
+   "center": {
+    "row": 1974,
+    "col": 10519,
+    "local": [
+     -0.2614574128309554,
+     11.207171670420284,
+     7.3936350423187145
+    ]
+   }
+  },
+  "r2": {
+   "seconds": 26.147337297999997,
+   "converged": false,
+   "error_db": -69.40981236515773,
+   "conj_error_db": -1.2820260358790587e-06,
+   "cpi_pulses": 10256.0,
+   "error_fixed_receiver_db": -50.60496971904614,
+   "reference_seconds": 29.948587422999992,
+   "center": {
+    "row": 1974,
+    "col": 15779,
+    "local": [
+     -4808.399509050183,
+     14.91669164510778,
+     10.403556050906703
+    ]
+   }
+  }
+ },
+ "full_image_estimate_seconds": 8292.957980913392
+}

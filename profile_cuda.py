@@ -1,12 +1,12 @@
 """Per-stage device time of the CUDA factorized image on one scene.   python profile_cuda.py --data /tmp/v2/panama.npz"""
 import argparse, json, time
 import numpy as np, cupy as cp
-import v2_prep
-from sarbench import ffbp2, ffbp_cuda
+import prep
+from dev import ffbp2, ffbp_cuda
 ap = argparse.ArgumentParser(); ap.add_argument('--data', required=True); ap.add_argument('--ng', type=int, default=8); ap.add_argument('--out', default='profile_cuda.json')
 a = ap.parse_args()
 from scipy.signal.windows import taylor
-col, S, grid = v2_prep.load(a.data)
+col, S, grid = prep.load(a.data)
 nx, ny, spx, spy = grid['nx'], grid['ny'], grid['spx'], grid['spy']
 P, K = S.shape
 wp = taylor(P, nbar=4, sll=35.0, norm=False).astype(np.float32); wk = taylor(K, nbar=4, sll=35.0, norm=False).astype(np.float32)

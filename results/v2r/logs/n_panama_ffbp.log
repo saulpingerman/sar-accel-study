@@ -1,8 +1,0 @@
-plan [(8, 8, 6, 4, 2408, 3805), (8, 7, 7, 7, 352, 552), (6, 5, 5, 6, 79, 100)] padded 12288 8960 21.5s
-ffbp/f16 ok {'first_s': 37.8507, 'run_s': 14.36, 'host_s': 0.7027, 'filt': 'dense'}
-ffbp/fp32_fast ok {'first_s': 49.4361, 'run_s': 22.3042, 'host_s': 0.7023, 'filt': 'dense'}
-ffbp/fp32 ok {'first_s': 105.2351, 'run_s': 31.6463, 'host_s': 0.71, 'filt': 'dense'}
-plan [(8, 8, 6, 4, 2408, 3805), (8, 7, 7, 7, 352, 552), (6, 5, 5, 6, 79, 100)] padded 12288 8960 21.5s
-ffbp/f16_conv ok {'first_s': 19.642, 'run_s': 11.9147, 'host_s': 0.6947, 'filt': 'conv'}
-plan [(8, 8, 6, 4, 2408, 3805), (8, 7, 7, 7, 352, 552), (6, 5, 5, 6, 79, 100)] padded 12288 8960 21.2s
-ffbp/f16_direct ok {'first_s': 36.0951, 'run_s': 12.9418, 'host_s': 0.6977, 'filt': 'dense'}

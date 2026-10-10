@@ -1,0 +1,19 @@
+{
+ "fastsar": "rel-rc7-20261009 (4f14e4b)",
+ "api": "ExactFormer(..., 512, 512, center=<region center>)",
+ "regions": {
+  "locks": {
+   "seconds": 4.136743973999998,
+   "error_db": -66.83870865517831
+  },
+  "port": {
+   "seconds": 4.104052355,
+   "error_db": -68.48608191320879
+  },
+  "ships": {
+   "seconds": 4.132978527999995,
+   "error_db": -67.2307027941173
+  }
+ },
+ "full_image_estimate_s_from_lock": 1696.6996549490477
+}

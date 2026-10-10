@@ -1,0 +1,145 @@
+Model name:                              AMD EPYC 9B45
+16
+FastSAR 0decd5a2b671b4f54034d31cd8827717bc61088d 2026-10-07 03:18:47 +0000
+isce3 0.25.17 numba 0.68.0
+-rw-rw-r-- 1 user user 9921494144 Oct  7 03:28 c.cphd
+-rw-rw-r-- 1 user user 4524796233 Oct  7 03:24 c.ntf
+== fastsar cpu
+grid 136197 8313 1132.2 Mpx
+mosaic 5747.5 s, 1206 patches
+region 0: error -59.26 dB
+region 1: error -59.62 dB
+region 2: error -50.89 dB
+	Command being timed: "/data/w/env/bin/python -I modes_strip.py c.cphd c.ntf out fastsar cpu"
+	User time (seconds): 57777.53
+	System time (seconds): 5781.43
+	Percent of CPU this job got: 928%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:54:08
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 86916512
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 5
+	Minor (reclaiming a frame) page faults: 93836494
+	Voluntary context switches: 1081536
+	Involuntary context switches: 363553
+	Swaps: 0
+	File system inputs: 528
+	File system outputs: 17734016
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+exit 0
+== isce3 cpu
+Traceback (most recent call last):
+  File "/data/w/modes_strip.py", line 97, in <module>
+    orbit = isce3.core.Orbit([isce3.core.StateVector(epoch + isce3.core.TimeDelta(float(t_rel[k])), tx[k], txv[k]) for k in range(0, P)], epoch)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: non-uniform spacing between state vectors encountered - interval between state vector at position 8859 and state vector at position 8860 is 0.000070 s, expected 0.000070 s
+Command exited with non-zero status 1
+	Command being timed: "/data/w/env/bin/python -I modes_strip.py c.cphd c.ntf out isce3 cpu"
+	User time (seconds): 18.04
+	System time (seconds): 6.74
+	Percent of CPU this job got: 117%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:21.17
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 86916580
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 465010
+	Voluntary context switches: 48
+	Involuntary context switches: 173
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+exit 1
+== grdl rda
+Command terminated by signal 9
+	Command being timed: "/data/w/env/bin/python -I grdl_strip.py c.cphd out rda"
+	User time (seconds): 17.34
+	System time (seconds): 19.80
+	Percent of CPU this job got: 104%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:35.52
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 128232640
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 37
+	Minor (reclaiming a frame) page faults: 2362487
+	Voluntary context switches: 103
+	Involuntary context switches: 328
+	Swaps: 0
+	File system inputs: 5952
+	File system outputs: 224
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+exit 137
+== grdl smpfa
+smpfa formed (3435, 12960) 550.1 s (read 32.5 s)
+	Command being timed: "/data/w/env/bin/python -I grdl_strip.py c.cphd out smpfa"
+	User time (seconds): 6424.29
+	System time (seconds): 34.67
+	Percent of CPU this job got: 1081%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 9:57.47
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 81512212
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1677
+	Minor (reclaiming a frame) page faults: 5022341
+	Voluntary context switches: 100106
+	Involuntary context switches: 42095
+	Swaps: 0
+	File system inputs: 19791296
+	File system outputs: 695928
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+exit 0
+== grdl ffbp
+Command terminated by signal 9
+	Command being timed: "/data/w/env/bin/python -I grdl_strip.py c.cphd out ffbp"
+	User time (seconds): 15.10
+	System time (seconds): 14.59
+	Percent of CPU this job got: 105%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:28.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 128246200
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 28
+	Minor (reclaiming a frame) page faults: 1457758
+	Voluntary context switches: 78
+	Involuntary context switches: 324
+	Swaps: 0
+	File system inputs: 6528
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+exit 137

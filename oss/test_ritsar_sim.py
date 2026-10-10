@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 from scipy.signal.windows import taylor
 from ritsar import imgTools
-from sarbench import sim, cpu_ref, bp as bpmod
+from dev import sim, cpu_ref, bp as bpmod
 C = 299792458.0
 rng = np.random.default_rng(1)
 col = sim.make_collect(res=0.5, scene=60.0, r0=5e3)

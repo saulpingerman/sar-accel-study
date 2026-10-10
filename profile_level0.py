@@ -7,8 +7,8 @@ import argparse, json, time
 
 import numpy as np
 
-import v2_prep
-from sarbench import ffbp2
+import prep
+from dev import ffbp2
 
 
 def timeit(fn, *args, reps=5):
@@ -35,7 +35,7 @@ def main():
     import jax, jax.numpy as jnp
     from jax import lax
     from scipy.signal.windows import taylor
-    col, S, grid = v2_prep.load(a.data)
+    col, S, grid = prep.load(a.data)
     nx, ny, spx, spy = grid['nx'], grid['ny'], grid['spx'], grid['spy']
     e1, e2 = np.asarray(grid['e1'], np.float64), np.asarray(grid['e2'], np.float64)
     P, K = S.shape
@@ -125,9 +125,9 @@ def main():
                 print('pallas2 L0 children for', ngr, 'tiles', round(t0g, 4), flush=True)
                 # the bare kernel at each level's shapes
                 if platform == 'tpu':
-                    from sarbench.pallas_ffbp import fused_rotate_dec_k2, pad_columns
+                    from dev.pallas_ffbp import fused_rotate_dec_k2, pad_columns
                 else:
-                    from sarbench.pallas_ffbp_gpu import fused_rotate_dec_k2_gpu, pad_columns_gpu as pad_columns
+                    from dev.pallas_ffbp_gpu import fused_rotate_dec_k2_gpu, pad_columns_gpu as pad_columns
                     gprec = 'highest' if ffbp2.POLICIES[pol]['prec'] == lax.Precision.HIGHEST else None
 
                     def fused_rotate_dec_k2(A, B, c, s_, band, kc, pb, passes):
@@ -143,7 +143,7 @@ def main():
                     xr = pad_columns(jnp.zeros((1, Pp, Kl), jnp.float32), band); xi = xr
                     c0z = jnp.zeros((1, ncl, Pp), jnp.float32) + 0.1; slz = jnp.zeros((1, ncl, Pp), jnp.float32) + 1e-3
                     if platform == 'tpu' and a.gen >= 3:
-                        from sarbench.pallas_ffbp import fused_rotate_dec_k3
+                        from dev.pallas_ffbp import fused_rotate_dec_k3
                         fk = jax.jit(lambda A, B, c, s_, pbl=pbl, band=band, npass=npass: fused_rotate_dec_k3(A, B, c, s_, band, (Kl - 1) / 2.0, pb=pbl, passes=npass))
                     else:
                         fk = jax.jit(lambda A, B, c, s_, pbl=pbl, band=band, npass=npass: fused_rotate_dec_k2(A, B, c, s_, band, (Kl - 1) / 2.0, pb=pbl, passes=npass))
@@ -194,7 +194,7 @@ def main():
                   round(G * (t_rot + t_dec + t_decp), 3), flush=True)
         else:
             if platform == 'tpu':
-                from sarbench.pallas_ffbp import band_blocks, pad_columns, fused_rotate_dec_k
+                from dev.pallas_ffbp import band_blocks, pad_columns, fused_rotate_dec_k
                 band = band_blocks(np.asarray(lv['Fk']), lv['Dk'])
                 npass = 1 if prec is None else 3
                 Pp = -(-P // a.pb) * a.pb
@@ -222,7 +222,7 @@ def main():
                 res['pallas_fused_8children_map_s'] = t_m
                 print('fused 8 children via map', round(t_m, 4), 'per child', round(t_m / 8, 4), flush=True)
             else:
-                from sarbench.pallas_ffbp_gpu import band_blocks_gpu, pad_columns_gpu, fused_rotate_dec_k_gpu
+                from dev.pallas_ffbp_gpu import band_blocks_gpu, pad_columns_gpu, fused_rotate_dec_k_gpu
                 band = band_blocks_gpu(np.asarray(lv['Fk']), lv['Dk'])
                 gpu_prec = 'highest' if prec is not None and prec == lax.Precision.HIGHEST else None
                 for pb in (16, 32):

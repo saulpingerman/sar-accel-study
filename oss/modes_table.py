@@ -1,7 +1,7 @@
-"""Collect the other-modes records (results/oss/modes/<tag>/*.json) into one table: per collection and implementation,
+"""Collect the other-modes records (results/comparison/modes/<tag>/*.json) into one table: per collection and implementation,
 time per full image (measured, or estimated from the regions by pixel count) and the error against the float64 reference
 at the implementation's own pixels with its own aperture (range over the three regions).
-    python3 modes_table.py results/oss/modes results/oss/modes_table.json"""
+    python3 modes_table.py results/comparison/modes results/comparison/modes_table.json"""
 import sys, os, json, glob
 
 root, out = sys.argv[1:3]

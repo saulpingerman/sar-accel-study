@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Fresh-instance entry for the pallas5 build: pallas5_tpu.sh <label> ...
+bash ~/sar/cloud/pallas3_tpu.sh $1 256 8 16 pallas5 r5
