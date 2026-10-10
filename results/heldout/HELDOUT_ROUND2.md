@@ -31,3 +31,7 @@ Amendment, 2026-10-09, before any round-2 collection was downloaded: 0.1.1 remov
 when the CPHD gives one (Capella's SICD images remove it, Umbra's keep it). The harness reads with
 `troposphere=False`, which is what round 1's default did, so criterion 3 keeps round 1's meaning; the harness also
 reports, as a diagnostic and not a criterion, the correlation peak over shifts of up to 32 pixels and its position.
+
+Amendment, 2026-10-10, before any round-2 collection was downloaded: the harness's vendor check copied the phase
+history twice (`S[sel]`, then its conjugate), which killed the 320,360-pulse Capella C11 spotlight of round 1 at
+128 GB after the library fixes; it now passes a slice and conjugates in place. No criterion changes.

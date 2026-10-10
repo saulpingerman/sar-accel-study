@@ -102,10 +102,15 @@ if vendor:
             if sel.size < 16:
                 sel = np.arange(P)
             out = dict(pulses=int(sel.size))
+            # a slice where the band is contiguous and the conjugate taken in place: S[sel] and np.conjugate(S[sel])
+            # each copied a history that is 54 GB for a long Capella spotlight (killed at 128 GB in round 1)
+            rows = slice(int(sel[0]), int(sel[-1]) + 1) if sel.size == sel[-1] - sel[0] + 1 else sel
             for sgn in ('as read', 'conjugated'):
-                Sx = S[sel] if sgn == 'as read' else np.conjugate(S[sel])
-                img = fastsar.backproject(Sx, ant[sel], f0, df, pts, ref=None if ref is None else ref[sel], backend='cpu')
-                del Sx
+                if sgn == 'conjugated':
+                    np.conjugate(S, out=S)
+                img = fastsar.backproject(S[rows], ant[sel], f0, df, pts, ref=None if ref is None else ref[sel], backend='cpu')
+                if sgn == 'conjugated':
+                    np.conjugate(S, out=S)
                 aa, av = np.abs(img).ravel(), np.abs(v).ravel()
                 out[sgn] = dict(amp_corr=float(np.corrcoef(aa, av)[0, 1]),
                                 logamp_corr=float(np.corrcoef(np.log10(aa + 1e-9 * aa.max()), np.log10(av + 1e-9 * av.max()))[0, 1]),
