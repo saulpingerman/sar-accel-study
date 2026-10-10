@@ -36,12 +36,13 @@ Amendment, 2026-10-10, before any round-2 collection was downloaded: the harness
 history twice (`S[sel]`, then its conjugate), which killed the 320,360-pulse Capella C11 spotlight of round 1 at
 128 GB after the library fixes; it now passes a slice and conjugates in place. No criterion changes.
 
-Amendment, 2026-10-10, before any round-2 collection was downloaded: criterion 3 is replaced. The vendor's pixel
-grid is not ground truth: each vendor applies corrections of its own (the troposphere delay, the surface its grid
-lies on) that the files do not state, and in round 1 every Capella and ICEYE collection missed the zero-shift
-correlation by 1 to 8 pixels for such reasons while its images were sharp and the geolocation checks against aerial
-and Sentinel-2 imagery (`geoloc/`) placed FastSAR's images at least as well as the vendors' products. The new
-criterion 3: on the vendor's pixels of the center window, FastSAR's exact backprojection with the phase sign
-`read_cphd` chose has a peak-to-mean amplitude ratio at least 1.5 times that of the same backprojection with the
-conjugated history (an image, not a blur). The correlation with the vendor's image, at zero shift and at its peak
-over shifts, is reported as a diagnostic and is not a criterion.
+Amendment, 2026-10-10, before any round-2 collection was downloaded: criterion 3 is withdrawn, and no criterion
+replaces it. The vendor's pixel grid is not ground truth: each vendor applies corrections of its own (the troposphere
+delay, the surface its grid lies on) that the files do not state, and in round 1 every Capella and ICEYE collection
+missed the zero-shift correlation by 1 to 8 pixels for such reasons while its images were sharp and the geolocation
+checks against aerial and Sentinel-2 imagery (`geoloc/`) placed FastSAR's images at least as well as the vendors'
+products. A vendor-free phase-sign check (the image with the chosen sign sharper than with the conjugated history)
+was tried on local Umbra and Capella data and withdrawn the same day: near the phase reference, conjugating the
+history mirrors the image instead of blurring it (identical sharpness on the Panama collection), so the check has no
+power where the harness measures. The correlation with the vendor's image, with both signs, at zero shift and at its
+peak over shifts, is reported as a diagnostic and is not a criterion. Round 2 is judged on criteria 1, 2 and 4.
