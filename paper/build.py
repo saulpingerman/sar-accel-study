@@ -115,7 +115,7 @@ def gen_power(num):
             ('TPU v6e', 'Factorized BP, single-pass products, fused kernels', 'third-party design power', '200 to 350', need('t.panama.tpu-v6e.ffbp.fp32_fast_pallas2_direct.s'), f"{need('pw.v6e.lo')} to {need('pw.v6e.hi')}"),
             ('TPU v6e', 'Factorized BP, three-pass products, fused kernels', 'third-party design power', '200 to 350', need('t.panama.tpu-v6e.ffbp.fp32_high_pallas2_direct.s'), f"{need('pw.v6e.3.lo')} to {need('pw.v6e.3.hi')}"),
             ('CPU', 'Factorized BP, float32, C++ kernels', 'pro-rata estimate', f"25 at {need('pw.cpu.occ')}\\%", need('t.panama.cpu-c4d16.ffbp.fp32_cpp.s'), need('pw.cpu.kj'))]
-    out = [r'\begin{table}[tb]', r'\centering',
+    out = [r'\begin{table}[tbp]', r'\centering',
            r'\caption{Energy per Panama image for the processor alone, over the single-image time (the kWh column of Table~\ref{tab:cost} uses the per-image time of the timed loop, which is shorter than the single-image time on the TPUs only). The L4 draw is the mean of \texttt{nvidia-smi} samples during the timed loop; the TPU figures are ranges based on design-power figures quoted by third parties (120 to 200~W for the v5e, 200 to 350~W for the v6e~\cite{introl2025,gpuadvisor2025}), since the announcement of the v6e~\cite{google2024trillium} gives no power figure, assuming the chip ran at that power throughout; the CPU figure is the pro-rata share of the 8 cores (25~W of the 400~W package) times their occupancy, the busy fraction of the 16 hardware threads doubled and capped at one. Hosts, memory and the other components of each instance are excluded.}',
            r'\label{tab:power}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrr}', r'\toprule',
            r'Device & Configuration & Basis & Power (W) & Time (s) & Energy (kJ) \\', r'\midrule']
@@ -166,7 +166,7 @@ def gen_kernels():
     for f in glob.glob(f'{R}/timing/panama_*.json'):
         lab = os.path.basename(f)[7:-5]
         base[lab] = json.load(open(f))
-    out = [r'\begin{table}[tb]', r'\centering',
+    out = [r'\begin{table}[tbp]', r'\centering',
            r'\caption{The builds of the factorized algorithm on Panama, two precisions per accelerator and float32 on the CPU: 16-bit means single-pass products on the TPUs and, on the L4, float16 products (JAX program), the float32 build with the float16 tensor-core final stage (CUDA builds four to six) or float16 storage throughout (build seven); float32-class means three-pass products on the TPUs and float32 on the L4. The first row of each device is the device time of the JAX program per image (s), measured in the development session of the first kernel build (on the CPU, which has no transfers, the JAX program of the released library); the rows between give the change each development build made to the device time of the build before it (s; negative is faster). Each change is relative to the nearest row above that is not marked rejected or instead. The last row is the time of the released library from host memory to host memory (Table~\ref{tab:cost}), which includes the transfers and the per-collection host work and is not directly comparable with the device time of the last build (on the CPU, which has no transfers, the release time is the shorter). On the CPU the changes add up from the first C++ build (51.8~s, Appendix~\ref{app:kernels}), the step from the JAX program to it being omitted.}',
            r'\label{tab:kernels}', r'\small', r'\resizebox{\textwidth}{!}{\begin{tabular}{llrr}', r'\toprule', r'Device & Build & 16-bit (s) & float32-class (s) \\', r'\midrule']
     final = {'tpu': ('ffbp/fp32_fast_pallas2_direct', 'ffbp/fp32_high_pallas2_direct'), 'gpu': ('ffbp/f16_cuda', 'ffbp/fp32_cuda'),
@@ -240,7 +240,7 @@ def gen_modes(num):
     def load(tag, name):
         f = os.path.join(MODES_DIR, tag, name)
         return json.load(open(f)) if os.path.exists(f) else None
-    out = [r'\begin{table}[tb]', r'\centering',
+    out = [r'\begin{table}[tbp]', r'\centering',
            r'\caption{The five Capella collections. FastSAR time per image (host memory to host memory, Section~\ref{sec:protocol}) at float32-class accuracy and cost per thousand images (hourly price times the single-image time) on the CPU instance, the L4 and the v6e; the L4 runs used a g2-standard-32 instance at \$1.734 per hour. *~Run with smaller first-level groups (with a \texttt{MemoryWarning}), because full speed needs more than the roughly 23~GB free on the L4: 33.8~GB for the 2024 spotlight, 23.3~GB for the 2025 one. FastSAR error: the worst of three 512 by 512~pixel regions against the float64 reference over the three devices. ISCE3: whole-image time estimated from the three regions on the CPU instance, and worst-region error against a reference formed with ISCE3\textquoteright s receive model (Section~\ref{sec:general}) and against the reference with the per-pulse antenna positions of the CPHD file (CPHD), as for FastSAR. GRDL: algorithm (PFA, polar format; RDA, range-Doppler; SMPFA, GRDL\textquoteright s stripmap polar format) and time on the CPU instance; its slant-plane images are not scored against the reference.}',
            r'\label{tab:modes}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lrrrrrrrrrrrrlr}', r'\toprule',
            r' & & & \multicolumn{3}{c}{FastSAR time (s)} & \multicolumn{3}{c}{FastSAR cost (\$/1000)} & FastSAR & \multicolumn{3}{c}{ISCE3} & \multicolumn{2}{c}{GRDL} \\',
@@ -325,7 +325,7 @@ def gen_bounds():
     if not os.path.exists(p):
         return []
     b = json.load(open(p))
-    out = [r'\begin{table}[tb]', r'\centering',
+    out = [r'\begin{table}[tbp]', r'\centering',
            r'\caption{Each stage of the profiled development builds (on the TPUs and the CPU the last build of each device in Table~\ref{tab:kernels}, on the L4 the sixth, float32, build) against the lower bound set by the unit that binds it, Panama image, single-pass or float32 arithmetic. The bounds divide the inherent work of the stage by rates measured on the same device with microbenchmarks in the same framework (vector unit on the rotation mix of the kernel with data resident on chip, high-bandwidth memory copy, matrix units at the product shapes of the kernel, sines in XLA; on the L4 the inner mixes of the kernels on resident shared memory and the memory copy rate). Ratio is measured time over bound; the last column divides the measured time by the sum of all the bounds of the stage, the time it would take if none of its units overlapped. Stage times are measured on the device, excluding transfers.}',
            r'\label{tab:bounds}', r'\small', r'\resizebox{\textwidth}{!}{\begin{tabular}{llrrrrr}', r'\toprule',
            r'Device & Stage & Binding unit & Bound (s) & Measured (s) & Ratio & To the sum \\', r'\midrule']
@@ -384,7 +384,7 @@ def gen_sicd(num):
         rows.append(f"{SCENE[s_]} & {len(w)} & {_np.abs(meas[:, 0]).max():.1f} / {_np.abs(meas[:, 1]).max():.1f} & {_np.abs(mod[:, 0]).max():.1f} / {_np.abs(mod[:, 1]).max():.1f} & {rms[0]:.2f} / {rms[1]:.2f} & {resid[0]:.2f} / {resid[1]:.2f} & {wa.get('coh_mean', float('nan')):.2f} & {wcoh:.2f} & {wlog:.2f} \\\\")
     if not rows:
         return []
-    return [r'\begin{table}[tb]', r'\centering',
+    return [r'\begin{table}[tbp]', r'\centering',
             r'\caption{The reference (float64 exact backprojection) against the vendor\textquoteright s complex image (SICD) of the same collection, which Umbra forms by polar format. Columns: the number of 512 by 512 windows, centered on a grid with 1024-pixel spacing, with enough contrast for an amplitude cross-correlation; the largest displacement of the vendor image relative to the reference over the windows (azimuth / range, pixels); the largest displacement the planar-wavefront model of Appendix~\ref{app:pfa} predicts at the same windows; the root-mean-square difference between measured and predicted displacement; the root-mean-square residual displacement after the vendor image is resampled through the model; and, after that resampling and a local realignment and phase-ramp removal in each window, the 5 by 5 coherence of the two images (mean over all pixels of the scene; median of the window means) and the median over the windows of the correlation of their log amplitudes.}',
             r'\label{tab:sicd}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lrrrrrrrr}', r'\toprule',
             r'Collection & Windows & Measured (px) & Model (px) & RMS difference (px) & Residual after resampling (px) & Coherence, scene mean & window median & Log-amplitude correlation \\', r'\midrule'] + rows + [r'\bottomrule', r'\end{tabular}}', r'\end{table}']
@@ -614,7 +614,7 @@ def main():
         if os.path.exists(p):
             t = open(p).read()
             info[s] = json.loads(t[t.index('{'):])
-    lines = [r'\begin{table}[tb]', r'\centering', r'\caption{The three collections and their native image grids. Spacings are azimuth by range in the slant plane; squint is the Doppler cone angle less $90^\circ$ at the aperture center; range is the slant range to the scene center at the start of the aperture.}',
+    lines = [r'\begin{table}[tbp]', r'\centering', r'\caption{The three collections and their native image grids. Spacings are azimuth by range in the slant plane; squint is the Doppler cone angle less $90^\circ$ at the aperture center; range is the slant range to the scene center at the start of the aperture.}',
              r'\label{tab:scenes}', r'\small', r'\resizebox{\textwidth}{!}{\begin{tabular}{lrrrrrrr}', r'\toprule',
              r'Scene & Image (az $\times$ rg) & Spacing (m) & Pulses $\times$ samples & Bandwidth (MHz) & Grazing angle ($^\circ$) & Squint ($^\circ$) & Range (km) \\', r'\midrule']
     for s, d in info.items():
@@ -625,7 +625,7 @@ def main():
     lines += [r'\bottomrule', r'\end{tabular}}', r'\end{table}']
     gen['scenes'] = '\n'.join(lines)
     # ---- platforms
-    gen['platforms'] = '\n'.join([r'\begin{table}[tb]', r'\centering', r'\caption{Instances, the arithmetic timed on each (Appendix~\ref{app:formats}) and on-demand prices (US dollars per hour, us-central1).}', r'\label{tab:platforms}',
+    gen['platforms'] = '\n'.join([r'\begin{table}[tbp]', r'\centering', r'\caption{Instances, the arithmetic timed on each (Appendix~\ref{app:formats}) and on-demand prices (US dollars per hour, us-central1).}', r'\label{tab:platforms}',
                                   r'\small', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllr}', r'\toprule', r'Device & Instance & Arithmetic timed & Price (\$/h) \\', r'\midrule',
                                   r'TPU v5e & 1 chip (v5litepod-1), 24 vCPU host & bfloat16 single- and three-pass products; float32 data & 1.200 \\',
                                   r'TPU v6e & 1 chip (v6e-1), 44 vCPU host & bfloat16 single- and three-pass products; float32 data & 2.700 \\',
@@ -633,7 +633,7 @@ def main():
                                   r'CPU & c4d-highmem-16, AMD EPYC 9B45, 8 cores, 126 GB & float32 & 0.964 \\',
                                   r'\bottomrule', r'\end{tabular}}', r'\end{table}'])
     # ---- arithmetic table (static text)
-    gen['arith'] = '\n'.join([r'\begin{table}[tb]', r'\centering', r'\caption{Floating-point type of each step in the timed configurations. Geometry means tile centers, ranges and phase-ramp coefficients; ramps means the sines and cosines themselves; products means the operands of the matrix products, filters or sums, always accumulated in float32 or better.}',
+    gen['arith'] = '\n'.join([r'\begin{table}[tbp]', r'\centering', r'\caption{Floating-point type of each step in the timed configurations. Geometry means tile centers, ranges and phase-ramp coefficients; ramps means the sines and cosines themselves; products means the operands of the matrix products, filters or sums, always accumulated in float32 or better.}',
                               r'\label{tab:arith}', r'\footnotesize', r'\setlength{\tabcolsep}{3pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{llllll}', r'\toprule',
                               r'Device & Algorithm, label & Data in memory & Geometry & Ramps & Products \\', r'\midrule',
                               r'L4, CPU & Exact BP, cubic or linear interpolation & float32 profiles & float64 per tile, float32 within the tile & float32 & float32 sums \\',
@@ -728,10 +728,10 @@ def main():
                 r[:] = [bold(c) if c.strip() and 'bullet' not in c else c for c in r]
 
     def cost_header(label, caption):
-        return [r'\begin{table}[tb]', r'\centering', caption, label, r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrr}', r'\toprule',
+        return [r'\begin{table}[tbp]', r'\centering', caption, label, r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrr}', r'\toprule',
                 r'Device & Algorithm & Arithmetic & Time (s) & Images/h & \$ per 1000 & kWh per 1000 \\', r'\midrule']
 
-    lines = [r'\begin{table}[tb]', r'\centering',
+    lines = [r'\begin{table}[tbp]', r'\centering',
              r'\caption{Panama Canal: the configurations of release 0.1.0, cheapest first. Bold rows are the Pareto front of the whole-image errors, the configurations that no other configuration beats on both cost and error (errors within 0.05~dB before rounding counted as equal). Time is the single-image time; cost is computed from the throughput of the timed loop, which on the TPUs overlaps staging with formation; error is the whole-image error (Section~\ref{sec:protocol}); an asterisk marks rows timed without a loop, with cost computed from the single-image time. Energy is that of the processor alone over the per-image time of the cost column; its basis on each device is given with Table~\ref{tab:power}. Table~\ref{tab:costother} gives the other two collections.}',
              r'\label{tab:cost}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{lllrrrr}', r'\toprule',
              r'Device & Algorithm & Arithmetic & Time (s) & \$ per 1000 & kWh per 1000 & Error (dB) \\', r'\midrule']
@@ -895,7 +895,7 @@ def main():
             if mon.get('gpu_watts_mean'):
                 num[key + '.w'] = f"{mon['gpu_watts_mean']:.0f}"
     # ---- precision table (Panama, all configurations of record + variants)
-    lines = [r'\begin{table}[tb]', r'\centering', r'\caption{Precision of the Panama Canal images against the float64 exact backprojection: energy of the difference (dB), largest pixel difference relative to the brightest pixel (dB), 0.1 percentile and minimum of the 5 by 5 coherence (the mean is in the supplementary tables), amplitude ratio (99th percentile and maximum, dB) and phase difference (99th percentile and maximum, degrees) over the brighter half of the pixels. The 16 times oversampled exact row uses the interpolation of the reference (Appendix~\ref{app:protocol}).}',
+    lines = [r'\begin{table}[tbp]', r'\centering', r'\caption{Precision of the Panama Canal images against the float64 exact backprojection: energy of the difference (dB), largest pixel difference relative to the brightest pixel (dB), 0.1 percentile and minimum of the 5 by 5 coherence (the mean is in the supplementary tables), amplitude ratio (99th percentile and maximum, dB) and phase difference (99th percentile and maximum, degrees) over the brighter half of the pixels. The 16 times oversampled exact row uses the interpolation of the reference (Appendix~\ref{app:protocol}).}',
              r'\label{tab:prec}', r'\small', r'\setlength{\tabcolsep}{4pt}', r'\resizebox{\textwidth}{!}{\begin{tabular}{llrrrrrrrr}', r'\toprule',
              r'Device & Configuration & Error & Max & Coh. p0.1 & Coh. min & Amp. p99 & max & Phase p99 & max \\', r'\midrule']
     rows = rows_of(m, 'panama')

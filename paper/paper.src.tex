@@ -9,9 +9,10 @@
 \usepackage{lmodern}
 \usepackage{microtype}
 \usepackage[section,above,below]{placeins}
-\makeatletter
-\AtBeginDocument{\expandafter\renewcommand\expandafter\subsection\expandafter{\expandafter\@fb@secFB\subsection}}
-\makeatother
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.5}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.8}
 
 \title{FastSAR: High-Throughput, High-Fidelity Open-Source SAR Image Formation on CPUs, GPUs and TPUs}
 \author{Paul Singerman\\ Penn State University\\ \texttt{pgs16@psu.edu} \and Tom Braun\\ Penn State University\\ \texttt{trb5864@psu.edu}}
@@ -38,7 +39,7 @@ The factorized algorithm is written as tile-wise phase rotations and decimation 
 
 Of the four devices evaluated (two TPU generations, one GPU and one CPU instance, Table~\ref{tab:platforms}), the L4 forms the float32-class image at the lowest cost (Table~\ref{tab:cost}). Reduced precision, float16 throughout on the L4 and single-pass products on the TPUs, lowers the cost by @@l4.f16.saving.pct@@\% and by @@sp.saving.v6e.pct@@ to @@sp.saving.v5e.pct@@\% and raises the error by @@l4.f16.loss@@ and @@sp.vs.3pass.db@@~dB (Sections~\ref{sec:quality} and~\ref{sec:cost}). On five Capella collections in three modes the float32-class errors stay below $-59$~dB (Table~\ref{tab:modes}).
 
-\begin{figure}[tb]
+\begin{figure}[tbp]
 \centering
 \includegraphics[width=0.9\textwidth]{fig/teaser.pdf}
 \caption{Cost per thousand Panama Canal images against the error over the lock, port and ship regions of Figure~\ref{fig:zoom}, for FastSAR on each device and for the open-source implementations on the same CPU instance type and L4 GPU (gray). The three regions are pooled with weights equal to their reference energy. FastSAR's errors are relative to the 64-times computation of Section~\ref{sec:protocol}, the open-source implementations' relative to the reference; ISCE3 is scored as the mean over its own three patches. Times marked est.\ are estimates (Section~\ref{sec:oss}). The torchbp and GRDL backprojections, which produced no usable image (amplitude correlation with the reference 0.22 or less, Appendix~\ref{app:oss}), are drawn off scale. The line is the Pareto front of the FastSAR configurations on these pooled region errors (the bold rows of Table~\ref{tab:cost} use whole-image errors); those off the front are drawn faded and unlabeled (Table~\ref{tab:cost} identifies each configuration). Each dotted line marks the worst FastSAR configuration of one of the image-quality regimes~1 to~3 of Section~\ref{sec:quality}.}
@@ -105,7 +106,7 @@ The two open-source polar-format implementations, \texttt{pfa\_mem} (44.5~s) and
 
 FastSAR's exact backprojection forms the full image in @@exact.cpu.dur@@ on the CPU and @@exact.l4.dur@@ on the L4, @@exact.isce3.cpu.ratio@@ and @@exact.isce3.l4.ratio@@ times faster than the ISCE3 estimates, with region errors of @@truth.l4exact.range@@~dB. Scaling by pixel count overpredicted the full-image time of FastSAR's exact backprojection on the CPU by a factor of @@exact.cpu.est.factor@@ (@@exact.cpu.est.dur@@ predicted, @@exact.cpu.dur@@ measured), so the open-source estimates and the speed ratios derived from them should be read as upper bounds.
 
-\begin{table}[tb]
+\begin{table}[tbp]
 \centering
 \caption{Error against the reference and time per full image on the Umbra Panama collection. Errors (dB, Section~\ref{sec:protocol}) are the range over the lock, port and ship regions of Figure~\ref{fig:zoom}, worst to best. ISCE3 was scored instead on three 256 by 256~pixel patches of its own grid (the scene center and two off-center positions), after removal of a linear phase ramp fitted to each. An error of 0.0~dB means that the difference has the same energy as the reference. FastSAR's errors are measured against the 64-times computation, those of the open-source implementations against the reference (Section~\ref{sec:protocol}). $16\times$, $8\times$ and $2\times$ give the oversampling of the range profiles; FastSAR's exact backprojection interpolates them cubically, the others linearly. Times are measured, except those marked est., which scale the time on the scored regions by the number of pixels (Section~\ref{sec:oss}).}
 \label{tab:oss}
@@ -297,7 +298,7 @@ Table~\ref{tab:arith} gives the floating-point type of each step of every timed 
 
 Float16 (IEEE binary16, Table~\ref{tab:formats}) overflows above 65,504, so the phase history is scaled to unit peak before conversion. On the TPU every matrix product is formed from bfloat16~\cite{wang2019bfloat16} operands. A float32 operand is either rounded once (one pass) or split into a bfloat16 head and tail with the cross terms accumulated (three passes); the three-pass product keeps the first 16 significant bits of each operand. A split into three parts (six passes, used by the JAX program) recovers float32 accuracy~\cite{jax2018}. The L4's tensor cores accept float16 operands, which the final stage of float16 throughout uses. The CPU kernels use no reduced-precision arithmetic; the AVX-512 bfloat16 instructions of the processor were not evaluated.
 
-\begin{table}[tb]
+\begin{table}[tbp]
 \centering
 \caption{Floating-point formats. Significant bits include the implicit bit; the spacing is the distance between adjacent representable values near 1.}
 \label{tab:formats}
@@ -326,6 +327,12 @@ Google's Cloud TPU documentation~\cite{tpudocs} describes no texture or cache pa
 
 \section{Kernels for the factorized algorithm}
 \label{app:kernels}
+
+% BEGIN GEN kernels
+% END GEN kernels
+
+% BEGIN GEN bounds
+% END GEN bounds
 
 The factorized rows of Table~\ref{tab:cost} are formed by kernels written for each device after a stage-by-stage profile of the code that XLA, JAX's compiler, generated from the JAX program. On the device, the JAX program took @@kbase.v6e.3.s@@, @@kbase.v5e.3.s@@ and @@kbase.l4.32.s@@~s for the float32-class Panama image on the v6e, v5e and L4, and the last development builds @@knew.v6e.3.s@@, @@knew.v5e.3.s@@ and @@knew.l4.32.s@@~s (the L4 figure is the seventh session's float32 build; its float16-storage build took 2.9~s). On the CPU release 0.1.0 forms the image in @@kbase.cpu.32.s@@~s with the JAX program and @@knew.cpu.32.s@@~s with the C++ kernels. The float32 images of the CUDA and C++ kernels are closer to the reference than that of the JAX program, a difference consistent with their float64 geometry at every level.
 
@@ -375,11 +382,6 @@ Four builds were measured (Table~\ref{tab:kernels}). The first, a polyphase filt
 
 The instance's measured rates are a memory copy at 49~GB/s, the filter's inner loop at 314 billion fused multiply-adds per second on resident data, and the final product's inner loop at 1.04 trillion fused multiply-adds per second. The last figure is near the 8 cores' float32 peak of two 512-bit fused multiply-adds per core and cycle at the measured clock. Against these, the level kernel runs at 1.2 times its arithmetic bound (0.8 of the sum of arithmetic and memory) and the pulse filter at 1.05 times its memory bound. The final stage runs at 1.4 times its arithmetic bound, with the excess in table building (Table~\ref{tab:bounds}).
 
-% BEGIN GEN bounds
-% END GEN bounds
-
-% BEGIN GEN kernels
-% END GEN kernels
 
 \section{Polar format on an orbital aperture}
 \label{app:pfa}
@@ -396,7 +398,7 @@ The fit residual is below 1~mrad of phase everywhere in the three scenes, so the
 
 \paragraph{Final resampling.} The spectrum is placed in a raster of twice the pixel density and transformed without the carrier terms. The result is interpolated at the apparent positions with a six-tap Lanczos kernel along each axis and multiplied by the carriers evaluated at the apparent positions. No separate phase correction is needed; the quadratic phase of about @@pfa.center.quad@@~rad at 211~m seen in development in a center crop before the resampling is the carrier of the range displacement. The oversampled raster is processed in blocks: the range transform is done once, and the azimuth transform and the resampling proceed in blocks of 512 output range columns. The polar-format figures in this paper are for the resampled image.
 
-\begin{figure}[tb]
+\begin{figure}[tbp]
 \centering
 \includegraphics[width=0.72\textwidth]{fig/rings.pdf}
 \caption{Error relative to the reference in four concentric rings by distance from the scene center, for the polar-format image and the float32 factorized image on the L4, on the three collections (dB; rings are quarters of the half-width from the scene center outward).}
@@ -407,7 +409,7 @@ The fit residual is below 1~mrad of phase everywhere in the three scenes, so the
 
 In development, on the full Panama image, the resampling kernel (4, 6 and 8 taps) and the oversampling of the intermediate raster (2 and 3 times) changed the whole-image error by less than 0.6~dB (Table~\ref{tab:pfaedge}). In the outermost ring, where the displacement is 10 to 18~pixels, the change was less than 0.4~dB. Lengthening the pulse interpolator from 16 to 32 or 48 taps, with a narrower Kaiser window, made the error up to 0.9~dB worse. The registration error, measured from the cross-spectrum phase, was 0.001~pixel, and the convergence of the reference is more than 30~dB below the residual. One untested candidate is the Taylor weighting, which backprojection applies per pulse and sample and polar format applies through the resampling onto the rectangular raster; such a difference would grow with distance from the scene center.
 
-\begin{table}[tb]
+\begin{table}[tbp]
 \centering
 \caption{Panama Canal, polar format on the CPU in development: whole-image error and error by ring (dB) for variations of the final resampling. Rings are the quarters of the half-width from the scene center outward, inner to outer; the selected configuration is the first row.}
 \label{tab:pfaedge}
@@ -427,6 +429,13 @@ Variation & Error & Ring 1 & Ring 2 & Ring 3 & Ring 4 \\
 \section{Validation against the vendor's image}
 \label{app:sicd}
 
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.94\textwidth]{fig/sicd_panama.pdf}
+\caption{The port, lock and ship regions of Figure~\ref{fig:zoom} (rows, 512 by 512 pixels; the row order differs from that figure). Columns: the reference; the vendor image as delivered, on the same pixels; the vendor image after resampling through the planar-wavefront displacement model of Appendix~\ref{app:pfa}; and the 5 by 5 coherence of the resampled vendor image with the reference after local realignment and phase-ramp removal, from 0 to 1, with its mean below each map. Amplitudes are displayed over a 45~dB range.}
+\label{fig:sicd}
+\end{figure}
+
 Umbra, the vendor, distributes each collection as a complex image in the SICD format, on the pixel grid that the reference adopts; its metadata states that the image was formed from the same phase history by polar format. This allows the reference to be checked against an independent processor. The integer and subpixel offset between the two images (attributed to the vendor's reference-pixel convention) was found from the cross-correlation of block-averaged log amplitude and refined on a central window. The linear phase ramp between them, which reflects the different spectral centering of the two images (@@sicd.panama.ramp.rg@@ cycles per pixel in range on Panama), was found from the peak of the cross-spectrum of the same window and removed.
 
 The vendor image was compared with the reference in 512 by 512 windows centered on a grid with 1024-pixel spacing, keeping the windows with enough contrast for an amplitude cross-correlation (@@sicd.panama.n@@ on Panama). In each window the local offset of the vendor image was measured by amplitude cross-correlation and compared with the displacement that the planar-wavefront model of Appendix~\ref{app:pfa} predicts at the window center. The vendor image was then resampled through the model with a cubic kernel and, after a local realignment and phase-ramp removal in each window, the coherence and the log-amplitude correlation of the two images were computed. As delivered, the vendor image differs from the reference in two respects: it is masked to the parallelogram over which the vendor's processor has full spectral support, and bright points carry cross-shaped sidelobes that the reference's Taylor weighting suppresses.
@@ -434,12 +443,6 @@ The vendor image was compared with the reference in 512 by 512 windows centered 
 % BEGIN GEN sicd
 % END GEN sicd
 
-\begin{figure}[tb]
-\centering
-\includegraphics[width=0.94\textwidth]{fig/sicd_panama.pdf}
-\caption{The port, lock and ship regions of Figure~\ref{fig:zoom} (rows, 512 by 512 pixels; the row order differs from that figure). Columns: the reference; the vendor image as delivered, on the same pixels; the vendor image after resampling through the planar-wavefront displacement model of Appendix~\ref{app:pfa}; and the 5 by 5 coherence of the resampled vendor image with the reference after local realignment and phase-ramp removal, from 0 to 1, with its mean below each map. Amplitudes are displayed over a 45~dB range.}
-\label{fig:sicd}
-\end{figure}
 
 The vendor image (Table~\ref{tab:sicd}) is displaced from the reference by a field whose largest value over the Panama windows is @@sicd.panama.meas.az@@~pixels in azimuth and @@sicd.panama.meas.rg@@ in range. The model predicts @@sicd.panama.model.az@@ and @@sicd.panama.model.rg@@ from the collection geometry alone. The root-mean-square difference between measured and predicted displacement over the windows is @@sicd.panama.rms.az@@ and @@sicd.panama.rms.rg@@~pixel on Panama and at most 0.34~pixel on the other two collections, 1 to 4\% of the largest displacement. After the resampling the root-mean-square residual displacement is at most 0.25~pixel (individual windows up to 0.43). The coherence of the two images averages @@sicd.panama.coh@@, @@sicd.melbourne.coh@@ and @@sicd.iowa.coh@@ on Panama, Melbourne and Iowa (@@sicd.panama.wcoh@@, @@sicd.melbourne.wcoh@@ and @@sicd.iowa.wcoh@@ as the median over windows), and their log amplitudes correlate at @@sicd.panama.wlog@@ to @@sicd.iowa.wlog@@ within windows (Figure~\ref{fig:sicd}).
 
@@ -462,7 +465,7 @@ The torchbp kernels evaluate the distance in float32 (Table~\ref{tab:oss}, footn
 
 The AFRL toolbox also contains a polar format, \texttt{pfa\_mem}, run unmodified in Octave on the same instance (with a compatibility version of \texttt{cross} for mixed row and column inputs), and GRDL's polar format ran on the same instance. Neither image is corrected for the planar-wavefront displacement. Each region was therefore registered and resampled onto the reference pixels before scoring by amplitude statistics and coherence, as for the vendor image of Appendix~\ref{app:sicd} (Table~\ref{tab:osspfa}); part of their coherence loss comes from that resampling.
 
-\begin{table}[tb]
+\begin{table}[tbp]
 \centering
 \caption{Polar-format implementations on the Panama collection, on the CPU instance: correlation of the log amplitude with the reference and mean coherence in 5 by 5~pixel windows over the three regions, and the time per full image (s).}
 \label{tab:osspfa}
@@ -536,11 +539,11 @@ The ship was assumed to follow the channel axis (bearing $158^\circ$, from the S
 
 The time and statistics of every configuration on each scene are in the supplementary tables of the study repository (\texttt{paper/supplement\_tables.pdf}); the configuration labels are those of Section~\ref{sec:fastsar}.
 
-% BEGIN GEN prec
-% END GEN prec
-
 % BEGIN GEN costother
 % END GEN costother
+
+% BEGIN GEN prec
+% END GEN prec
 
 
 \end{document}
